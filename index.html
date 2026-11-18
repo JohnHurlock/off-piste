@@ -464,26 +464,8 @@ function center(z){ return 22*Math.sin(z*0.0055) + 9*Math.sin(z*0.016+1.3); }
 function baseH(x,z){
   let h = z*SLOPE + 1.1*Math.sin(x*0.09+z*0.045) + 0.7*Math.sin(z*0.12-x*0.06) + 0.32*Math.sin(x*0.21+z*0.17);
   const e = Math.abs(x-center(z)) - 20; if(e>0) h += e*e*0.05;
-  return h + dropH(x,z);
+  return h;
 }
-/* Drops: the run is cut into ~95 m terraces. Each one runs out a little flatter, then rolls over a lip
-   into a short steep drop, so speed off the lip turns into real air. Same every day for everyone (seeded). */
-const DROP_CELL=95;
-function dropHash(k,s){ const v=Math.sin(k*127.1+s*311.7+(WORLD_SEED%997)*0.37)*43758.5453; return v-Math.floor(v); }
-function dropA(k){ return k<1 || dropHash(k,2)<0.15 ? 0 : 1.8+dropHash(k,3)*2.6; }   // metres of drop; a few terraces have none
-function lipS(k){ return 58+dropHash(k,1)*14; }                                      // distance into the terrace where the lip sits
-function dropH(x,z){
-  if(z>-DROP_CELL) return 0;
-  const k=Math.floor(-z/DROP_CELL), A=dropA(k); if(!A) return 0;
-  const s=-z-k*DROP_CELL, ls=lipS(k)+3*Math.sin(x*0.045+k), dL=8+A*1.2;
-  if(s<ls) return A*(s/ls);
-  if(s<ls+dL){ const t=(s-ls)/dL; return A*(1-t*t*(3-2*t)); }
-  return 0;
-}
-// keep kickers and rails off the lips
-function nearLip(z){ const k0=Math.floor(-z/DROP_CELL);
-  for(let k=k0-1;k<=k0+1;k++){ if(!dropA(k)) continue; const zl=-(k*DROP_CELL+lipS(k)); if(zl<z+18 && zl>z-80) return true; }
-  return false; }
 const buckets = new Map();
 function pillowH(x,z){
   const k = Math.floor(z/16); let h = 0;
@@ -683,8 +665,7 @@ function spawnRail(zTop){
 }
 function spawnGate(z){ const g={type:'gate',x:center(z),z,passed:false}; objs.push(g); buildGate(g); }
 function genChunk(z0,z1){
-  while(nextFeatureZ > z1-80){ let g=0; while(nearLip(nextFeatureZ) && g++<12) nextFeatureZ-=15;
-    if(WR()<0.45) spawnRail(nextFeatureZ); else spawnKicker(nextFeatureZ); nextFeatureZ -= wrand(70,115); }
+  while(nextFeatureZ > z1-80){ if(WR()<0.45) spawnRail(nextFeatureZ); else spawnKicker(nextFeatureZ); nextFeatureZ -= wrand(70,115); }
   while(nextGateZ > z1){ spawnGate(nextGateZ); nextGateZ -= 160; }
   const nP = WR()<0.75 ? (WR()<0.45?2:1) : 0;
   for(let i=0;i<nP;i++){
