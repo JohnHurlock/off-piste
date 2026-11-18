@@ -25,13 +25,14 @@ To update the game later, open your site in Netlify, go to **Deploys**, and drag
 - Works in Chrome on Chromebooks, Windows, Mac, Android, and in Safari on iPhone and iPad.
 
 ## How multiplayer works
-- Players connect straight to each other through WebRTC (peer-to-peer). The free public PeerJS service (`0.peerjs.com`) only introduces players to each other. Game traffic doesn't pass through a game server.
-- The first person in a room hosts it and passes updates along. Each rider sends their position and pose 20 times a second.
-- If the host leaves, the others take over within a few seconds.
+- Everyone in a room sends their position and pose about 12 times a second through two free public relays (MQTT brokers at broker.emqx.io and broker.hivemq.com) over a normal secure web connection. This works on school, office and phone networks, where direct peer-to-peer links are often blocked.
+- The game sends to both relays, so a room keeps working if one relay is down or blocked.
+- There is no host. Anyone can leave and the room carries on.
 - Everyone gets the same mountain each day. It changes at midnight UTC.
+- The title screen lists who is in your room and whether they are skiing or still in the lobby. A banner pops up when someone joins or leaves.
 
 ## Limits to know
-- Some school and office networks block peer-to-peer connections. If friends can't connect on one network, try another, such as home Wi-Fi or a phone hotspot. Fixing this for every network would need a relay (TURN) server, which usually costs money.
-- The PeerJS service is free and run by volunteers, so it can occasionally be slow or down.
+- The relays are public. Anyone who knew your room code could see riders' positions and names, so don't use a real full name.
+- The relays are free community services, so they can occasionally be slow or down.
 - About 8 players per room is comfortable.
-- Cost: hosting on Netlify or GitHub Pages is free. A custom domain such as `violethour.com` is optional and costs roughly $10–20 a year.
+- Cost: hosting on Netlify or GitHub Pages is free. A custom domain such as `offpiste.com` is optional and costs roughly $10–20 a year.

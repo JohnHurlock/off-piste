@@ -42,6 +42,8 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
 .netlist .netlive{font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
 .netlist .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:0}
 .netnote{font-size:13px;opacity:.85;margin:0}
+.nettoast{position:fixed;left:50%;top:calc(52px + env(safe-area-inset-top,0px));transform:translate(-50%,-6px);padding:8px 16px;border-radius:999px;background:var(--glass);border:1px solid var(--line);font:600 14px var(--body);color:var(--ink);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:20;white-space:nowrap;backdrop-filter:blur(6px)}
+.nettoast.on{opacity:1;transform:translate(-50%,0)}
 .mp{display:grid;gap:10px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--glass);max-width:760px}
 .mp h3{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
 .mprow{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
@@ -159,6 +161,7 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
     <button class="icon-btn" id="pauseBtn" aria-label="Pause">II</button>
   </div>
   <div class="toast" id="toast">CHECKPOINT</div>
+  <div class="nettoast" id="netToast" aria-live="polite"></div>
   <div class="charge" id="charge"><i id="chargeBar"></i></div>
   <div class="live" id="live"><span class="deg" id="liveDeg"></span><span class="sub" id="liveSub"></span></div>
   <div class="trick" id="trick"><div class="trick-name" id="trickName"></div><div class="trick-pts" id="trickPts"></div></div>
@@ -257,7 +260,7 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
 <script>
 (function(){
 'use strict';
@@ -1070,7 +1073,7 @@ const dz=v=>Math.abs(v)<0.15?0:(v-Math.sign(v)*0.15)/0.85;
 function pollPad(){
   PAD=null; if(!navigator.getGamepads) return;
   const pads=navigator.getGamepads(); let p=null;
-  for(const g of pads){ if(g&&g.connected){ p=g; break; } }
+  for(const g of pads){ if(g&&g.connected&&(!isTouch||g.mapping==='standard')&&g.buttons.length>=10){ p=g; break; } }
   if(!p) return;
   const b=i=>!!(p.buttons[i]&&p.buttons[i].pressed);
   let x=dz(p.axes[0]||0), y=-dz(p.axes[1]||0);
@@ -1107,7 +1110,7 @@ window.addEventListener('keydown',e=>{
   keys.add(e.code);
 });
 window.addEventListener('keyup',e=>keys.delete(e.code));
-window.addEventListener('blur',()=>{ keys.clear(); if(state==='play') pause(); });
+window.addEventListener('blur',()=>{ keys.clear(); stick.id=null; stick.x=stick.y=0; if(state==='play' && !isTouch) pause(); });
 document.addEventListener('visibilitychange',()=>{ if(document.hidden && state==='play') pause(); });
 window.addEventListener('pointerdown',()=>initAudio(),{passive:true});
 
@@ -1542,7 +1545,7 @@ function updateHud(){
 
 /* ---------- Flow ---------- */
 function show(id){ ['title','pause','results'].forEach(s=>$(s).hidden=s!==id); }
-function startRun(){
+function startRun(){ try{ const ae=document.activeElement; if(ae&&ae.tagName==='INPUT') ae.blur(); }catch(e){}
   initAudio(); resetWorld(); state='play'; show(null);
   $('hud').hidden=false; $('touch').hidden=!isTouch; hudCache={}; hudEls.fade.classList.remove('on');
   hudEls.trick.classList.remove('show'); hideLive(); powderV=0;
@@ -1626,7 +1629,7 @@ const cleanName=v=>String(v||'').replace(/[^\p{L}\p{N} _.'-]/gu,'').trim().slice
 function ingest(p){
   const pres=p.presence||{}; let r=NET.peers.get(p.peer);
   if(!r){ r=makeRemote(p.peer); NET.peers.set(p.peer,r); }
-  r.name=cleanName(pres.n); r.score=Math.max(0,Math.min(1e9,Number(pres.s)||0));
+  r.name=cleanName(pres.n); r.st=pres.st!==0; r.score=Math.max(0,Math.min(1e9,Number(pres.s)||0));
   if(pres.k!==r.lastK && validPose(pres.k)){
     r.lastK=pres.k; const now=performance.now();
     const last=r.buf[r.buf.length-1];
@@ -1637,7 +1640,7 @@ function ingest(p){
 const qa=new THREE.Quaternion(), qb=new THREE.Quaternion(), tagV=new THREE.Vector3();
 function applyRemote(r,now){
   const b=r.buf; if(!b.length || now-r.seen>5000){ r.g.visible=false; r.tag.hidden=true; return; }
-  const rt=now-110; let A=b[0], B=b[0], f=0;
+  const rt=now-170; let A=b[0], B=b[0], f=0;
   if(rt>=b[b.length-1].t){ A=B=b[b.length-1]; }
   else for(let i=0;i<b.length-1;i++){ if(b[i].t<=rt && rt<b[i+1].t){ A=b[i]; B=b[i+1]; f=(rt-A.t)/(B.t-A.t); break; } }
   const a=A.k, c=B.k, lr=(i)=>a[i]+(c[i]-a[i])*f;
@@ -1648,7 +1651,7 @@ function applyRemote(r,now){
   // name tag over the rider's head
   tagV.set(r.g.position.x,r.g.position.y+1.3,r.g.position.z);
   const dist=tagV.distanceTo(camera.position); tagV.project(camera);
-  if(tagV.z>1 || dist>140 || Math.abs(tagV.x)>1.1 || Math.abs(tagV.y)>1.1){ r.tag.hidden=true; return; }
+  if(state==='title' || tagV.z>1 || dist>140 || Math.abs(tagV.x)>1.1 || Math.abs(tagV.y)>1.1){ r.tag.hidden=true; return; }
   const rc=canvas.getBoundingClientRect();
   r.tag.hidden=false; r.tag.style.transform=`translate(${(rc.left+(tagV.x*0.5+0.5)*rc.width).toFixed(1)}px,${(rc.top+(-tagV.y*0.5+0.5)*rc.height).toFixed(1)}px) translate(-50%,-100%)`;
   r.tag.style.opacity=String(Math.max(0.35,1-dist/160)); r.tag.style.color='#'+new THREE.Color(r.col).getHexString();
@@ -1657,11 +1660,11 @@ function applyRemote(r,now){
 function renderNetList(){
   const el=$('netList'), note=$('netNote'), n=NET.peers.size;
   if(!NET.room){ el.hidden=true; note.textContent=NET.status||'Playing solo. Make a room and send friends the invite link.'; return; }
-  note.hidden=false; note.textContent = NET.status || (n ? `Room ${NET.code}: ${n} other ${n===1?'rider':'riders'} here` : `Room ${NET.code}: waiting for friends. Send them the invite link.`);
+  note.hidden=false; note.textContent = NET.status || (n ? `Room ${NET.code}: you're with ${[...NET.peers.values()].map(r=>nameFor(r)+(r.st?' (skiing)':' (in the lobby)')).join(', ')}` : `Room ${NET.code}: waiting for friends. Send them the invite link.`);
   if(!n){ el.hidden=true; return; }
   el.hidden=false; el.textContent='';
   const head=document.createElement('div'); head.className='netlive'; head.textContent=`● Live · ${n+1} riders`; el.appendChild(head);
-  const rows=[{name:'You',score:stats.score,col:0xd93a72},...[...NET.peers.values()].map(r=>({name:nameFor(r),score:r.score,col:r.col}))].sort((x,y)=>y.score-x.score).slice(0,6);
+  const rows=[{name:'You',score:stats.score,col:0xd93a72},...[...NET.peers.values()].map(r=>({name:nameFor(r)+(r.st?'':' · lobby'),score:r.score,col:r.col}))].sort((x,y)=>y.score-x.score).slice(0,6);
   for(const row of rows){ const d=document.createElement('div'), dot=document.createElement('span'); dot.className='dot'; dot.style.background='#'+new THREE.Color(row.col).getHexString();
     d.append(dot, document.createTextNode(row.name+'  '+fmt(Math.round(row.score)))); el.appendChild(d); }
 }
@@ -1669,7 +1672,7 @@ function netTick(rdt,now){
   if(!NET.room) return;
   for(const r of NET.peers.values()) applyRemote(r,now);
   NET.sendT+=rdt;
-  if(NET.sendT>=0.05){ NET.sendT=0; NET.room.presence({k:packPose(),s:Math.round(stats.score),n:myName()}).catch(()=>{}); }
+  if(NET.sendT>=0.08){ NET.sendT=0; NET.room.presence({k:packPose(),s:Math.round(stats.score),n:myName(),st:state==='title'?0:1}).catch(()=>{}); }
   NET.listT+=rdt; if(NET.listT>0.5){ NET.listT=0; renderNetList(); }
 }
 
@@ -1678,95 +1681,64 @@ function netTick(rdt,now){
    Exposes the same small interface the game uses: presence(patch) and onPeers(handler). */
 function myName(){ return cleanName($('mpName').value)||'Rider'; }
 function peerRoom(code){
-  // A room is a short ladder of host slots: violethour-<code>-0, -1, ... The lowest live slot hosts.
-  // A slot whose host vanished can stay reserved on the signalling server for a while, so players skip
-  // past a dead slot, and a host on a higher slot keeps checking the lower ones and moves everyone down
-  // when one answers, so the room never stays split.
-  const SLOTS=6, slotId=g=>'violethour-'+code.toLowerCase()+'-'+g;
-  const peers=new Map(), hs=[], conns=new Map(), lastSeen=new Map();
-  let mine={}, peer=null, isHost=false, hostConn=null, closed=false, tries=0, hostLast=0, attempt=0, gen=0, probing=false;
+  // Everyone in a room talks through public MQTT relays over a normal secure web connection (wss),
+  // so it works on school, office and phone networks where direct peer-to-peer links get blocked.
+  // We connect to two relays and send to both, so the room still works if one is down or blocked;
+  // a sequence number drops the duplicate copy.
+  const BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'];
+  const me=(Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)).replace(/[^a-z0-9]/g,'');
+  const base='offpiste/v1/'+code+'/';
+  const peers=new Map(), hs=[]; let mine={}, seq=0, closed=false;
   const fire=ch=>{ const snap=[...peers.values()]; hs.forEach(h=>h(Object.assign({peers:snap,joined:[],left:[],updated:[]},ch))); };
-  const upsert=(id,pres)=>{ if(typeof id!=='string'||!pres||typeof pres!=='object') return; const ex=peers.has(id);
-    const p={peer:id,by:null,isMe:false,sameTab:false,kind:'viewer',guest:false,presence:pres,updatedAt:Date.now()}; peers.set(id,p); fire(ex?{updated:[p]}:{joined:[p]}); };
   const remove=id=>{ const p=peers.get(id); if(!p) return; peers.delete(id); fire({left:[p]}); };
-  const clearAll=()=>{ for(const id of [...peers.keys()]) remove(id); };
-  const setStatus=t=>{ NET.status=t; renderNetList(); };
-  const online=()=>{ tries=0; NET.status=''; renderNetList(); };
-  // tear down the current attempt; every handler checks its own token so stale callbacks do nothing
-  function reset(){ attempt++; try{ peer&&peer.destroy(); }catch(e){} peer=null; isHost=false; hostConn=null; conns.clear(); lastSeen.clear(); clearAll(); }
-  function retry(){ if(closed) return; reset(); tries++; setStatus(`Room ${code}: reconnecting…`); setTimeout(()=>tryHost(0), Math.min(6000,400+Math.random()*1200*tries)); }
-  function nextSlot(g){ if(closed) return; reset(); if(g+1<SLOTS) tryHost(g+1); else retry(); }
-  function dropConn(id){ const c=conns.get(id); if(!c) return; conns.delete(id); lastSeen.delete(id); try{ c.close(); }catch(e){} remove(id); for(const o of conns.values()) if(o.open) o.send({t:'x',id}); }
-  function hostHandle(conn,my){
-    conn.on('open',()=>{ if(my!==attempt) return; conns.set(conn.peer,conn); lastSeen.set(conn.peer,Date.now());
-      conn.send({t:'p',id:peer.id,p:mine}); for(const [id,p] of peers) if(id!==conn.peer) conn.send({t:'p',id,p:p.presence}); });
-    conn.on('data',d=>{ if(my!==attempt) return; lastSeen.set(conn.peer,Date.now()); if(!d||d.t!=='p') return;
-      upsert(conn.peer,d.p); for(const [id,c] of conns) if(id!==conn.peer && c.open) c.send({t:'p',id:conn.peer,p:d.p}); });
-    conn.on('close',()=>{ if(my===attempt) dropConn(conn.peer); });
+  const anyUp=()=>clients.some(c=>c.connected);
+  const status=()=>{ if(closed) return; const t=anyUp()?'':`Room ${code}: connecting…`; if(NET.status!==t){ NET.status=t; renderNetList(); } };
+  function onMsg(topic,buf){
+    if(closed || !buf || buf.length>6000 || !topic.startsWith(base)) return;
+    const rest=topic.slice(base.length), kind=rest[0], id=rest.slice(2);
+    if(rest[1]!=='/' || id===me || !/^[a-z0-9]{6,24}$/.test(id)) return;
+    if(kind==='x'){ remove(id); return; }
+    if(kind!=='p') return;
+    let d; try{ d=JSON.parse(new TextDecoder().decode(buf)); }catch(e){ return; }
+    if(!d || typeof d!=='object' || !Number.isInteger(d.q) || !d.p || typeof d.p!=='object') return;
+    const ex=peers.get(id); if(ex && d.q<=ex.seq) return;   // the same update arriving via the second relay
+    const p={peer:id,by:null,isMe:false,sameTab:false,kind:'viewer',guest:false,presence:d.p,seq:d.q,updatedAt:Date.now()};
+    peers.set(id,p); fire(ex?{updated:[p]}:{joined:[p]});
   }
-  function tryHost(g){
-    if(closed) return; gen=g; setStatus(`Room ${code}: connecting…`);
-    const my=++attempt; let ok=false; const p=peer=new Peer(slotId(g),{debug:0});
-    setTimeout(()=>{ if(my===attempt && !ok) retry(); },8000);
-    p.on('open',()=>{ if(my!==attempt) return; ok=true; isHost=true; online(); });
-    p.on('connection',c=>{ if(my===attempt && isHost) hostHandle(c,my); else c.close(); });
-    p.on('disconnected',()=>{ if(my===attempt && isHost && !closed) try{ p.reconnect(); }catch(e){} });
-    p.on('error',e=>{ if(my!==attempt) return;
-      if(e.type==='unavailable-id'){ ok=true; try{ p.destroy(); }catch(_){} joinSlot(g); }
-      else if(!isHost) retry(); });
-  }
-  function joinSlot(g){
-    if(closed) return; gen=g; const my=++attempt; let ok=false; const p=peer=new Peer({debug:0});
-    setTimeout(()=>{ if(my===attempt && !ok) nextSlot(g); },7000);   // slot taken but nobody answers: it's dead, move up
-    p.on('open',()=>{ if(my!==attempt) return;
-      const c=hostConn=p.connect(slotId(g),{serialization:'json',reliable:false});
-      c.on('open',()=>{ if(my!==attempt) return; ok=true; hostLast=Date.now(); c.send({t:'p',p:mine}); online(); });
-      c.on('data',d=>{ if(my!==attempt||!d) return; hostLast=Date.now();
-        if(d.t==='p') upsert(d.id,d.p); else if(d.t==='x') remove(d.id);
-        else if(d.t==='m' && Number.isInteger(d.g) && d.g>=0 && d.g<g){ reset(); joinSlot(d.g); } });
-      c.on('close',()=>{ if(my===attempt) retry(); });
-    });
-    p.on('error',e=>{ if(my!==attempt) return; if(e.type==='peer-unavailable') nextSlot(g); else retry(); });
-  }
-  // a host on a higher slot checks the lower ones; if one has a live host, everyone moves there
-  function probeLower(){
-    if(!isHost || gen===0 || probing || closed) return; probing=true; const my=attempt, target=gen-1;
-    const pr=new Peer({debug:0}); let done=false; const end=()=>{ if(done) return; done=true; probing=false; try{ pr.destroy(); }catch(e){} };
-    setTimeout(end,6000);
-    pr.on('open',()=>{ const c=pr.connect(slotId(target),{serialization:'json'});
-      c.on('open',()=>{ end(); if(my!==attempt||!isHost) return; for(const o of conns.values()) if(o.open) o.send({t:'m',g:target}); setTimeout(()=>{ if(my===attempt){ reset(); joinSlot(target); } },300); }); });
-    pr.on('error',end);
-  }
-  // heartbeat: timers keep running in background tabs, so a peer that goes quiet for 8 s is gone
-  let beat=0;
-  const hb=setInterval(()=>{
-    if(closed){ clearInterval(hb); return; } const now=Date.now(); beat++;
-    if(isHost){ for(const [id,c] of conns){ if(c.open) c.send({t:'h'}); if(now-(lastSeen.get(id)||0)>8000) dropConn(id); } if(beat%10===0) probeLower(); }
-    else if(hostConn && hostConn.open){ hostConn.send({t:'h'}); if(now-hostLast>8000) retry(); }
-  },1000);
-  tryHost(0);
+  const clients=BROKERS.map((url,i)=>{
+    const c=mqtt.connect(url,{clientId:'op'+me+i, keepalive:20, reconnectPeriod:2500, connectTimeout:8000, clean:true,
+      will:{topic:base+'x/'+me, payload:'1', qos:0, retain:false}});
+    c.on('connect',()=>{ c.subscribe(base+'+/+',{qos:0}); status(); });
+    c.on('close',status); c.on('offline',status); c.on('error',()=>{}); c.on('message',onMsg);
+    return c;
+  });
+  // anyone silent for 6 s has left (closed the tab, lost signal, or switched apps)
+  const sweep=setInterval(()=>{ if(closed){ clearInterval(sweep); return; } const now=Date.now();
+    for(const [id,p] of peers) if(now-p.updatedAt>6000) remove(id); status(); },1000);
+  status();
   return {
     code,
-    presence:async patch=>{ mine=Object.assign({},mine,patch);
-      if(isHost){ const m={t:'p',id:peer.id,p:mine}; for(const c of conns.values()) if(c.open) c.send(m); }
-      else if(hostConn && hostConn.open) hostConn.send({t:'p',p:mine}); },
+    presence:async patch=>{ mine=Object.assign({},mine,patch); const msg=JSON.stringify({q:++seq,p:mine});
+      for(const c of clients) if(c.connected) c.publish(base+'p/'+me,msg,{qos:0}); },
     onPeers:h=>{ hs.push(h); return ()=>{}; },
-    info:()=>({slot:gen,host:isHost,id:peer&&peer.id,conns:conns.size,riders:[...peers.keys()],linked:!!(isHost||(hostConn&&hostConn.open))}),
-    leave(){ closed=true; clearInterval(hb); reset(); }
+    info:()=>({id:me,relays:clients.map((c,i)=>BROKERS[i].split('/')[2]+':'+(c.connected?'up':'down')),riders:[...peers.keys()]}),
+    leave(){ if(closed) return; for(const c of clients){ try{ if(c.connected) c.publish(base+'x/'+me,'1'); c.end(false); }catch(e){} } closed=true; clearInterval(sweep); for(const id of [...peers.keys()]) remove(id); }
   };
 }
+let netToastT=0;
+function netToast(msg){ const el=$('netToast'); if(!el) return; el.textContent=msg; el.classList.add('on'); clearTimeout(netToastT); netToastT=setTimeout(()=>el.classList.remove('on'),3200); }
 function cleanCode(v){ return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6); }
 function inviteLink(code){ return location.origin+location.pathname+'#'+code; }
 function joinRoom(code){
   code=cleanCode(code); if(code.length<3){ NET.status='Room codes are 3 to 6 letters or numbers.'; renderNetList(); return; }
-  if(typeof Peer!=='function'){ NET.status='Could not load the multiplayer library. Check your connection and reload.'; renderNetList(); return; }
+  if(typeof mqtt!=='object'&&typeof mqtt!=='function'){ NET.status='Could not load the multiplayer library. Check your connection and reload.'; renderNetList(); return; }
   if(NET.room){ NET.room.leave(); for(const k of [...NET.peers.keys()]) dropRemote(k); }
   NET.code=code; $('mpCode').value=code; $('mpCopy').hidden=false;
   try{ history.replaceState(null,'','#'+code); }catch(e){}
   const room=peerRoom(code); NET.room=room; window.__vhnet=()=>NET.room&&NET.room.info&&NET.room.info();
   room.onPeers(ch=>{
-    for(const p of ch.left) dropRemote(p.peer);
-    for(const p of ch.joined) ingest(p);
+    for(const p of ch.left){ const r=NET.peers.get(p.peer); if(r) netToast(nameFor(r)+' left the room'); dropRemote(p.peer); }
+    for(const p of ch.joined){ ingest(p); const r=NET.peers.get(p.peer); if(r) netToast(nameFor(r)+' is in the room with you'); renderNetList(); }
     for(const p of ch.updated) ingest(p);
   });
   renderNetList();
@@ -1782,6 +1754,8 @@ function joinRoom(code){
     try{ await navigator.clipboard.writeText(link); ok=true; }catch(e){}
     $('mpCopy').textContent= ok ? 'Link copied!' : link; setTimeout(()=>{ $('mpCopy').textContent='Copy invite link'; },2500); });
   const h=cleanCode(location.hash.slice(1)); if(h.length>=3) joinRoom(h);
+  window.addEventListener('pagehide',()=>{ if(NET.room) NET.room.leave(); });
+  window.addEventListener('pageshow',e=>{ if(e.persisted && NET.code) joinRoom(NET.code); });
   window.addEventListener('hashchange',()=>{ const c=cleanCode(location.hash.slice(1)); if(c.length>=3 && c!==NET.code) joinRoom(c); });
 })();
 
