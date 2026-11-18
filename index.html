@@ -36,7 +36,11 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
 
 /* HUD */
 .hud-tl{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));display:grid;gap:6px;pointer-events:none}
-.nettag{position:fixed;left:0;top:0;transform:translate(-50%,-100%);font-weight:700;font-size:12px;line-height:1.2;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.75);white-space:nowrap;pointer-events:none;text-align:center;z-index:5}
+.nettag{position:fixed;left:0;top:0;transform:translate(-50%,-100%);display:grid;justify-items:center;gap:1px;padding:4px 10px 5px;border-radius:10px;background:rgba(6,17,42,.62);border:1px solid var(--tc,#fff);color:#fff;font-weight:700;font-size:13px;line-height:1.15;white-space:nowrap;pointer-events:none;text-align:center;z-index:5;backdrop-filter:blur(4px)}
+.nettag span{color:var(--tc,#fff)}
+.nettag small{font-size:10px;font-weight:600;opacity:.8}
+.nettag::after{content:'';position:absolute;left:50%;bottom:-6px;margin-left:-5px;border:5px solid transparent;border-top-color:var(--tc,#fff);border-bottom:0}
+.nettag.edge::after{display:none}
 .nettag small{display:block;font-weight:600;opacity:.8;font-variant-numeric:tabular-nums}
 .netlist{font-size:12px;line-height:1.5;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,.6);font-variant-numeric:tabular-nums}
 .netlist .netlive{font-size:10px;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
@@ -44,6 +48,21 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
 .netnote{font-size:13px;opacity:.85;margin:0}
 .nettoast{position:fixed;left:50%;top:calc(52px + env(safe-area-inset-top,0px));transform:translate(-50%,-6px);padding:8px 16px;border-radius:999px;background:var(--glass);border:1px solid var(--line);font:600 14px var(--body);color:var(--ink);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:20;white-space:nowrap;backdrop-filter:blur(6px)}
 .nettoast.on{opacity:1;transform:translate(-50%,0)}
+.chatlog{display:grid;gap:3px;font-size:13px;line-height:1.35}
+.chatlog p{margin:0;overflow-wrap:anywhere}
+.chatlog b{font-weight:700;margin-right:6px}
+.chatlog .sys{opacity:.7;font-style:italic}
+.chatform{display:flex;gap:8px}
+.chatform input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.3);color:var(--ink);font:500 14px var(--body);outline:none;-webkit-user-select:text;user-select:text}
+.chatform input:focus{border-color:var(--ink)}
+.lobbychat{display:grid;gap:8px}
+.lobbychat .chatlog{max-height:120px;overflow-y:auto}
+.gamechat{position:fixed;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:min(360px,70vw);display:grid;gap:6px;pointer-events:none;z-index:6}
+body.touch .gamechat{top:calc(120px + env(safe-area-inset-top,0px));bottom:auto}
+.gamechat .chatlog p{background:rgba(6,17,42,.55);padding:3px 9px;border-radius:9px;justify-self:start;text-shadow:0 1px 3px rgba(0,0,0,.6);transition:opacity .6s}
+.gamechat .chatlog p.old{opacity:0}
+.gamechat.open .chatlog p.old{opacity:1}
+.gamechat .chatform{pointer-events:auto}
 .mp{display:grid;gap:10px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--glass);max-width:760px}
 .mp h3{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
 .mprow{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
@@ -66,6 +85,16 @@ button:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
 .lbl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .stat.low b{color:var(--rose);animation:pulse 1s infinite}
 @keyframes pulse{50%{opacity:.45}}
+.speedo{position:fixed;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:118px;height:118px;display:grid;place-items:center;align-content:center;pointer-events:none;border-radius:50%;background:radial-gradient(circle,rgba(6,17,42,.62) 55%,rgba(6,17,42,0) 72%)}
+.speedo svg{position:absolute;inset:0;width:100%;height:100%}
+.speedo path{fill:none;stroke-width:8;stroke-linecap:round}
+.speedo .trk{stroke:rgba(210,228,255,.16)}
+.speedo .arc{stroke:var(--rose);stroke-dasharray:226;stroke-dashoffset:226;transition:stroke .3s}
+.speedo.fast .arc{stroke:#bfe6ff;filter:drop-shadow(0 0 6px rgba(67,184,255,.8))}
+.speedo b{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;font-variant-numeric:tabular-nums;margin-top:6px}
+.speedo span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+body.touch .speedo{bottom:calc(150px + env(safe-area-inset-bottom,0px));width:96px;height:96px}
+body.touch .speedo b{font-size:24px}
 .icon-btns{position:fixed;top:calc(74px + env(safe-area-inset-top,0px));right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:8px}
 .icon-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--glass);font-size:13px;font-weight:600;backdrop-filter:blur(6px)}
 .toast{position:fixed;left:0;right:0;top:calc(16px + env(safe-area-inset-top,0px));text-align:center;pointer-events:none;opacity:0;font-family:var(--display);font-weight:800;font-size:clamp(13px,2.4vw,17px);letter-spacing:.2em;color:var(--mint)}
@@ -152,16 +181,21 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
     <div class="netlist" id="netList" hidden></div>
   </div>
   <div class="hud-tr">
-    <div class="stat"><span class="lbl">km/h</span><b id="spd">0</b></div>
-    <div class="stat" id="timeStat"><span class="lbl" id="timeLbl">Light left</span><b id="time">2:30</b></div>
+    <div class="stat" id="timeStat"><span class="lbl" id="timeLbl">Riding</span><b id="time">0:00</b></div>
+  </div>
+  <div class="speedo" id="speedo" aria-label="Speed">
+    <svg viewBox="0 0 120 120" aria-hidden="true"><path class="trk" d="M22 94 A48 48 0 1 1 98 94"/><path class="arc" id="spdArc" d="M22 94 A48 48 0 1 1 98 94"/></svg>
+    <b id="spd">0</b><span>km/h</span>
   </div>
   <div class="icon-btns">
+    <button class="icon-btn" id="chatBtn" aria-label="Chat" hidden>💬</button>
     <button class="icon-btn" id="viewBtn" aria-label="Change camera distance">⤢</button>
     <button class="icon-btn" id="muteBtn" aria-label="Mute sound">♪</button>
     <button class="icon-btn" id="pauseBtn" aria-label="Pause">II</button>
   </div>
   <div class="toast" id="toast">CHECKPOINT</div>
   <div class="nettoast" id="netToast" aria-live="polite"></div>
+  <div class="gamechat" id="gameChat" hidden><div class="chatlog" id="gameLog" aria-live="polite"></div><form class="chatform" id="gameForm" autocomplete="off" hidden><input id="gameIn" maxlength="140" placeholder="Chat (Enter to send, Esc to close)" enterkeyhint="send"></form></div>
   <div class="charge" id="charge"><i id="chargeBar"></i></div>
   <div class="live" id="live"><span class="deg" id="liveDeg"></span><span class="sub" id="liveSub"></span></div>
   <div class="trick" id="trick"><div class="trick-name" id="trickName"></div><div class="trick-pts" id="trickPts"></div></div>
@@ -177,9 +211,9 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
 
 <div class="screen" id="title">
   <div class="card">
-    <div class="eyebrow">Backcountry powder · 2½ minutes of daylight</div>
+    <div class="eyebrow">Backcountry powder · free ski, no time limit</div>
     <h1>Off<br>Piste</h1>
-    <p class="lede">The sun is going down behind the ridge. Carve through deep powder, sink into a crouch and spring off kickers, slide the rails, and stomp spins, flips and grabs. Chain tricks to stack your multiplier. Bail and you restart at the last checkpoint gate.</p>
+    <p class="lede">An endless backcountry run. Carve through deep powder, sink into a crouch and spring off kickers, slide the rails, and stomp spins, flips and grabs. Chain tricks to stack your multiplier. Bail and you restart at the last checkpoint gate.</p>
     <div class="controls">
       <div class="ctl"><h3>Keyboard</h3><dl>
         <dt><kbd>←</kbd><kbd>→</kbd></dt><dd>Carve · spin in air</dd>
@@ -214,11 +248,16 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
         <button class="ghost" id="mpNew">New room</button>
         <button class="ghost" id="mpCopy" hidden>Copy invite link</button>
       </div>
+      <div class="lobbychat" id="lobbyChat" hidden>
+        <div class="chatlog" id="lobbyLog"></div>
+        <form class="chatform" id="lobbyForm" autocomplete="off"><input id="lobbyIn" maxlength="140" placeholder="Say something to your room…" enterkeyhint="send"><button class="ghost" type="submit">Send</button></form>
+      </div>
       <p class="netnote" id="netNote">Playing solo. Make a room and send friends the invite link.</p>
     </div>
     <div class="row">
       <button class="go" id="startBtn">Drop in</button>
       <button class="ghost assistBtn" aria-pressed="true">Landing assist: On</button>
+      <button class="ghost outfitBtn">Outfit</button>
       <button class="ghost lightBtn">Lighting: Midnight</button>
       <button class="ghost weatherBtn">Weather: Light snow</button>
       <button class="ghost gfxBtn">Graphics: Auto</button>
@@ -233,7 +272,9 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
     <div class="row">
       <button class="go" id="resumeBtn">Resume</button>
       <button class="ghost" id="restartBtn">Restart run</button>
+      <button class="ghost" id="endBtn">End run</button>
       <button class="ghost assistBtn" aria-pressed="true">Landing assist: On</button>
+      <button class="ghost outfitBtn">Outfit</button>
       <button class="ghost lightBtn">Lighting: Midnight</button>
       <button class="ghost weatherBtn">Weather: Light snow</button>
       <button class="ghost gfxBtn">Graphics: Auto</button>
@@ -243,7 +284,7 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
 
 <div class="screen" id="results" hidden>
   <div class="card">
-    <div class="eyebrow">The sun is down</div>
+    <div class="eyebrow">Run complete</div>
     <div class="bigscore" id="resScore">0</div>
     <div class="newbest" id="newBest" hidden>New best run</div>
     <div class="results">
@@ -278,6 +319,7 @@ const wrap = a=>mod(a+Math.PI,TAU)-Math.PI;
 const fmt = n=>Math.round(n).toLocaleString('en-US');
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isTouch = ('ontouchstart' in window) || matchMedia('(pointer: coarse)').matches;
+if(isTouch) document.body.classList.add('touch');
 const RUN_TIME = 150;
 const G = 14, SLOPE = 0.32, G_SLIDE = 7.8;
 const L = h => new THREE.Color(h).convertSRGBToLinear();
@@ -298,7 +340,7 @@ function syncSky(){
   PAL=LIGHTS[LIGHT]; document.documentElement.dataset.light=LIGHT;
   document.querySelectorAll('.lightBtn').forEach(b=>b.textContent='Lighting: '+LIGHTS[LIGHT].name);
   document.querySelectorAll('.weatherBtn').forEach(b=>b.textContent='Weather: '+WEATHERS[WEATHER].name);
-  $('timeLbl').textContent=LIGHTS[LIGHT].timeLabel;
+  $('timeLbl').textContent='Riding';
   try{ localStorage.setItem('off-piste-light',LIGHT); localStorage.setItem('violet-hour-weather',WEATHER); }catch(e){}
 }
 const cycle=(obj,cur)=>{ const k=Object.keys(obj); return k[(k.indexOf(cur)+1)%k.length]; };
@@ -668,13 +710,81 @@ function limbGeo(len,r0,r1,bulge,seg,flat){
   const g=new THREE.LatheGeometry(pts,seg||16); if(flat) g.scale(1,1,flat); g.computeVertexNormals(); return g;
 }
 function latheFrom(profile,seg,sx,sz){ const g=new THREE.LatheGeometry(profile.map(p=>new THREE.Vector2(p[0],p[1])),seg||24); g.scale(sx||1,1,sz||1); g.computeVertexNormals(); return g; }
+/* Fabric: small canvas textures give the clothes real material. Grey maps multiply the outfit colour,
+   normal maps carry the quilting, seams and weave so the light catches them. */
+function fabricTex(kind){
+  const N=256, hc=new Float32Array(N*N), c=document.createElement('canvas'); c.width=c.height=N;
+  const g=c.getContext('2d'), img=g.createImageData(N,N), nimg=g.createImageData(N,N);
+  let seed=kind.length*977; const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
+  const noise=new Float32Array(N*N); for(let i=0;i<N*N;i++) noise[i]=rnd();
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+    let h=0, ao=1; const u=x/N, v=y/N, n=noise[y*N+x];
+    if(kind==='puffer'){        // quilted channels running around the body, stitched between, fine ripstop on top
+      const f=(v*7)%1, puff=Math.pow(Math.sin(Math.PI*f),0.55);
+      h=puff*0.9+n*0.05+((x%16<1||y%16<1)?-0.04:0);
+      ao=0.62+0.38*puff; if(f<0.035||f>0.965) ao*=0.7;
+    } else if(kind==='twill'){  // diagonal weave for the pants, with a seam down the side
+      h=0.5+0.5*Math.sin((x+y)*0.9)+n*0.25; ao=0.9+0.1*h;
+      const sd=Math.abs(u-0.5); if(sd<0.012){ h=-0.6; ao=0.72; } else if(sd<0.03){ h+=0.4; }
+    } else if(kind==='shell'){  // smooth hard-shell with a faint grid and two stitched panel lines
+      h=n*0.12+((x%32<1||y%32<1)?-0.08:0); ao=0.95+n*0.05;
+      for(const sv of [0.3,0.72]) if(Math.abs(v-sv)<0.008){ h=-0.7; ao=0.75; }
+    } else {                    // knit for the neck gaiter and cuffs
+      h=0.5+0.5*Math.sin(x*1.6)*Math.sin(y*0.8)+n*0.2; ao=0.85+0.15*h;
+    }
+    hc[y*N+x]=h; const a=Math.round(255*Math.max(0,Math.min(1,ao))), i=(y*N+x)*4;
+    img.data[i]=img.data[i+1]=img.data[i+2]=a; img.data[i+3]=255;
+  }
+  const st=kind==='puffer'?2.6:kind==='twill'?1.4:kind==='shell'?1.2:1.8;
+  for(let y=0;y<N;y++) for(let x=0;x<N;x++){
+    const hx=hc[y*N+(x+1)%N]-hc[y*N+(x+N-1)%N], hy=hc[((y+1)%N)*N+x]-hc[((y+N-1)%N)*N+x];
+    let nx=-hx*st, ny=-hy*st, nz=1; const l=Math.hypot(nx,ny,nz); nx/=l; ny/=l; nz/=l; const i=(y*N+x)*4;
+    nimg.data[i]=(nx*0.5+0.5)*255; nimg.data[i+1]=(ny*0.5+0.5)*255; nimg.data[i+2]=(nz*0.5+0.5)*255; nimg.data[i+3]=255;
+  }
+  const mk=d=>{ const cc=document.createElement('canvas'); cc.width=cc.height=N; cc.getContext('2d').putImageData(d,0,0);
+    const t=new THREE.CanvasTexture(cc); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.anisotropy=4; return t; };
+  const map=mk(img); map.encoding=THREE.sRGBEncoding;
+  return {map, normalMap:mk(nimg)};
+}
+const FAB={puffer:fabricTex('puffer'), twill:fabricTex('twill'), shell:fabricTex('shell'), knit:fabricTex('knit')};
+FAB.knit.map.repeat.set(3,3); FAB.knit.normalMap.repeat.set(3,3);
+// goggle lens: a mirrored gradient that reads as a reflective lens from any angle
+const lensTex=(()=>{ const c=document.createElement('canvas'); c.width=4; c.height=128; const g=c.getContext('2d'), gr=g.createLinearGradient(0,0,0,128);
+  gr.addColorStop(0,'#2a0b3a'); gr.addColorStop(0.45,'#ff5a8a'); gr.addColorStop(0.62,'#ffd36a'); gr.addColorStop(1,'#3a1a10');
+  g.fillStyle=gr; g.fillRect(0,0,4,128); const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; return t; })();
+// outfits: jacket, contrast panels, pants, helmet, lens tint, gloves
+const OUTFITS=[
+  {name:'Glacier', jacket:0x2f7de1, accent:0xeef2f7, pants:0x1d2433, helmet:0x1b1e26, lens:0x7fd8ff, glove:0x15171c},
+  {name:'Ember',   jacket:0xe5562b, accent:0x26221f, pants:0x3a3f47, helmet:0xf2f0ea, lens:0xffc04a, glove:0x1d1a18},
+  {name:'Moss',    jacket:0x58743a, accent:0xd8c8a0, pants:0x2b2a25, helmet:0xd8c8a0, lens:0xff8a3a, glove:0x2b2a25},
+  {name:'Orchid',  jacket:0xd93a72, accent:0x2a2346, pants:0x2a2738, helmet:0xeeeaf4, lens:0xff8a3a, glove:0x17161c},
+  {name:'Mono',    jacket:0xefeee9, accent:0x16171a, pants:0x16171a, helmet:0x16171a, lens:0xff5a8a, glove:0x16171a},
+  {name:'Citrus',  jacket:0xf2c21b, accent:0x1b2a4a, pants:0x1b2a4a, helmet:0xf4f4f0, lens:0x6fd3ff, glove:0x1b2a4a},
+  {name:'Arctic',  jacket:0x9fd4e6, accent:0x2c3e50, pants:0xe9ecef, helmet:0x2c3e50, lens:0xffb86a, glove:0x2c3e50},
+  {name:'Night',   jacket:0x22252e, accent:0xff6b2b, pants:0x22252e, helmet:0x22252e, lens:0x7fd8ff, glove:0x101114}
+];
+const OUTFIT={i:0};
+try{ const o=localStorage.getItem('off-piste-outfit'); OUTFIT.i = o!==null && OUTFITS[+o] ? +o : Math.floor(Math.random()*OUTFITS.length); }catch(e){ OUTFIT.i=Math.floor(Math.random()*OUTFITS.length); }
+// paint a set of slot materials with an outfit
+function paintOutfit(mats,i){ const o=OUTFITS[i]||OUTFITS[0];
+  for(const k of ['jacket','accent','pants','helmet','glove']) if(mats[k]) mats[k].color.copy(L(o[k]));
+  if(mats.pack) mats.pack.color.copy(L(o.glove)).lerp(L(o.pants),0.5);
+  if(mats.gaiter) mats.gaiter.color.copy(L(o.glove)).lerp(L(o.accent),0.12);
+  if(mats.lens){ mats.lens.color.copy(L(0xffffff)); mats.lens.emissive.copy(L(o.lens)).multiplyScalar(0.35); }
+}
 const R = (function(){
   const rider=new THREE.Group(), orient=new THREE.Group(); orient.rotation.order='YXZ'; rider.add(orient);
   const body=new THREE.Group(); body.position.y=-0.7; orient.add(body);  // rotate around the centre of mass
   const M=(c,r,m,e)=>new THREE.MeshStandardMaterial({color:L(c),roughness:r,metalness:m||0,emissive:L(e||0)});
-  const jacketM=M(0xd93a72,0.66), accentM=M(0x2a2346,0.75), pantsM=M(0x2a2738,0.88), helmetM=M(0xeeeaf4,0.3), lensM=M(0xff8a3a,0.08,0.7,0x3a1200),
-        frameM=M(0x121016,0.5), gloveM=M(0x17161c,0.85), bootM=M(0x2b2d3a,0.35,0.1), bootAcc=M(0xf0a24f,0.4), skiTop=M(0xf0a24f,0.32,0.1), skiEdge=M(0x16141b,0.4,0.3),
-        bindM=M(0x9aa0ad,0.35,0.6), poleM=M(0x2c2c33,0.3,0.6), packM=M(0x3a3352,0.85), gaiterM=M(0x2a2346,0.95);
+  const F=(c,r,fab,rep,slot)=>{ const m=new THREE.MeshStandardMaterial({color:L(c),roughness:r,map:fab.map,normalMap:fab.normalMap});
+    m.normalScale.set(1,1); m.userData.slot=slot; m.userData.rep=rep; return m; };
+  const jacketM=F(0xd93a72,0.78,FAB.puffer,null,'jacket'), accentM=F(0x2a2346,0.7,FAB.shell,null,'accent'), pantsM=F(0x2a2738,0.9,FAB.twill,null,'pants'),
+        helmetM=Object.assign(M(0xeeeaf4,0.42),{}), lensM=new THREE.MeshStandardMaterial({color:0xffffff,map:lensTex,roughness:0.12,metalness:0.55,emissive:L(0xff8a3a).multiplyScalar(0.35),emissiveMap:lensTex}),
+        frameM=M(0x121016,0.5), gloveM=F(0x17161c,0.85,FAB.shell,null,'glove'), bootM=M(0x2b2d3a,0.35,0.1), bootAcc=M(0xf0a24f,0.4), skiTop=M(0xf0a24f,0.32,0.1), skiEdge=M(0x16141b,0.4,0.3),
+        bindM=M(0x9aa0ad,0.35,0.6), poleM=M(0x2c2c33,0.3,0.6), packM=F(0x3a3352,0.85,FAB.shell,null,'pack'), gaiterM=F(0x2a2346,0.95,FAB.knit,null,'gaiter'),
+        zipM=M(0xc9ced6,0.3,0.8), reflM=new THREE.MeshStandardMaterial({color:L(0xd8dde4),roughness:0.25,metalness:0.6,emissive:L(0x2a2e35)});
+  helmetM.userData.slot='helmet'; lensM.userData.slot='lens'; reflM.userData.slot='refl';
+  const SLOTS={jacket:jacketM,accent:accentM,pants:pantsM,helmet:helmetM,lens:lensM,glove:gloveM,pack:packM,gaiter:gaiterM};
   const add=(m,parent)=>{ m.castShadow=true; (parent||body).add(m); return m; };
   const limb=(len,r0,r1,bulge,mat,flat)=>{ const m=new THREE.Mesh(limbGeo(len,r0,r1,bulge,16,flat),mat); m.userData.len=len; return add(m); };
 
@@ -711,33 +821,54 @@ const R = (function(){
   add(new THREE.Mesh(jacket,jacketM),torsoF);
   const hemG=latheFrom([[0.197,-0.16],[0.2,-0.13],[0.196,-0.1],[0.19,-0.1]],28,1.12,0.68); add(new THREE.Mesh(hemG,accentM),torsoF);
   const yoke=latheFrom([[0.208,0.3],[0.212,0.36],[0.206,0.43],[0.176,0.5],[0.17,0.49],[0.2,0.42],[0.205,0.36],[0.2,0.3]],28,1.12,0.68); add(new THREE.Mesh(yoke,accentM),torsoF);
-  add(new THREE.Mesh(new THREE.BoxGeometry(0.014,0.5,0.01),accentM),torsoF).position.set(0,0.2,-0.142);
+  add(new THREE.Mesh(new THREE.BoxGeometry(0.016,0.62,0.012),zipM),torsoF).position.set(0,0.24,-0.146);
+  add(new THREE.Mesh(new THREE.BoxGeometry(0.03,0.05,0.012),zipM),torsoF).position.set(0,0.52,-0.128);
+  { const pk=add(new THREE.Mesh(new THREE.BoxGeometry(0.11,0.09,0.02),accentM),torsoF); pk.position.set(0.1,0.36,-0.138); pk.rotation.y=-0.32;
+    add(new THREE.Mesh(new THREE.BoxGeometry(0.1,0.006,0.008),zipM),torsoF).position.set(0.1,0.405,-0.15); }
+  for(const sx of [-1,1]){ const hp=add(new THREE.Mesh(new THREE.BoxGeometry(0.13,0.11,0.025),jacketM),torsoF); hp.position.set(sx*0.15,-0.05,-0.115); hp.rotation.y=sx*0.55;
+    const pf=add(new THREE.Mesh(new THREE.BoxGeometry(0.13,0.018,0.03),accentM),torsoF); pf.position.set(sx*0.15,0.012,-0.12); pf.rotation.y=sx*0.55; }
+  { const hood=new THREE.Mesh(new THREE.TorusGeometry(0.115,0.05,10,22,Math.PI*1.25),jacketM); hood.rotation.set(Math.PI/2,0,-Math.PI*0.125+Math.PI); hood.scale.set(1.05,1,0.8);
+    add(hood,torsoF).position.set(0,0.555,0.035); }
+  add(new THREE.Mesh(latheFrom([[0.214,0.255],[0.217,0.27],[0.214,0.285]],28,1.12,0.68),reflM),torsoF);
   // backpack with straps
   const pack=new THREE.Mesh(limbGeo(0.3,0.12,0.11,0.01,16,0.55),packM); add(pack,torsoF).position.set(0,0.1,0.18);
   for(const s of [-1,1]){ const st=new THREE.Mesh(new THREE.BoxGeometry(0.035,0.42,0.012),packM); st.rotation.x=0.12; add(st,torsoF).position.set(s*0.1,0.27,-0.14); }
   // collar / neck gaiter
-  add(new THREE.Mesh(latheFrom([[0.09,0],[0.095,0.05],[0.085,0.1],[0,0.1]],18,1,0.95),gaiterM),torsoF).position.y=0.56;
+  add(new THREE.Mesh(latheFrom([[0.105,0],[0.122,0.03],[0.118,0.06],[0.098,0.075],[0,0.075]],22,1.05,0.95),jacketM),torsoF).position.y=0.54;
   const head=new THREE.Group(); head.rotation.order='YXZ'; head.position.y=0.63; torsoF.add(head);
   // helmet shell with a lip, vents, goggles with frame and strap
-  const helmetG=latheFrom([[0.12,0.09],[0.128,0.075],[0.14,0.085],[0.142,0.13],[0.135,0.19],[0.11,0.24],[0.06,0.265],[0,0.27]],24,1,1.14);
-  add(new THREE.Mesh(helmetG,helmetM),head);
-  for(const s of [-1,0,1]){ const v=new THREE.Mesh(new THREE.BoxGeometry(0.018,0.008,0.1),frameM); v.position.set(s*0.045,0.262,0.01); add(v,head); }
-  add(new THREE.Mesh(latheFrom([[0.095,-0.04],[0.1,0.02],[0.092,0.08],[0,0.08]],18,1,1.05),gaiterM),head).position.y=0.0;
-  const frame=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,0.085,24,1,true,Math.PI*0.6,Math.PI*0.8),frameM); frame.material.side=THREE.DoubleSide; frame.scale.z=1.12; add(frame,head).position.y=0.13;
-  const lens=new THREE.Mesh(new THREE.CylinderGeometry(0.153,0.153,0.066,24,1,true,Math.PI*0.64,Math.PI*0.72),lensM); lens.material.side=THREE.DoubleSide; lens.scale.z=1.12; add(lens,head).position.y=0.13;
-  const strap=new THREE.Mesh(new THREE.CylinderGeometry(0.145,0.145,0.03,24,1,true,-Math.PI*0.42,Math.PI*0.84),frameM); strap.material.side=THREE.DoubleSide; strap.scale.z=1.12; add(strap,head).position.y=0.13;
+  // rounded head: knit balaclava under a domed helmet, goggles curve round the front, strap round the back
+  const HC=0.115, sph=(r,ps,pl,ts,tl,ws,hs)=>new THREE.SphereGeometry(r,ws||28,hs||14,ps,pl,ts,tl);
+  { const bal=new THREE.Mesh(sph(0.112,0,Math.PI*2,0,Math.PI,24,18),gaiterM); bal.scale.set(0.95,1.0,1.02); add(bal,head).position.y=HC-0.005; }
+  { const hm=new THREE.Mesh(sph(0.142,0,Math.PI*2,0,Math.PI*0.6),helmetM); hm.scale.set(1,0.98,1.12); add(hm,head).position.y=HC; }
+  for(const s of [-1,0,1]){ const v=new THREE.Mesh(new THREE.BoxGeometry(0.016,0.01,0.09),frameM); v.position.set(s*0.042,HC+0.135,0.015); add(v,head); }
+  { const st=new THREE.Mesh(sph(0.1445,Math.PI*0.5-0.05,0.1,0,Math.PI*0.5,4,12),accentM); st.scale.set(1,0.98,1.12); add(st,head).position.y=HC;
+    const st2=st.clone(); st2.rotation.y=Math.PI; add(st2,head); }
+  const frame=new THREE.Mesh(sph(0.15,Math.PI*1.1,Math.PI*0.8,Math.PI*0.39,Math.PI*0.17),frameM); frame.material.side=THREE.DoubleSide; frame.scale.set(1,1,1.12); add(frame,head).position.y=HC;
+  const lens=new THREE.Mesh(sph(0.153,Math.PI*1.15,Math.PI*0.7,Math.PI*0.41,Math.PI*0.13),lensM); lens.scale.set(1,1,1.12); add(lens,head).position.y=HC;
+  const strap=new THREE.Mesh(sph(0.146,-Math.PI*0.12,Math.PI*1.24,Math.PI*0.42,Math.PI*0.1),frameM); strap.material.side=THREE.DoubleSide; strap.scale.set(1,1,1.12); add(strap,head).position.y=HC;
+  add(new THREE.Mesh(new THREE.BoxGeometry(0.05,0.03,0.02),frameM),head).position.set(0,HC+0.04,0.162);
   // arms: puffy sleeves with cuffs, mittens, poles
   const arm=()=>({
     up:limb(0.29,0.074,0.06,0.01,jacketM), fo:limb(0.27,0.06,0.054,0.004,jacketM),
     cuff:(()=>{ const m=limb(0.035,0.056,0.056,0,accentM); return m; })(),
+    band:null,
     gl:(()=>{ const m=limb(0.1,0.05,0.042,0.006,gloveM,0.7); return m; })(),
     pole:(()=>{ const m=new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.011,1.18,6),poleM); m.geometry.translate(0,0.59,0); m.userData.len=1.18; add(m);
       const bk=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.01,10),poleM); bk.position.y=1.06; m.add(bk);
       const grip=new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.018,0.12,8),gloveM); grip.position.y=0.04; m.add(grip); return m; })()
   });
   const armL=arm(), armR=arm();
+  for(const a of [armL,armR]){ const b=new THREE.Mesh(limbGeo(0.025,0.077,0.077,0,16),reflM); b.position.y=0.17; b.castShadow=true; a.up.add(b);
+    const gt=new THREE.Mesh(limbGeo(0.05,0.062,0.07,0,14),gloveM); gt.position.y=-0.02; gt.castShadow=true; a.gl.add(gt); }
+  // pants: knee patches and a cargo pocket on each thigh
+  for(const [th,sh,sx] of [[thighL,shinL,-1],[thighR,shinR,1]]){
+    const kp=new THREE.Mesh(limbGeo(0.09,0.087,0.087,0,16,0.9),accentM); kp.position.y=-0.02; kp.scale.set(1,1,1); sh.add(kp);
+    const cp=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.13,0.1),pantsM); cp.position.set(sx*0.095,0.22,0); th.add(cp);
+    const cf=new THREE.Mesh(new THREE.BoxGeometry(0.034,0.025,0.104),accentM); cf.position.set(sx*0.097,0.29,0); th.add(cf); }
+  paintOutfit(SLOTS,OUTFIT.i);
   scene.add(rider);
-  return {rider,orient,body,skis,skiParts,ankles,thighL,thighR,shinL,shinR,torsoF,head,armL,armR};
+  return {rider,orient,body,skis,skiParts,ankles,thighL,thighR,shinL,shinR,torsoF,head,armL,armR,SLOTS};
 })();
 
 const _u=new THREE.Vector3(), _p=new THREE.Vector3();
@@ -1186,7 +1317,8 @@ function resetWorld(){
 }
 
 /* ---------- HUD helpers ---------- */
-const hudEls={score:$('score'),spd:$('spd'),time:$('time'),timeStat:$('timeStat'),comboBox:$('comboBox'),comboTxt:$('comboTxt'),comboBar:$('comboBar'),
+const SPD_ARC=226;
+const hudEls={speedo:$('speedo'),spdArc:$('spdArc'),score:$('score'),spd:$('spd'),time:$('time'),timeStat:$('timeStat'),comboBox:$('comboBox'),comboTxt:$('comboTxt'),comboBar:$('comboBar'),
   bank:$('bank'),live:$('live'),liveDeg:$('liveDeg'),liveSub:$('liveSub'),trick:$('trick'),trickName:$('trickName'),trickPts:$('trickPts'),
   toast:$('toast'),charge:$('charge'),chargeBar:$('chargeBar'),fade:$('fade')};
 const restart=(el,cls)=>{ el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
@@ -1511,7 +1643,7 @@ function updateCamera(dt,now){
   if(Math.abs(camera.fov-fov)>0.05){ camera.fov+=(fov-camera.fov)*Math.min(1,3*dt); camera.updateProjectionMatrix(); }
 }
 function updateEnvironment(){
-  const t=clamp(state==='title'?0.12:elapsed/RUN_TIME,0,1);
+  const t=0.22;   // free ski: the light holds instead of fading out
   palColor('top',t,skyU.uTop.value); palColor('mid',t,skyU.uMid.value); palColor('hor',t,skyU.uHor.value); palColor('sun',t,skyU.uSun.value);
   palColor('fog',t,scene.fog.color);
   palColor('hSky',t,hemi.color).convertSRGBToLinear(); palColor('hGnd',t,hemi.groundColor).convertSRGBToLinear(); palColor('sunL',t,sunLight.color).convertSRGBToLinear();
@@ -1535,8 +1667,10 @@ function updateEnvironment(){
 function updateHud(){
   const sp=Math.hypot(P.vx,P.vz)*3.6;
   setText('score',fmt(stats.score)); setText('spd',String(Math.round(sp)));
-  const left=Math.max(0,RUN_TIME-elapsed), m=Math.floor(left/60), s=Math.floor(left%60);
-  setText('time',m+':'+String(s).padStart(2,'0')); hudEls.timeStat.classList.toggle('low',left<=15);
+  const m=Math.floor(elapsed/60), s=Math.floor(elapsed%60);
+  setText('time',m+':'+String(s).padStart(2,'0'));
+  // speedometer: needle arc fills to 110 km/h
+  const f=Math.min(1,sp/110); if(Math.abs(f-(hudEls.lastSpd||0))>0.004){ hudEls.lastSpd=f; hudEls.spdArc.style.strokeDashoffset=String(SPD_ARC*(1-f)); hudEls.speedo.classList.toggle('fast',sp>=70); }
   if(combo.mult>0){ hudEls.comboBox.hidden=false; setText('comboTxt','×'+combo.mult+'  ·  '+fmt(combo.pts)); hudEls.comboBar.style.width=(combo.t/5*100)+'%'; }
   else hudEls.comboBox.hidden=true;
   const ch=P.charge/0.4;
@@ -1566,6 +1700,7 @@ $('againBtn').addEventListener('click',startRun);
 $('resumeBtn').addEventListener('click',resume);
 $('restartBtn').addEventListener('click',startRun);
 $('pauseBtn').addEventListener('click',pause);
+$('endBtn').addEventListener('click',()=>{ if(state==='paused') endRun(); });
 $('muteBtn').addEventListener('click',()=>{ initAudio(); setMuted(!muted); });
 
 /* ---------- Main loop ---------- */
@@ -1582,7 +1717,6 @@ function frame(now){
     passGates();
     generateUntil(P.z-340); recycleT+=rdt; if(recycleT>0.5){ recycleT=0; recycle(); }
     updateTerrain(false); updateHud();
-    if(elapsed>=RUN_TIME && !P.air && !P.grind) endRun();
     if(AC){ const sp=Math.hypot(P.vx,P.vz), t=AC.currentTime;
       windG.gain.setTargetAtTime(Math.min(0.32,sp/110+(P.air?0.05:0)),t,0.1); windF.frequency.setTargetAtTime(250+sp*28,t,0.1);
       carveG.gain.setTargetAtTime(P.air||P.grind||P.crash>0?0:Math.min(0.22,(P.slip*0.04+Math.abs(P.turn)*sp*0.004+(P.brake||0)*0.2)),t,0.05);
@@ -1615,20 +1749,23 @@ function peerColor(peer){ let h=0; for(let i=0;i<peer.length;i++) h=(h*31+peer.c
 const tagLayer=document.createElement('div'); document.body.appendChild(tagLayer);
 function makeRemote(peer){
   const g=R.rider.clone(true), list=[]; g.traverse(o=>list.push(o));
-  const col=peerColor(peer), jm=R.armL.up.material.clone(); jm.color.copy(L(col));
-  g.traverse(o=>{ if(o.isMesh && o.material===R.armL.up.material) o.material=jm; else if(o.isMesh && o.material===R.torsoF.children[0].material) o.material=jm; });
+  const col=peerColor(peer), mats={}; for(const k in R.SLOTS) mats[k]=R.SLOTS[k].clone();
+  g.traverse(o=>{ if(!o.isMesh || Array.isArray(o.material)) return; for(const k in R.SLOTS) if(o.material===R.SLOTS[k]){ o.material=mats[k]; break; } });
+  paintOutfit(mats, Math.abs((()=>{ let h=0; for(let i=0;i<peer.length;i++) h=(h*31+peer.charCodeAt(i))|0; return h; })())%OUTFITS.length);
+  const jm=mats.jacket;
   g.visible=false; scene.add(g);
   const tag=document.createElement('div'); tag.className='nettag'; tag.hidden=true;
   const nm=document.createElement('span'), sc=document.createElement('small'); tag.append(nm,sc); tagLayer.appendChild(tag);
-  return {peer,g,nodes:poseIdx.map(i=>list[i]),jm,col,buf:[],lastK:null,score:0,by:null,tag,nm,sc,seen:0};
+  return {peer,g,nodes:poseIdx.map(i=>list[i]),jm,mats,outfit:-1,col,buf:[],lastK:null,score:0,by:null,tag,nm,sc,seen:0};
 }
-function dropRemote(peer){ const r=NET.peers.get(peer); if(!r) return; scene.remove(r.g); r.jm.dispose(); r.tag.remove(); NET.peers.delete(peer); }
+function dropRemote(peer){ const r=NET.peers.get(peer); if(!r) return; scene.remove(r.g); for(const k in r.mats) r.mats[k].dispose(); r.tag.remove(); NET.peers.delete(peer); }
 function validPose(k){ if(!Array.isArray(k)||k.length!==POSE_LEN) return false; for(let i=0;i<k.length;i++){ const v=k[i]; if(typeof v!=='number'||!isFinite(v)||Math.abs(v)>1e6) return false; } return true; }
 function nameFor(r){ return r.name || 'Rider'; }
 const cleanName=v=>String(v||'').replace(/[^\p{L}\p{N} _.'-]/gu,'').trim().slice(0,16);
 function ingest(p){
   const pres=p.presence||{}; let r=NET.peers.get(p.peer);
   if(!r){ r=makeRemote(p.peer); NET.peers.set(p.peer,r); }
+  if(Number.isInteger(pres.o) && pres.o>=0 && pres.o<OUTFITS.length && pres.o!==r.outfit){ r.outfit=pres.o; paintOutfit(r.mats,pres.o); { const o=OUTFITS[pres.o], c=new THREE.Color(new THREE.Color(o.jacket).getLuminance()>0.12?o.jacket:o.accent); c.lerp(new THREE.Color(0xffffff),0.3); r.col=c.getHex(); } }
   r.name=cleanName(pres.n); r.st=pres.st!==0; r.score=Math.max(0,Math.min(1e9,Number(pres.s)||0));
   if(pres.k!==r.lastK && validPose(pres.k)){
     r.lastK=pres.k; const now=performance.now();
@@ -1651,11 +1788,17 @@ function applyRemote(r,now){
   // name tag over the rider's head
   tagV.set(r.g.position.x,r.g.position.y+1.3,r.g.position.z);
   const dist=tagV.distanceTo(camera.position); tagV.project(camera);
-  if(state==='title' || tagV.z>1 || dist>140 || Math.abs(tagV.x)>1.1 || Math.abs(tagV.y)>1.1){ r.tag.hidden=true; return; }
+  if(!r.g.visible || state==='title'){ r.tag.hidden=true; return; }
+  // tags show at any distance; someone off-screen or behind you gets a tag pinned to the screen edge, pointing their way
+  const behind=tagV.z>1; if(behind){ tagV.x=-tagV.x; tagV.y=-tagV.y; }
+  const kx=Math.abs(tagV.x)/0.9, ky=Math.abs(tagV.y)/0.8, edge=behind||kx>1||ky>1;
+  if(edge){ const k=Math.max(kx,ky,1e-3); tagV.x/=k; tagV.y/=k; if(behind && ky<kx*0.5) tagV.y=-0.8; }
   const rc=canvas.getBoundingClientRect();
-  r.tag.hidden=false; r.tag.style.transform=`translate(${(rc.left+(tagV.x*0.5+0.5)*rc.width).toFixed(1)}px,${(rc.top+(-tagV.y*0.5+0.5)*rc.height).toFixed(1)}px) translate(-50%,-100%)`;
-  r.tag.style.opacity=String(Math.max(0.35,1-dist/160)); r.tag.style.color='#'+new THREE.Color(r.col).getHexString();
-  r.nm.textContent=nameFor(r); r.sc.textContent=fmt(Math.round(r.score))+' pts · '+Math.round(dist)+' m';
+  r.tag.hidden=false; r.tag.classList.toggle('edge',edge);
+  r.tag.style.transform=`translate(${(rc.left+(tagV.x*0.5+0.5)*rc.width).toFixed(1)}px,${(rc.top+(-tagV.y*0.5+0.5)*rc.height).toFixed(1)}px) translate(-50%,-100%)`;
+  r.tag.style.opacity=edge?'0.9':String(Math.max(0.75,1-dist/400)); r.tag.style.setProperty('--tc','#'+new THREE.Color(r.col).getHexString());
+  const arrow=edge?(Math.abs(tagV.x)>Math.abs(tagV.y)*1.1?(tagV.x<0?'◀ ':'▶ '):(tagV.y<0||behind?'▼ ':'▲ ')):'';
+  r.nm.textContent=arrow+nameFor(r); r.sc.textContent=Math.round(dist)+' m · '+fmt(Math.round(r.score))+' pts';
 }
 function renderNetList(){
   const el=$('netList'), note=$('netNote'), n=NET.peers.size;
@@ -1672,7 +1815,7 @@ function netTick(rdt,now){
   if(!NET.room) return;
   for(const r of NET.peers.values()) applyRemote(r,now);
   NET.sendT+=rdt;
-  if(NET.sendT>=0.08){ NET.sendT=0; NET.room.presence({k:packPose(),s:Math.round(stats.score),n:myName(),st:state==='title'?0:1}).catch(()=>{}); }
+  if(NET.sendT>=0.08){ NET.sendT=0; NET.room.presence({k:packPose(),s:Math.round(stats.score),n:myName(),st:state==='title'?0:1,o:OUTFIT.i}).catch(()=>{}); }
   NET.listT+=rdt; if(NET.listT>0.5){ NET.listT=0; renderNetList(); }
 }
 
@@ -1688,7 +1831,7 @@ function peerRoom(code){
   const BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'];
   const me=(Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)).replace(/[^a-z0-9]/g,'');
   const base='offpiste/v1/'+code+'/';
-  const peers=new Map(), hs=[]; let mine={}, seq=0, closed=false;
+  const peers=new Map(), hs=[], chs=[], seenChat=new Map(); let mine={}, seq=0, cseq=0, closed=false, lastSay=0;
   const fire=ch=>{ const snap=[...peers.values()]; hs.forEach(h=>h(Object.assign({peers:snap,joined:[],left:[],updated:[]},ch))); };
   const remove=id=>{ const p=peers.get(id); if(!p) return; peers.delete(id); fire({left:[p]}); };
   const anyUp=()=>clients.some(c=>c.connected);
@@ -1698,6 +1841,11 @@ function peerRoom(code){
     const rest=topic.slice(base.length), kind=rest[0], id=rest.slice(2);
     if(rest[1]!=='/' || id===me || !/^[a-z0-9]{6,24}$/.test(id)) return;
     if(kind==='x'){ remove(id); return; }
+    if(kind==='c'){ let d; try{ d=JSON.parse(new TextDecoder().decode(buf)); }catch(e){ return; }
+      if(!d || !Number.isInteger(d.q) || typeof d.t!=='string') return;
+      if((seenChat.get(id)||0)>=d.q) return; seenChat.set(id,d.q);   // the duplicate from the second relay
+      const text=String(d.t).replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,140); if(!text) return;
+      chs.forEach(h=>h({id,name:cleanName(d.n)||'Rider',text})); return; }
     if(kind!=='p') return;
     let d; try{ d=JSON.parse(new TextDecoder().decode(buf)); }catch(e){ return; }
     if(!d || typeof d!=='object' || !Number.isInteger(d.q) || !d.p || typeof d.p!=='object') return;
@@ -1721,10 +1869,32 @@ function peerRoom(code){
     presence:async patch=>{ mine=Object.assign({},mine,patch); const msg=JSON.stringify({q:++seq,p:mine});
       for(const c of clients) if(c.connected) c.publish(base+'p/'+me,msg,{qos:0}); },
     onPeers:h=>{ hs.push(h); return ()=>{}; },
+    onChat:h=>{ chs.push(h); },
+    say(text){ const now=Date.now(); if(now-lastSay<700) return false; text=String(text||'').replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,140); if(!text) return false;
+      lastSay=now; const msg=JSON.stringify({q:++cseq,n:myName(),t:text}); let sent=false;
+      for(const c of clients) if(c.connected){ c.publish(base+'c/'+me,msg,{qos:0}); sent=true; } return sent; },
     info:()=>({id:me,relays:clients.map((c,i)=>BROKERS[i].split('/')[2]+':'+(c.connected?'up':'down')),riders:[...peers.keys()]}),
     leave(){ if(closed) return; for(const c of clients){ try{ if(c.connected) c.publish(base+'x/'+me,'1'); c.end(false); }catch(e){} } closed=true; clearInterval(sweep); for(const id of [...peers.keys()]) remove(id); }
   };
 }
+const CHAT=[];
+function chatColor(id){ const r=NET.peers.get(id); return r ? '#'+new THREE.Color(r.col).getHexString() : '#bfe6ff'; }
+function addChat(line){ CHAT.push(Object.assign({t:Date.now()},line)); if(CHAT.length>40) CHAT.shift(); renderChat(); }
+function renderChat(){
+  for(const [logId,max] of [['lobbyLog',40],['gameLog',6]]){ const el=$(logId); if(!el) continue; el.textContent='';
+    for(const m of CHAT.slice(-max)){ const p=document.createElement('p');
+      if(m.sys){ p.className='sys'; p.textContent=m.text; }
+      else { const b=document.createElement('b'); b.textContent=m.name; b.style.color=m.me?'#ffffff':chatColor(m.id); p.append(b,document.createTextNode(m.text)); }
+      if(logId==='gameLog') p.dataset.t=m.t; el.appendChild(p); }
+    if(logId==='lobbyLog') el.scrollTop=el.scrollHeight; }
+  ageChat();
+}
+function ageChat(){ const now=Date.now(); document.querySelectorAll('#gameLog p').forEach(p=>p.classList.toggle('old',now-(+p.dataset.t)>12000)); }
+setInterval(ageChat,1000);
+function sendChat(inp){ if(!NET.room||!NET.room.say) return; const v=inp.value; if(!v.trim()) return;
+  if(NET.room.say(v)){ addChat({me:true,name:myName(),text:v.trim().slice(0,140)}); inp.value=''; } }
+function openGameChat(){ if(!NET.room) return; $('gameChat').classList.add('open'); $('gameForm').hidden=false; $('gameIn').focus(); }
+function closeGameChat(){ $('gameChat').classList.remove('open'); $('gameForm').hidden=true; $('gameIn').blur(); }
 let netToastT=0;
 function netToast(msg){ const el=$('netToast'); if(!el) return; el.textContent=msg; el.classList.add('on'); clearTimeout(netToastT); netToastT=setTimeout(()=>el.classList.remove('on'),3200); }
 function cleanCode(v){ return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6); }
@@ -1735,10 +1905,13 @@ function joinRoom(code){
   if(NET.room){ NET.room.leave(); for(const k of [...NET.peers.keys()]) dropRemote(k); }
   NET.code=code; $('mpCode').value=code; $('mpCopy').hidden=false;
   try{ history.replaceState(null,'','#'+code); }catch(e){}
-  const room=peerRoom(code); NET.room=room; window.__vhnet=()=>NET.room&&NET.room.info&&NET.room.info();
+  const room=peerRoom(code); NET.room=room;
+  room.onChat(m=>addChat(m));
+  $('lobbyChat').hidden=false; $('gameChat').hidden=false; $('chatBtn').hidden=false;
+  addChat({sys:true,text:'You joined room '+code+'.'}); window.__vhnet=()=>NET.room&&NET.room.info&&NET.room.info();
   room.onPeers(ch=>{
-    for(const p of ch.left){ const r=NET.peers.get(p.peer); if(r) netToast(nameFor(r)+' left the room'); dropRemote(p.peer); }
-    for(const p of ch.joined){ ingest(p); const r=NET.peers.get(p.peer); if(r) netToast(nameFor(r)+' is in the room with you'); renderNetList(); }
+    for(const p of ch.left){ const r=NET.peers.get(p.peer); if(r){ netToast(nameFor(r)+' left the room'); addChat({sys:true,text:nameFor(r)+' left.'}); } dropRemote(p.peer); }
+    for(const p of ch.joined){ ingest(p); const r=NET.peers.get(p.peer); if(r){ netToast(nameFor(r)+' is in the room with you'); addChat({sys:true,text:nameFor(r)+' joined.'}); } renderNetList(); }
     for(const p of ch.updated) ingest(p);
   });
   renderNetList();
@@ -1749,6 +1922,14 @@ function joinRoom(code){
   $('mpCode').addEventListener('input',e=>{ e.target.value=cleanCode(e.target.value); });
   $('mpCode').addEventListener('keydown',e=>{ if(e.key==='Enter') joinRoom($('mpCode').value); });
   $('mpJoin').addEventListener('click',()=>joinRoom($('mpCode').value));
+  $('lobbyForm').addEventListener('submit',e=>{ e.preventDefault(); sendChat($('lobbyIn')); });
+  $('gameForm').addEventListener('submit',e=>{ e.preventDefault(); sendChat($('gameIn')); closeGameChat(); });
+  $('gameIn').addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); closeGameChat(); } });
+  $('gameIn').addEventListener('blur',()=>setTimeout(()=>{ if(document.activeElement!==$('gameIn')) closeGameChat(); },0));
+  $('chatBtn').addEventListener('click',()=>{ if($('gameForm').hidden) openGameChat(); else closeGameChat(); });
+  // Enter or T opens chat while riding
+  window.addEventListener('keydown',e=>{ if(!NET.room || state!=='play' || (e.target&&e.target.tagName==='INPUT')) return;
+    if(e.key==='Enter'||e.code==='KeyT'){ e.preventDefault(); openGameChat(); } });
   $('mpNew').addEventListener('click',()=>{ const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<4;i++) c+=A[Math.floor(Math.random()*A.length)]; joinRoom(c); });
   $('mpCopy').addEventListener('click',async()=>{ const link=inviteLink(NET.code); let ok=false;
     try{ await navigator.clipboard.writeText(link); ok=true; }catch(e){}
@@ -1762,6 +1943,11 @@ function joinRoom(code){
 document.querySelectorAll('.gfxBtn').forEach(b=>b.addEventListener('click',()=>{
   const order=['auto','low','medium','high']; setGfxMode(order[(order.indexOf(GFX.mode)+1)%order.length]); }));
 { let m='auto'; try{ m=localStorage.getItem('off-piste-gfx')||'auto'; }catch(e){} setGfxMode(['auto','low','medium','high'].includes(m)?m:'auto'); }
+
+function syncOutfit(){ paintOutfit(R.SLOTS,OUTFIT.i); document.querySelectorAll('.outfitBtn').forEach(b=>b.textContent='Outfit: '+OUTFITS[OUTFIT.i].name);
+  try{ localStorage.setItem('off-piste-outfit',String(OUTFIT.i)); }catch(e){} }
+document.querySelectorAll('.outfitBtn').forEach(b=>b.addEventListener('click',()=>{ OUTFIT.i=(OUTFIT.i+1)%OUTFITS.length; syncOutfit(); }));
+syncOutfit();
 
 requestAnimationFrame(frame);
 })();
