@@ -1502,6 +1502,12 @@ function groundStep(dt){
   const g=physH(P.x,P.z), pred=prevY+P.vy*dt-0.5*G*dt*dt;
   if(g<pred-0.04 && sp>4){ P.y=pred; P.vy-=G*dt; takeoff(); return; }
   P.vy=clamp((g-prevY)/dt,-45,22); P.y=g;
+  // rollovers: where the hill drops away under you at speed, the crest throws you into the air instead of
+  // gluing you to the snow. Sharper crests and more speed give more air; one launch per crest.
+  if(P.crestCD>0) P.crestCD-=dt;
+  else if(sp>9 && !P.grind && P.charge<=0){ const ux=P.vx/sp, uz=P.vz/sp, d=2.5;
+    const s0=(g-physH(P.x-ux*d,P.z-uz*d))/d, s1=(physH(P.x+ux*d,P.z+uz*d)-g)/d, cv=s0-s1;
+    if(cv>0.035){ P.vy=sp*s0+Math.min(4.4,1+cv*sp*5); P.crestCD=1.2; takeoff(); return; } }
   // hold jump to sink into a crouch, let go to spring
   if(IN.jump){ P.charge=Math.min(0.4,P.charge+dt); }
   else if(P.charge>0){ doPop(); takeoff(); P.popReady=false; return; }
