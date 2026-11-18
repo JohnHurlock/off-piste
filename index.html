@@ -1518,7 +1518,9 @@ function groundStep(dt){
   if(P.crestCD>0) P.crestCD-=dt;
   else if(sp>9 && !P.grind && P.charge<=0){ const ux=P.vx/sp, uz=P.vz/sp, d=2.5;
     const s0=(g-physH(P.x-ux*d,P.z-uz*d))/d, s1=(physH(P.x+ux*d,P.z+uz*d)-g)/d, cv=s0-s1;
-    if(cv>0.035){ P.vy=sp*s0+Math.min(4.4,1+cv*sp*5); P.crestCD=1.2; takeoff(); return; } }
+    // you leave the crest on the line you were already riding and float down: never pushed upward like a jump
+    if(cv>0.035){ const vy=Math.min(sp*s0+Math.min(3,0.6+cv*sp*3.5), Math.min(0,sp*s0*0.4));
+      if(vy-sp*s1>1.6){ P.vy=vy; P.crestCD=1.2; takeoff(); return; } } }   // only if the snow falls away long enough for real air
   // hold jump to sink into a crouch, let go to spring
   if(IN.jump){ P.charge=Math.min(0.4,P.charge+dt); }
   else if(P.charge>0){ doPop(); takeoff(); P.popReady=false; return; }
