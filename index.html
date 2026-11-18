@@ -216,7 +216,7 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
     <div class="row">
       <button class="go" id="startBtn">Drop in</button>
       <button class="ghost assistBtn" aria-pressed="true">Landing assist: On</button>
-      <button class="ghost lightBtn">Lighting: Golden hour</button>
+      <button class="ghost lightBtn">Lighting: Midnight</button>
       <button class="ghost weatherBtn">Weather: Light snow</button>
       <button class="ghost gfxBtn">Graphics: Auto</button>
       <span class="best">Best run <b id="bestTitle">—</b></span>
@@ -231,7 +231,7 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
       <button class="go" id="resumeBtn">Resume</button>
       <button class="ghost" id="restartBtn">Restart run</button>
       <button class="ghost assistBtn" aria-pressed="true">Landing assist: On</button>
-      <button class="ghost lightBtn">Lighting: Golden hour</button>
+      <button class="ghost lightBtn">Lighting: Midnight</button>
       <button class="ghost weatherBtn">Weather: Light snow</button>
       <button class="ghost gfxBtn">Graphics: Auto</button>
     </div>
@@ -288,15 +288,15 @@ try{ ASSIST=localStorage.getItem('violet-hour-assist')!=='off'; }catch(e){}
 function syncAssist(){ document.querySelectorAll('.assistBtn').forEach(b=>{ b.textContent='Landing assist: '+(ASSIST?'On':'Off'); b.setAttribute('aria-pressed',String(ASSIST)); }); }
 document.querySelectorAll('.assistBtn').forEach(b=>b.addEventListener('click',()=>{ ASSIST=!ASSIST; try{ localStorage.setItem('violet-hour-assist',ASSIST?'on':'off'); }catch(e){} syncAssist(); }));
 syncAssist();
-let LIGHT='sunset', WEATHER='snow';
-try{ const l=localStorage.getItem('violet-hour-light'), w=localStorage.getItem('violet-hour-weather'); if(l) LIGHT=l; if(w) WEATHER=w; }catch(e){}
+let LIGHT='night', WEATHER='snow';
+try{ const l=localStorage.getItem('off-piste-light'), w=localStorage.getItem('violet-hour-weather'); if(l) LIGHT=l; if(w) WEATHER=w; }catch(e){}
 function syncSky(){
-  if(!LIGHTS[LIGHT]) LIGHT='sunset'; if(!WEATHERS[WEATHER]) WEATHER='snow';
+  if(!LIGHTS[LIGHT]) LIGHT='night'; if(!WEATHERS[WEATHER]) WEATHER='snow';
   PAL=LIGHTS[LIGHT]; document.documentElement.dataset.light=LIGHT;
   document.querySelectorAll('.lightBtn').forEach(b=>b.textContent='Lighting: '+LIGHTS[LIGHT].name);
   document.querySelectorAll('.weatherBtn').forEach(b=>b.textContent='Weather: '+WEATHERS[WEATHER].name);
   $('timeLbl').textContent=LIGHTS[LIGHT].timeLabel;
-  try{ localStorage.setItem('violet-hour-light',LIGHT); localStorage.setItem('violet-hour-weather',WEATHER); }catch(e){}
+  try{ localStorage.setItem('off-piste-light',LIGHT); localStorage.setItem('violet-hour-weather',WEATHER); }catch(e){}
 }
 const cycle=(obj,cur)=>{ const k=Object.keys(obj); return k[(k.indexOf(cur)+1)%k.length]; };
 document.querySelectorAll('.lightBtn').forEach(b=>b.addEventListener('click',()=>{ LIGHT=cycle(LIGHTS,LIGHT); syncSky(); }));
@@ -328,7 +328,7 @@ const LIGHTS = {
   overcast:{ name:'Overcast', timeLabel:'Time left', elev:[0.3,0.3], sunI:[0.55,0.55], hemiI:[1.25,1.25], sunAmt:0.12, stars:[0,0], cloud:1, exposure:1.0, lamp:[0,0],
     top:[0x7a7c90,0x7a7c90], mid:[0x9c9dae,0x9c9dae], hor:[0xc9c8d4,0xc9c8d4], sun:[0xe4e3ec,0xe4e3ec], fog:[0xbab9c7,0xbab9c7], hSky:[0xcecdda,0xcecdda],
     hGnd:[0x6f6e80,0x6f6e80], sunL:[0xe2e1ea,0xe2e1ea], mFar:[0x9a9aab,0x9a9aab], mNear:[0x76768a,0x76768a] },
-  night:{ name:'Moonlight', timeLabel:'Time left', elev:[0.32,0.32], sunI:[0.7,0.7], hemiI:[0.5,0.5], sunAmt:0.55, stars:[1,1], cloud:0.15, exposure:1.25, lamp:[1,1],
+  night:{ name:'Midnight', timeLabel:'Time left', elev:[0.32,0.32], sunI:[0.7,0.7], hemiI:[0.5,0.5], sunAmt:0.55, stars:[1,1], cloud:0.15, exposure:1.25, lamp:[1,1],
     top:[0x02030a,0x02030a], mid:[0x0a1030,0x0a1030], hor:[0x1e2656,0x1e2656], sun:[0xd2dcff,0xd2dcff], fog:[0x121741,0x121741], hSky:[0x40518f,0x40518f],
     hGnd:[0x0b0d22,0x0b0d22], sunL:[0xa9baff,0xa9baff], mFar:[0x1c2350,0x1c2350], mNear:[0x0d1233,0x0d1233] }
 };
