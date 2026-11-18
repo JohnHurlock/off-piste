@@ -1,4 +1,4 @@
-# Violet Hour: website version
+# Off Piste: website version
 
 The whole game is one file: `index.html`. Host it anywhere that serves static files. No server code and no keys needed.
 
