@@ -2145,13 +2145,14 @@ function makeRemote(peer){
 }
 function dropRemote(peer){ const r=NET.peers.get(peer); if(!r) return; scene.remove(r.g); for(const k in r.mats) r.mats[k].dispose(); r.tag.remove(); NET.peers.delete(peer); }
 function validPose(k){ if(!Array.isArray(k)||k.length!==POSE_LEN) return false; for(let i=0;i<k.length;i++){ const v=k[i]; if(typeof v!=='number'||!isFinite(v)||Math.abs(v)>1e6) return false; } return true; }
-function nameFor(r){ return r.name || 'Rider'; }
+function nameFor(r){ return (r.admin?'★ ':'')+(r.name || 'Rider'); }
 const cleanName=v=>String(v||'').replace(/[^\p{L}\p{N} _.'-]/gu,'').trim().slice(0,16);
 function ingest(p){
   const pres=p.presence||{}; let r=NET.peers.get(p.peer);
   if(!r){ r=makeRemote(p.peer); NET.peers.set(p.peer,r); }
   if(Number.isInteger(pres.o) && pres.o>=0 && pres.o<OUTFITS.length && pres.o!==r.outfit){ r.outfit=pres.o; paintOutfit(r.mats,pres.o); { const o=OUTFITS[pres.o], c=new THREE.Color((c0=>0.2126*c0.r+0.7152*c0.g+0.0722*c0.b)(new THREE.Color(o.jacket))>0.12?o.jacket:o.accent); c.lerp(new THREE.Color(0xffffff),0.3); r.col=c.getHex(); } }
   { const b=pres.b===1; if(b!==r.board){ r.board=b; rideVis(r.g,b); } }
+  if(typeof pres.adm==='string' && !r.admChecked){ r.admChecked=true; adminCheck('adm:'+p.peer,pres.adm).then(ok=>{ r.admin=ok; renderNetList(); }); }
   r.name=cleanName(pres.n); r.st=pres.st!==0;
   { const lv=LEVELS[pres.lv]?pres.lv:'back'; if(r.lv!==lv){ const first=!r.lv; r.lv=lv;
       // joining a friend who is already on another mountain: follow them there (only from the menu)
@@ -2205,7 +2206,7 @@ function netTick(rdt,now){
   if(!NET.room) return;
   for(const r of NET.peers.values()) applyRemote(r,now);
   NET.sendT+=rdt;
-  if(NET.sendT>=0.08){ NET.sendT=0; NET.room.presence({k:packPose(),s:Math.round(stats.score),n:myName(),st:state==='title'?0:1,o:OUTFIT.i,b:BOARD?1:0,lv:LEVEL}).catch(()=>{}); }
+  if(NET.sendT>=0.08){ NET.sendT=0; NET.room.presence({k:packPose(),s:Math.round(stats.score),n:myName(),st:state==='title'?0:1,o:OUTFIT.i,b:BOARD?1:0,lv:LEVEL,adm:ADM_BADGE&&NET.room&&ADM_BADGE.id===NET.room.info().id?ADM_BADGE.sig:undefined}).catch(()=>{}); }
   NET.listT+=rdt; if(NET.listT>0.5){ NET.listT=0; renderNetList(); }
 }
 
@@ -2272,6 +2273,75 @@ function peerRoom(code){
     leave(){ if(closed) return; for(const c of clients){ try{ if(c.connected) c.publish(base+'x/'+me,'1'); c.end(false); }catch(e){} } closed=true; clearInterval(sweep); for(const id of [...peers.keys()]) remove(id); }
   };
 }
+
+/* ---------- Admin ----------
+   The admin panel ships sealed (admin.bin). It opens only with the owner's secret link AND password: the pair
+   derives the AES key, so the file is unreadable junk to everyone else. Commands to other players (announce, kick)
+   and the admin badge are signed with a private key that lives inside the sealed panel; everyone's game checks the
+   signature against the public key below and ignores anything else. Remaking the keys cuts off old links. */
+const ADMIN_PUB={"kty": "EC", "crv": "P-256", "x": "cYtBu4RKjG2-h0ltaQ72qWF_j5GOeRYFjajPU8bnMf8", "y": "OeOSwZv37y-7elWfUtykD_DNswuakijlLcY9BGWaY7s", "ext": true};
+const HOOK={frame:[],noCrash:false,time:1};
+let ADM_BADGE=null, admVerifyKey=null; const ADM_SEEN=new Set();
+const b64d=s=>Uint8Array.from(atob(String(s).replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+async function adminCheck(body,sig){ try{
+  admVerifyKey=admVerifyKey||crypto.subtle.importKey('jwk',ADMIN_PUB,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
+  return await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},await admVerifyKey,b64d(sig),new TextEncoder().encode(body)); }catch(e){ return false; } }
+(()=>{ const st=document.createElement('style'); st.textContent=`
+#admBanner{position:fixed;left:50%;top:14px;transform:translate(-50%,-140%);z-index:70;max-width:min(560px,calc(100vw - 32px));padding:10px 16px;border-radius:10px;
+  background:var(--acc);color:var(--onacc);font:700 15px/1.3 Barlow,system-ui,sans-serif;box-shadow:0 8px 28px rgba(0,0,0,.4);transition:transform .35s;text-align:center}
+#admBanner.on{transform:translate(-50%,0)}
+#admBanner::before{content:'★ ';}
+#admLock{position:fixed;inset:0;z-index:80;display:grid;place-items:center;background:rgba(4,10,24,.7)}
+#admLock form{display:grid;gap:10px;width:min(300px,calc(100vw - 32px));padding:18px;border-radius:12px;background:var(--panel);border:1px solid var(--line);color:var(--ink);font:500 14px Barlow,system-ui,sans-serif}
+#admLock b{font:800 20px 'Barlow Condensed',Barlow,sans-serif;letter-spacing:.06em;text-transform:uppercase}
+#admLock input{background:var(--dusk);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font:500 15px Barlow,system-ui,sans-serif}
+#admLock div{display:flex;gap:8px}
+#admLock button{flex:1;padding:9px;border-radius:8px;border:1px solid var(--acc);background:var(--acc);color:var(--onacc);font:700 14px Barlow,system-ui,sans-serif;cursor:pointer}
+#admLock button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+#admLock small{color:var(--muted);min-height:1em}
+.nettag.adm span{color:#bfeaff;font-weight:800}`; document.head.appendChild(st); })();
+function adminBanner(text){ let el=$('admBanner'); if(!el){ el=document.createElement('div'); el.id='admBanner'; document.body.appendChild(el); }
+  el.textContent=text; el.classList.add('on'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),7000); }
+async function onAdminMsg(buf){
+  if(!buf||buf.length>2000) return; let d,c; try{ d=JSON.parse(new TextDecoder().decode(buf)); c=JSON.parse(d.b); }catch(e){ return; }
+  if(!c||typeof c.n!=='string'||typeof d.s!=='string'||ADM_SEEN.has(c.n)||!(Math.abs(Date.now()-c.t)<90000)) return;
+  ADM_SEEN.add(c.n); if(!await adminCheck(d.b,d.s)){ ADM_SEEN.delete(c.n); return; }
+  if(c.c==='say') adminBanner(String(c.a||'').replace(/[\u0000-\u001f\u007f]/g,'').slice(0,160));
+  else if(c.c==='kick' && NET.room && c.room===NET.code && NET.room.info().id===c.id){
+    const code=NET.code; leaveRoom();
+    try{ localStorage.setItem('op-kick',JSON.stringify({code,until:Date.now()+Math.min(1440,Math.max(1,+c.min||10))*60000})); }catch(e){}
+    adminBanner('You were removed from room '+code+' by the admin.'); }
+}
+function kickedFrom(code){ try{ const k=JSON.parse(localStorage.getItem('op-kick')||'null'); return k&&k.code===code&&k.until>Date.now(); }catch(e){ return false; } }
+const ADMIN_API={ get P(){return P}, get IN(){return IN}, get R(){return R}, get camera(){return camera}, get scene(){return scene}, physH:(x,z)=>physH(x,z),
+  setLevel:id=>setLevel(id), get LEVELS(){return LEVELS}, get LEVEL(){return LEVEL}, get NET(){return NET}, joinRoom:c=>joinRoom(c), leaveRoom:()=>leaveRoom(), resetWorld:()=>resetWorld(),
+  takeoff:()=>takeoff(), get kickers(){return kickers}, get rails(){return rails}, get objs(){return objs}, get state(){return state}, get stats(){return stats},
+  HOOK, netToast:m=>netToast(m), adminBanner, nameFor:r=>nameFor(r), $:id=>$(id),
+  publish(b,sig){ const msg=JSON.stringify({b,s:sig}); let sent=false; for(const c of PUB.clients) if(c.connected){ c.publish('offpiste/v1/admin',msg,{qos:0}); sent=true; } onAdminMsg(new TextEncoder().encode(msg)); return sent; },
+  setBadge(v){ ADM_BADGE=v; } };
+async function adminUnlock(raw){
+  const res=await fetch('admin.bin',{cache:'no-store'}); if(!res.ok) throw new Error('missing');
+  const buf=new Uint8Array(await res.arrayBuffer()), key=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);
+  const code=new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},key,buf.slice(12)));
+  try{ (new Function('G',code))(ADMIN_API); }catch(e){ console.error('admin panel failed to start',e); } }
+async function adminKeyFrom(link,pw){ const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);
+  return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:b64d(link),iterations:300000,hash:'SHA-256'},base,256)); }
+function adminPrompt(link){
+  const w=document.createElement('div'); w.id='admLock';
+  w.innerHTML='<form><b>Admin</b><input type="password" placeholder="Password" autocomplete="off"><div><button type="submit">Unlock</button><button type="button" class="ghost">Cancel</button></div><small></small></form>';
+  document.body.appendChild(w); const f=w.querySelector('form'), inp=w.querySelector('input'), msg=w.querySelector('small'); inp.focus();
+  w.querySelector('.ghost').onclick=()=>w.remove();
+  f.onsubmit=async e=>{ e.preventDefault(); msg.textContent='Checking…';
+    try{ const raw=await adminKeyFrom(link,inp.value); await adminUnlock(raw);
+      try{ localStorage.setItem('op-adm',btoa(String.fromCharCode(...raw))); }catch(e){} w.remove(); }
+    catch(err){ msg.textContent='Wrong password.'; inp.select(); } };
+}
+function adminBoot(){
+  const m=location.hash.match(/admin=([A-Za-z0-9_-]{16,})/);
+  if(m){ try{ history.replaceState(null,'',location.pathname); }catch(e){} adminPrompt(m[1]); return; }
+  let k=null; try{ k=localStorage.getItem('op-adm'); }catch(e){}
+  if(k) adminUnlock(b64d(k)).catch(()=>{ try{ localStorage.removeItem('op-adm'); }catch(e){} });
+}
 const CHAT=[];
 function chatColor(id){ const r=NET.peers.get(id); return r ? '#'+new THREE.Color(r.col).getHexString() : '#bfe6ff'; }
 function addChat(line){ CHAT.push(Object.assign({t:Date.now()},line)); if(CHAT.length>40) CHAT.shift(); renderChat(); }
@@ -2297,6 +2367,7 @@ function inviteLink(code){ return location.origin+location.pathname+'#'+code; }
 function joinRoom(code){
   code=cleanCode(code); if(code.length<3){ NET.status='Room codes are 3 to 6 letters or numbers.'; renderNetList(); return; }
   if(typeof mqtt!=='object'&&typeof mqtt!=='function'){ NET.status='Could not load the multiplayer library. Check your connection and reload.'; renderNetList(); return; }
+  if(kickedFrom(code)){ NET.status='You were removed from room '+code+'. Try another room.'; renderNetList(); return; }
   if(NET.room){ NET.room.leave(); for(const k of [...NET.peers.keys()]) dropRemote(k); }
   NET.code=code; $('mpCode').value=code; $('mpCopy').hidden=false;
   try{ history.replaceState(null,'','#'+code); }catch(e){}
@@ -2328,8 +2399,8 @@ function startDirectory(){
   const id='opd'+Math.random().toString(36).slice(2,10);
   PUB.clients=RELAYS.map((url,i)=>{
     const c=mqtt.connect(url,{clientId:id+i,keepalive:30,reconnectPeriod:4000,connectTimeout:8000,clean:true});
-    c.on('connect',()=>c.subscribe('offpiste/v1/dir/+',{qos:0})); c.on('error',()=>{});
-    c.on('message',(topic,buf)=>{ if(!buf||buf.length>400) return; let d; try{ d=JSON.parse(new TextDecoder().decode(buf)); }catch(e){ return; }
+    c.on('connect',()=>{ c.subscribe('offpiste/v1/dir/+',{qos:0}); c.subscribe('offpiste/v1/admin',{qos:0}); }); c.on('error',()=>{});
+    c.on('message',(topic,buf)=>{ if(topic==='offpiste/v1/admin'){ onAdminMsg(buf); return; } if(!buf||buf.length>400) return; let d; try{ d=JSON.parse(new TextDecoder().decode(buf)); }catch(e){ return; }
       const code=cleanCode(topic.split('/').pop()); if(!isPub(code)||!d||!LEVELS[d.lv]) return;
       const n=clamp(Math.round(+d.n||1),1,PUB_MAX+5), ex=PUB.rooms.get(code), now=Date.now();
       // several riders in one room all announce it: keep the biggest count heard recently
@@ -2379,11 +2450,11 @@ function playOnline(){
   $('mpLeave').addEventListener('click',leaveRoom);
   $('mpOnline').addEventListener('click',playOnline);
   setInterval(()=>{ const n=NET.room?NET.peers.size:0; $('mpSum').textContent = NET.room ? 'Room '+NET.code+' · '+(n+1)+(n?' riders':' rider') : 'Solo'; },1000);
-  startDirectory();
+  startDirectory(); adminBoot();
   const h=cleanCode(location.hash.slice(1)); if(h.length>=3) joinRoom(h);
   window.addEventListener('pagehide',()=>{ if(NET.room) NET.room.leave(); });
   window.addEventListener('pageshow',e=>{ if(e.persisted && NET.code) joinRoom(NET.code); });
-  window.addEventListener('hashchange',()=>{ const c=cleanCode(location.hash.slice(1)); if(c.length>=3 && c!==NET.code) joinRoom(c); });
+  window.addEventListener('hashchange',()=>{ if(location.hash.includes('admin=')){ adminBoot(); return; } const c=cleanCode(location.hash.slice(1)); if(c.length>=3 && c!==NET.code) joinRoom(c); });
 })();
 
 document.querySelectorAll('.gfxBtn').forEach(b=>b.addEventListener('click',()=>{
