@@ -2182,29 +2182,7 @@ function bendCloth(c){
   }
   g.attributes.position.needsUpdate=true; g.computeVertexNormals();
 }
-/* the jacket below the waist: bend it back against the lean so it hangs over the hips like real fabric */
-const SK_Y0=-0.06, SK_Y1=-0.17, skQ=new THREE.Quaternion(), skD=new THREE.Vector3(), skE=new THREE.Vector3();
-function skirtInit(mesh){ const g=mesh.geometry, pa=g.attributes.position, na=g.attributes.normal;
-  g.userData.base=Float32Array.from(pa.array); g.userData.baseN=na?Float32Array.from(na.array):null;
-  for(let i=CLOTH_MESHES.length-1;i>=0;i--) if(CLOTH_MESHES[i].skirt) CLOTH_MESHES.splice(i,1);
-  CLOTH_MESHES.push({mesh,a:R.torsoF,b:R.thighL,c:R.thighR,skirt:true}); }
-function bendSkirt(c){
-  const g=c.mesh.geometry, base=g.userData.base, bn=g.userData.baseN; if(!base) return;
-  // line the hem up with the thighs: average thigh direction in the jacket's own space, then swing the skirt toward it
-  skQ.copy(c.a.quaternion).invert();
-  skD.set(0,1,0).applyQuaternion(c.b.quaternion); skE.set(0,1,0).applyQuaternion(c.c.quaternion); skD.add(skE).applyQuaternion(skQ);
-  const a=clamp(Math.atan2(-skD.z,-skD.y)*0.8,-0.3,1.4);
-  if(c.lastA!==undefined && Math.abs(a-c.lastA)<0.004) return; c.lastA=a;
-  const pos=g.attributes.position.array, nor=bn?g.attributes.normal.array:null;
-  for(let i=0;i<base.length;i+=3){ const y=base[i+1];
-    if(y>=SK_Y0){ pos[i+1]=y; pos[i+2]=base[i+2]; if(nor){ nor[i+1]=bn[i+1]; nor[i+2]=bn[i+2]; } continue; }
-    let w=(SK_Y0-y)/(SK_Y0-SK_Y1); w=w>=1?1:w*w*(3-2*w);
-    const t=a*w, ct=Math.cos(t), st=Math.sin(t), dy=y-SK_Y0, dz=base[i+2];
-    pos[i+1]=SK_Y0+dy*ct-dz*st; pos[i+2]=dy*st+dz*ct;
-    if(nor){ const ny=bn[i+1], nz=bn[i+2]; nor[i+1]=ny*ct-nz*st; nor[i+2]=ny*st+nz*ct; } }
-  g.attributes.position.needsUpdate=true; if(nor) g.attributes.normal.needsUpdate=true;
-}
-function bendAll(list){ for(const c of list){ if(c.skirt) bendSkirt(c); else bendCloth(c); } }
+function bendAll(list){ for(const c of list) bendCloth(c); }
 const CLOTH_MESHES=[];
 for(const [th,sh,s] of [[R.thighL,R.shinL,0],[R.thighR,R.shinR,1]]){
   const m=new THREE.Mesh(clothGeo(CLOTH_KIND.leg,s*3.1),R.MATS.pants); m.castShadow=true; m.name='cloth'; R.body.add(m);
@@ -2214,10 +2192,10 @@ for(const [A,s] of [[R.armL,0],[R.armR,1]]){
   CLOTH_MESHES.push({mesh:m,a:A.up,b:A.fo,c:A.gl}); A.up.visible=false; A.fo.visible=false; A.cuff.visible=false; }
 let CLOTH_IDX=[];
 function clothIndex(){ const all=[]; R.rider.traverse(o=>all.push(o));
-  CLOTH_IDX=CLOTH_MESHES.map(m=>({mi:all.indexOf(m.mesh),ai:all.indexOf(m.a),bi:all.indexOf(m.b),ci:m.c?all.indexOf(m.c):-1,skirt:!!m.skirt})); R.cloth=null; }
+  CLOTH_IDX=CLOTH_MESHES.map(m=>({mi:all.indexOf(m.mesh),ai:all.indexOf(m.a),bi:all.indexOf(m.b),ci:m.c?all.indexOf(m.c):-1})); R.cloth=null; }
 function clothBind(root,own){ const all=[]; root.traverse(o=>all.push(o));
   return CLOTH_IDX.map(d=>{ const mesh=all[d.mi]; if(own) mesh.geometry=mesh.geometry.clone();
-    return {mesh,a:all[d.ai],b:all[d.bi],c:d.ci>=0?all[d.ci]:null,skirt:d.skirt}; }); }
+    return {mesh,a:all[d.ai],b:all[d.bi],c:d.ci>=0?all[d.ci]:null}; }); }
 const poseNodes=[R.orient,R.body,R.skis,R.skiParts.L,R.skiParts.R,R.thighL,R.thighR,R.shinL,R.shinR,R.torsoF,R.head];
 for(const a of [R.armL,R.armR]) poseNodes.push(a.up,a.fo,a.cuff,a.gl,a.pole);
 const POSE_LEN=4+poseNodes.length*7;
@@ -2596,7 +2574,7 @@ function applyArt(root){
   const up=A('armUp'), fo=A('armFo'), cu=A('cuff'), gl=A('glove'), po=A('pole');
   for(const arm of [R.armL,R.armR]){ use(arm.up,up); use(arm.fo,fo); use(arm.cuff,cu); use(arm.gl,gl); use(arm.pole,po); }
   const to=A('torso'), tf=A('torsoFP');
-  if(to&&tf){ clear(R.torsoF); skirtInit(put(R.torsoF,to,'torsoArt')); put(R.torsoF,tf,'',true); }
+  if(to&&tf){ clear(R.torsoF); put(R.torsoF,to); put(R.torsoF,tf,'',true); }
   const he=A('helmet'); if(he){ clear(R.head); put(R.head,he); }
   const sk=A('ski'), bo=A('boot'), bi=A('bind');
   if(sk&&bo&&bi) for(const side of ['L','R']){ const g=R.skiParts[side]; clear(g); put(g,sk,'ski'); put(g,bo,''); put(g,bi,'bind'); }
