@@ -133,6 +133,8 @@ body.touch .speedo b{font-size:24px}
 #stickKnob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:linear-gradient(140deg,var(--rose),var(--violet));box-shadow:0 4px 18px rgba(61,107,255,.5)}
 .tbtn{position:absolute;pointer-events:auto;touch-action:none;border-radius:50%;border:2px solid var(--line);font-family:var(--display);font-weight:800;letter-spacing:.06em;backdrop-filter:blur(6px)}
 #btnJump{width:104px;height:104px;right:calc(22px + env(safe-area-inset-right,0px));bottom:calc(26px + env(safe-area-inset-bottom,0px));background:rgba(67,184,255,.32);font-size:15px}
+#btnStop{width:66px;height:66px;right:calc(30px + env(safe-area-inset-right,0px));bottom:calc(150px + env(safe-area-inset-bottom,0px));background:rgba(255,120,120,.25);font-size:11px}
+#btnPush{width:66px;height:66px;right:calc(150px + env(safe-area-inset-right,0px));bottom:calc(130px + env(safe-area-inset-bottom,0px));background:rgba(61,107,255,.28);font-size:11px}
 #btnGrab{width:76px;height:76px;right:calc(140px + env(safe-area-inset-right,0px));bottom:calc(40px + env(safe-area-inset-bottom,0px));background:rgba(61,107,255,.32);font-size:12px}
 .tbtn.down{transform:scale(.92);background:rgba(191,230,255,.45)}
 
@@ -208,6 +210,8 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
 <div id="touch" hidden>
   <div id="stickZone"><div id="stickBase"><div id="stickKnob"></div></div></div>
   <button class="tbtn" id="btnGrab" aria-label="Grab">GRAB</button>
+  <button class="tbtn" id="btnPush" aria-label="Push with poles">PUSH</button>
+  <button class="tbtn" id="btnStop" aria-label="Hockey stop">STOP</button>
   <button class="tbtn" id="btnJump" aria-label="Jump">JUMP</button>
 </div>
 
@@ -222,7 +226,9 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
         <dt><kbd>↑</kbd><kbd>↓</kbd></dt><dd>Tuck, brake · flip in air</dd>
         <dt><kbd>Space</kbd></dt><dd>Hold to crouch, let go to jump</dd>
         <dt><kbd>Shift</kbd></dt><dd>Grab (hold in air)</dd>
-        <dt>Mouse</dt><dd>Scroll to zoom · right-drag to look around · <kbd>C</kbd> resets</dd>
+        <dt><kbd>T</kbd></dt><dd>Push with both poles</dd>
+        <dt><kbd>R</kbd></dt><dd>Hockey stop (hold to stay stopped)</dd>
+        <dt>Mouse</dt><dd>Scroll or <kbd>+</kbd> <kbd>−</kbd> to zoom · right-drag to look around · <kbd>C</kbd> resets</dd>
         <dt><kbd>V</kbd></dt><dd>First / third person</dd>
         <dt><kbd>Esc</kbd></dt><dd>Pause</dd>
       </dl></div>
@@ -232,6 +238,8 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
         <dt><kbd>X</kbd> / <kbd>RB</kbd></dt><dd>Grab</dd>
         <dt><kbd>RT</kbd></dt><dd>Tuck for speed</dd>
         <dt>Right stick</dt><dd>Look around and zoom · click to reset</dd>
+        <dt><kbd>B</kbd></dt><dd>Push with both poles</dd>
+        <dt><kbd>LT</kbd></dt><dd>Hockey stop</dd>
         <dt><kbd>Y</kbd></dt><dd>First / third person</dd>
         <dt><kbd>Start</kbd></dt><dd>Pause</dd>
       </dl></div>
@@ -261,6 +269,7 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
     <div class="row">
       <button class="go" id="startBtn">Drop in</button>
       <button class="ghost assistBtn" aria-pressed="true">Landing assist: On</button>
+      <button class="ghost rideBtn">Ride: Skis</button>
       <button class="ghost outfitBtn">Outfit</button>
       <button class="ghost fpBtn">Camera: Third person</button>
       <button class="ghost lightBtn">Lighting: Midnight</button>
@@ -280,6 +289,7 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
       <button class="ghost" id="endBtn">End run</button>
       <button class="ghost" id="menuBtn">Main menu</button>
       <button class="ghost assistBtn" aria-pressed="true">Landing assist: On</button>
+      <button class="ghost rideBtn">Ride: Skis</button>
       <button class="ghost outfitBtn">Outfit</button>
       <button class="ghost fpBtn">Camera: Third person</button>
       <button class="ghost lightBtn">Lighting: Midnight</button>
@@ -365,7 +375,7 @@ renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.05;
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(62, 1, 0.1, 950);
+const camera = new THREE.PerspectiveCamera(62, 1, 0.05, 950);
 scene.fog = new THREE.FogExp2(0xc786b8, 0.0068);
 function resize(){ const w=window.innerWidth, h=window.innerHeight; renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); }
 window.addEventListener('resize', resize); resize();
@@ -779,8 +789,10 @@ const OUTFITS=[
   {name:'Night',   jacket:0x22252e, accent:0xff6b2b, pants:0x22252e, helmet:0x22252e, lens:0x7fd8ff, glove:0x101114}
 ];
 const OUTFIT={i:0};
+let BOARD=false; try{ BOARD=localStorage.getItem('off-piste-ride')==='board'; }catch(e){}
 try{ const o=localStorage.getItem('off-piste-outfit'); OUTFIT.i = o!==null && OUTFITS[+o] ? +o : Math.floor(Math.random()*OUTFITS.length); }catch(e){ OUTFIT.i=Math.floor(Math.random()*OUTFITS.length); }
 // paint a set of slot materials with an outfit
+function rideVis(group,board){ group.traverse(o=>{ if(o.name==='ski'||o.name==='pole') o.visible=!board; else if(o.name==='board'||o.name==='bind') o.visible=board; }); }
 function paintOutfit(mats,i){ const o=OUTFITS[i]||OUTFITS[0];
   for(const k of ['jacket','accent','pants','helmet','glove']) if(mats[k]) mats[k].color.copy(L(o[k]));
   if(mats.pack) mats.pack.color.copy(L(o.glove)).lerp(L(o.pants),0.5);
@@ -816,11 +828,24 @@ const R = (function(){
   // ski boot: lathe shell, flattened sideways, with a toe block and buckles
   const bootShell=latheFrom([[0,0],[0.075,0.005],[0.08,0.06],[0.074,0.14],[0.072,0.22],[0.078,0.26],[0,0.26]],16,1,1.25);
   const skis=new THREE.Group(); body.add(skis);
+  // snowboard: twin shape with rockered tip and tail, along the body's side-to-side axis
+  const board=(()=>{ const g=new THREE.BoxGeometry(1.56,0.022,0.27,30,1,4), p=g.attributes.position;
+      for(let i=0;i<p.count;i++){ let x=p.getX(i), y=p.getY(i), z=p.getZ(i); const ax=Math.abs(x)/0.78;
+        z*=0.88+0.12*Math.pow(ax,2);                                  // sidecut
+        if(ax>0.82){ const t=(ax-0.82)/0.18; y+=t*t*0.075; z*=1-t*t*0.35; }  // turned-up nose and tail, rounded
+        p.setXYZ(i,x,y,z); }
+      g.computeVertexNormals();
+      const top=new THREE.MeshStandardMaterial({color:L(0xffffff),roughness:0.35,metalness:0.1,map:(()=>{ const c=document.createElement('canvas'); c.width=256; c.height=32; const x=c.getContext('2d');
+        const gr=x.createLinearGradient(0,0,256,0); gr.addColorStop(0,'#1b2a4a'); gr.addColorStop(0.5,'#3d6bff'); gr.addColorStop(1,'#43b8ff'); x.fillStyle=gr; x.fillRect(0,0,256,32);
+        x.fillStyle='rgba(255,255,255,.85)'; x.font='bold 20px sans-serif'; x.textBaseline='middle'; x.fillText('OFF PISTE',84,17); const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; return t; })()});
+      const m=new THREE.Mesh(g,[skiEdge,skiEdge,top,skiEdge,skiEdge,skiEdge]); m.castShadow=true; m.position.y=0.02; m.name='board'; skis.add(m); return m; })();
   const skiParts={}, ankles={}, sg=skiGeo();
   for(const [side,s] of [['L',-1],['R',1]]){
     const sk=new THREE.Group(); sk.position.set(s*0.14,0,0); skis.add(sk);
-    add(new THREE.Mesh(sg,[skiEdge,skiEdge,skiTop,skiEdge,skiEdge,skiEdge]),sk).position.set(0,0.012,-0.06);
-    add(new THREE.Mesh(new THREE.BoxGeometry(0.08,0.035,0.4),bindM),sk).position.set(0,0.04,0);
+    { const m=add(new THREE.Mesh(sg,[skiEdge,skiEdge,skiTop,skiEdge,skiEdge,skiEdge]),sk); m.position.set(0,0.012,-0.06); m.name='ski'; }
+    { const m=add(new THREE.Mesh(new THREE.BoxGeometry(0.08,0.035,0.4),bindM),sk); m.position.set(0,0.04,0); m.name='ski'; }
+    { const hb=add(new THREE.Mesh(new THREE.BoxGeometry(0.15,0.09,0.06),frameM),sk); hb.position.set(0,0.08,0.16); hb.name='bind';   // board binding highback
+      const st=add(new THREE.Mesh(new THREE.BoxGeometry(0.17,0.03,0.07),bindM),sk); st.position.set(0,0.13,-0.05); st.name='bind'; }
     add(new THREE.Mesh(bootShell,bootM),sk).position.set(0,0.05,0.03);
     const toe=new THREE.Mesh(limbGeo(0.13,0.055,0.05,0,12,0.75),bootM); toe.rotation.x=-Math.PI/2; add(toe,sk).position.set(0,0.09,-0.02);
     for(const by of [0.12,0.2]){ const b=new THREE.Mesh(new THREE.BoxGeometry(0.15,0.018,0.05),bootAcc); add(b,sk).position.set(0,0.05+by,-0.02); }
@@ -843,13 +868,13 @@ const R = (function(){
   for(const sx of [-1,1]){ const hp=add(new THREE.Mesh(new THREE.BoxGeometry(0.13,0.11,0.025),jacketM),torsoF); hp.position.set(sx*0.15,-0.05,-0.115); hp.rotation.y=sx*0.55;
     const pf=add(new THREE.Mesh(new THREE.BoxGeometry(0.13,0.018,0.03),accentM),torsoF); pf.position.set(sx*0.15,0.012,-0.12); pf.rotation.y=sx*0.55; }
   { const hood=new THREE.Mesh(new THREE.TorusGeometry(0.115,0.05,10,22,Math.PI*1.25),jacketM); hood.rotation.set(Math.PI/2,0,-Math.PI*0.125+Math.PI); hood.scale.set(1.05,1,0.8);
-    add(hood,torsoF).position.set(0,0.555,0.035); }
+    add(hood,torsoF).position.set(0,0.555,0.035); hood.userData.fpHide=true; }
   add(new THREE.Mesh(latheFrom([[0.214,0.255],[0.217,0.27],[0.214,0.285]],28,1.12,0.68),reflM),torsoF);
   // backpack with straps
   const pack=new THREE.Mesh(limbGeo(0.3,0.12,0.11,0.01,16,0.55),packM); add(pack,torsoF).position.set(0,0.1,0.18);
   for(const s of [-1,1]){ const st=new THREE.Mesh(new THREE.BoxGeometry(0.035,0.42,0.012),packM); st.rotation.x=0.12; add(st,torsoF).position.set(s*0.1,0.27,-0.14); }
   // collar / neck gaiter
-  add(new THREE.Mesh(latheFrom([[0.105,0],[0.122,0.03],[0.118,0.06],[0.098,0.075],[0,0.075]],22,1.05,0.95),jacketM),torsoF).position.y=0.54;
+  { const cl=add(new THREE.Mesh(latheFrom([[0.105,0],[0.122,0.03],[0.118,0.06],[0.098,0.075],[0,0.075]],22,1.05,0.95),jacketM),torsoF); cl.position.y=0.54; cl.userData.fpHide=true; }
   const head=new THREE.Group(); head.rotation.order='YXZ'; head.position.y=0.63; torsoF.add(head);
   // helmet shell with a lip, vents, goggles with frame and strap
   // rounded head: knit balaclava under a domed helmet, goggles curve round the front, strap round the back
@@ -869,7 +894,7 @@ const R = (function(){
     cuff:(()=>{ const m=limb(0.035,0.056,0.056,0,accentM); return m; })(),
     band:null,
     gl:(()=>{ const m=limb(0.1,0.05,0.042,0.006,gloveM,0.7); return m; })(),
-    pole:(()=>{ const m=new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.011,1.18,6),poleM); m.geometry.translate(0,0.59,0); m.userData.len=1.18; add(m);
+    pole:(()=>{ const m=new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.011,1.18,6),poleM); m.geometry.translate(0,0.59,0); m.userData.len=1.18; m.name='pole'; add(m);
       const bk=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.01,10),poleM); bk.position.y=1.06; m.add(bk);
       const grip=new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.018,0.12,8),gloveM); grip.position.y=0.04; m.add(grip); return m; })()
   });
@@ -883,7 +908,7 @@ const R = (function(){
     const cf=new THREE.Mesh(new THREE.BoxGeometry(0.034,0.025,0.104),accentM); cf.position.set(sx*0.097,0.29,0); th.add(cf); }
   paintOutfit(SLOTS,OUTFIT.i);
   scene.add(rider);
-  return {rider,orient,body,skis,skiParts,ankles,thighL,thighR,shinL,shinR,torsoF,head,armL,armR,SLOTS};
+  return {rider,orient,body,skis,skiParts,ankles,thighL,thighR,shinL,shinR,torsoF,head,armL,armR,SLOTS,board};
 })();
 
 const _u=new THREE.Vector3(), _p=new THREE.Vector3();
@@ -932,6 +957,8 @@ function animateRig(dt,now){
     c=0.45+Math.sin(now*0.021)*0.2; lean=0.5+Math.sin(now*0.013)*0.3; side=Math.sin(now*0.016)*0.5; cross=Math.sin(now*0.011)*0.6; roll=Math.sin(now*0.019)*0.4; headYaw=Math.sin(now*0.01)*0.6;
   }
   if(RS.popT>0){ c-=RS.popT*0.9; lean-=RS.popT*0.2; RS.popT=Math.max(0,RS.popT-dt*3.2); }
+  const pushPh = (mode==='ride' && P.pushT>0) ? 1-P.pushT/PUSH_T : -1;
+  if(pushPh>=0){ const f=Math.sin(Math.PI*Math.min(1,pushPh/0.85)); c+=f*0.25; lean+=f*0.45; }
   c=clamp(c,-0.1,1);
   const kk=k(mode==='crash'?8:15);
   RS.c+=(c-RS.c)*k(18); RS.lean+=(lean-RS.lean)*kk; RS.twist+=(twist-RS.twist)*kk; RS.side+=(side-RS.side)*kk;
@@ -940,7 +967,8 @@ function animateRig(dt,now){
 
   // skis
   R.skis.position.set(0,RS.lift,RS.lift*0.12); R.skis.rotation.set(RS.pitch,0,RS.roll);
-  R.skiParts.L.rotation.y=RS.cross; R.skiParts.R.rotation.y=-RS.cross;
+  if(BOARD){ R.skiParts.L.position.x=-0.27; R.skiParts.R.position.x=0.27; R.skiParts.L.rotation.y=0.26; R.skiParts.R.rotation.y=-0.12; }
+  else { R.skiParts.L.position.x=-0.14; R.skiParts.R.position.x=0.14; R.skiParts.L.rotation.y=RS.cross; R.skiParts.R.rotation.y=-RS.cross; }
   R.skis.updateMatrix(); R.skiParts.L.updateMatrix(); R.skiParts.R.updateMatrix();
   const ankle=(s,out)=>out.copy(R.ankles[s].position).applyMatrix4(R.skiParts[s].matrix).applyMatrix4(R.skis.matrix);
   // hips
@@ -971,6 +999,8 @@ function animateRig(dt,now){
     else if(mode==='grind') t.set(sgn*0.62,0.42+wob*0.09*sgn,-0.04);
     else t.set(sgn*0.5+Math.sin(now*0.02+i*2)*0.3,0.5+Math.cos(now*0.017+i)*0.3,Math.sin(now*0.013+i)*0.4);
     if(RS.popT>0) t.lerp(vC.set(sgn*0.3,0.72,-0.34),RS.popT);
+    if(pushPh>=0){ if(pushPh<0.3) t.lerp(vC.set(sgn*0.27,0.5,-0.6),Math.min(1,pushPh/0.2));
+      else t.lerp(vC.set(sgn*0.24,0.0,0.32),Math.min(1,(pushPh-0.3)/0.4)*(pushPh<0.85?1:1-(pushPh-0.85)/0.15)); }
     t.applyMatrix4(R.torsoF.matrix);
     let grabbing=false;
     if(gd && (gd.hand==='B' || gd.hand===side2)){
@@ -985,9 +1015,11 @@ function animateRig(dt,now){
     placeSeg(A.cuff,vF.copy(hS[i]).addScaledVector(fd,-0.035),hS[i]);
     placeSeg(A.gl,hS[i],vF.copy(hS[i]).addScaledVector(fd,0.1));
     // pole
-    if(mode==='ride'||mode==='idle') vPole.set(sgn*0.1,-0.8,0.6-charge*0.2);
+    if(pushPh>=0 && pushPh<0.3) vPole.set(sgn*0.08,-0.95,-0.3);         // tips planted ahead of the bindings
+    else if(pushPh>=0 && pushPh<0.85) vPole.set(sgn*0.1,-0.55,0.85);    // driving back
+    else if(mode==='ride'||mode==='idle') vPole.set(sgn*0.1,-0.8,0.6-charge*0.2);
     else vPole.set(sgn*0.38,-0.38,0.84);
-    pD[i].lerp(vPole.normalize(),k(10)).normalize();
+    pD[i].lerp(vPole.normalize(),k(pushPh>=0?16:10)).normalize();
     const grip=vE.copy(hS[i]).addScaledVector(fd,0.05);
     placeSeg(A.pole,grip,vF.copy(grip).addScaledVector(pD[i],1.18));
   }
@@ -1133,21 +1165,22 @@ function trailPush(on){
   const fx=Math.sin(P.heading), fz=-Math.cos(P.heading);
   const gx=(groundH(P.x+0.5,P.z)-groundH(P.x-0.5,P.z)), gz=(groundH(P.x,P.z+0.5)-groundH(P.x,P.z-0.5));
   const nl=Math.hypot(gx,1,gz);
-  const hs=new Float32Array(NPV); for(let s2=0;s2<2;s2++) for(let j=0;j<PROF.length;j++){ const o=(s2?SKI_OFF:-SKI_OFF)+PROF[j]; hs[s2*PROF.length+j]=groundH(P.x-fz*o,P.z+fx*o)+0.03; }
+  const off=BOARD?0:SKI_OFF, pw=BOARD?2.75:1;   // board: one groove ~30 cm wide (board 27 cm + about an inch)
+  const hs=new Float32Array(NPV); for(let s2=0;s2<2;s2++) for(let j=0;j<PROF.length;j++){ const o=(s2?off:-off)+PROF[j]*pw; hs[s2*PROF.length+j]=groundH(P.x-fz*o,P.z+fx*o)+0.03; }
   trPts.push({x:P.x,z:P.z,hs,sx:-fz,sz:fx,nx:-gx/nl,ny:1/nl,nz:-gz/nl,on}); if(trPts.length>TN) trPts.shift();
   const n=trPts.length, last=PROF.length-1;
   for(let i=0;i<n;i++){ const p=trPts[i];
-    for(let s=0;s<2;s++){ const c=(s?SKI_OFF:-SKI_OFF);
-      for(let j=0;j<PROF.length;j++){ const v=(i*NPV+s*PROF.length+j)*3, o=c+PROF[j];
+    for(let s=0;s<2;s++){ const c=(s?off:-off);
+      for(let j=0;j<PROF.length;j++){ const v=(i*NPV+s*PROF.length+j)*3, o=c+PROF[j]*pw;
         trPos[v]=p.x+p.sx*o; trPos[v+1]=p.hs[s*PROF.length+j]+PH[j]; trPos[v+2]=p.z+p.sz*o;
         let nx=p.nx*NU[j]+p.sx*NT[j], ny=p.ny*NU[j], nz=p.nz*NU[j]+p.sz*NT[j]; const l=Math.hypot(nx,ny,nz);
         trNor[v]=nx/l; trNor[v+1]=ny/l; trNor[v+2]=nz/l; }
       // cap edges sit exactly on the groove lips
-      for(let e=0;e<2;e++){ const j=e?last:0, o=c+PROF[j], v=(i*4+s*2+e)*3;
+      for(let e=0;e<2;e++){ const j=e?last:0, o=c+PROF[j]*pw, v=(i*4+s*2+e)*3;
         capPos[v]=p.x+p.sx*o; capPos[v+1]=p.hs[s*PROF.length+j]; capPos[v+2]=p.z+p.sz*o; } } }
   let c=0, cc=0;
   for(let i=0;i<n-1;i++){ if(!trPts[i].on||!trPts[i+1].on) continue;
-    for(let s=0;s<2;s++){
+    for(let s=0;s<(BOARD?1:2);s++){
       for(let j=0;j<PROF.length-1;j++){
         const a=i*NPV+s*PROF.length+j, b=a+NPV;
         trIdx[c++]=a; trIdx[c++]=a+1; trIdx[c++]=b; trIdx[c++]=a+1; trIdx[c++]=b+1; trIdx[c++]=b; } // wound so faces point up into the groove
@@ -1214,7 +1247,7 @@ const keys=new Set();
 const IN={x:0,y:0,jump:false,grab:false};
 let PAD=null, padPrev={a:false,start:false};
 const stick={id:null,ox:0,oy:0,x:0,y:0};
-let tJump=false, tGrab=false;
+let tJump=false, tGrab=false, tStop=false;
 const dz=v=>Math.abs(v)<0.15?0:(v-Math.sign(v)*0.15)/0.85;
 function pollPad(){
   PAD=null; if(!navigator.getGamepads) return;
@@ -1224,8 +1257,8 @@ function pollPad(){
   const b=i=>!!(p.buttons[i]&&p.buttons[i].pressed);
   let x=dz(p.axes[0]||0), y=-dz(p.axes[1]||0);
   if(b(14)) x=-1; if(b(15)) x=1; if(b(12)) y=1; if(b(13)) y=-1;
-  const rt=p.buttons[7]?p.buttons[7].value:0;
-  PAD={x,y,a:b(0),grab:b(2)||b(1)||b(5)||b(4),start:b(9),rt,rx:dz(p.axes[2]||0),ry:dz(p.axes[3]||0),rs:b(11),yb:b(3)};
+  const rt=p.buttons[7]?p.buttons[7].value:0, lt=p.buttons[6]?p.buttons[6].value:0;
+  PAD={x,y,a:b(0),grab:b(2)||b(5)||b(4),push:b(1),start:b(9),rt,rx:dz(p.axes[2]||0),ry:dz(p.axes[3]||0),rs:b(11),yb:b(3),lt};
 }
 function readInput(){
   const ax=(n,p)=>(p.some(k=>keys.has(k))?1:0)-(n.some(k=>keys.has(k))?1:0);
@@ -1233,15 +1266,17 @@ function readInput(){
   if(PAD){ x+=PAD.x; y+=PAD.y; if(PAD.rt>0.3 && y<PAD.rt) y=Math.max(y,PAD.rt); }
   IN.x=clamp(x,-1,1); IN.y=clamp(y,-1,1);
   IN.jump=keys.has('Space')||(PAD&&PAD.a)||tJump;
+  IN.stop=keys.has('KeyR')||(PAD&&PAD.lt>0.4)||tStop;
   IN.grab=keys.has('ShiftLeft')||keys.has('ShiftRight')||keys.has('KeyJ')||keys.has('KeyK')||(PAD&&PAD.grab)||tGrab;
   if(PAD){
     if(PAD.a && !padPrev.a){ if(state==='title'||state==='results') startRun(); else if(state==='paused') resume(); }
     if(PAD.start && !padPrev.start){ if(state==='play') pause(); else if(state==='paused') resume(); else startRun(); }
     if(PAD.rs && !padPrev.rs) resetCam();
     if(PAD.yb && !padPrev.yb && state==='play') setFP(!CAM.fp);
+    if(PAD.push && !padPrev.push) startPush();
     if(PAD.rx) CAM.yaw-=PAD.rx*0.04;
     if(PAD.ry) setZoom(CAM.zoom*Math.exp(PAD.ry*0.025));
-    padPrev={a:PAD.a,start:PAD.start,rs:PAD.rs,yb:PAD.yb};
+    padPrev={a:PAD.a,start:PAD.start,rs:PAD.rs,yb:PAD.yb,push:PAD.push};
   }
 }
 window.addEventListener('keydown',e=>{
@@ -1254,6 +1289,7 @@ window.addEventListener('keydown',e=>{
   if(e.code==='Minus'||e.code==='NumpadSubtract'){ setZoom(CAM.zoom*1.15); return; }
   if(e.code==='KeyC'){ resetCam(); return; }
   if(e.code==='KeyV'){ setFP(!CAM.fp); return; }
+  if(e.code==='KeyT'){ startPush(); return; }
   if(e.code==='Enter' && (state==='title'||state==='results') && document.activeElement.tagName!=='BUTTON'){ startRun(); return; }
   keys.add(e.code);
 });
@@ -1277,14 +1313,15 @@ function holdBtn(el,set){
   el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); el.addEventListener('lostpointercapture',up);
   el.addEventListener('contextmenu',e=>e.preventDefault());
 }
-holdBtn($('btnJump'),v=>tJump=v); holdBtn($('btnGrab'),v=>tGrab=v);
+holdBtn($('btnJump'),v=>tJump=v); holdBtn($('btnGrab'),v=>tGrab=v); holdBtn($('btnPush'),v=>{ if(v) startPush(); }); holdBtn($('btnStop'),v=>tStop=v);
 
 /* camera controls: wheel / +- zoom, right-drag orbit, C or middle-click resets, right stick on a controller, pinch on touch */
 const CAM={zoom:1,yaw:0,pitch:0,drag:false,id:null,lx:0,ly:0,fp:false};
 try{ CAM.fp=localStorage.getItem('off-piste-fp')==='1'; }catch(e){}
-try{ const z=+localStorage.getItem('violet-hour-zoom'); if(z) CAM.zoom=clamp(z,0.45,2.6); }catch(e){}
-function setZoom(z){ CAM.zoom=clamp(z,0.45,2.6); try{ localStorage.setItem('violet-hour-zoom',CAM.zoom.toFixed(2)); }catch(e){} }
-function resetCam(){ CAM.yaw=0; CAM.pitch=0; setZoom(1); }
+const ZOOM0=0.7;   // default chase distance: closer in
+CAM.zoom=ZOOM0; try{ const z=+localStorage.getItem('off-piste-zoom'); if(z) CAM.zoom=clamp(z,0.45,2.6); }catch(e){}
+function setZoom(z){ CAM.zoom=clamp(z,0.45,2.6); try{ localStorage.setItem('off-piste-zoom',CAM.zoom.toFixed(2)); }catch(e){} }
+function resetCam(){ CAM.yaw=0; CAM.pitch=0; setZoom(ZOOM0); }
 window.addEventListener('wheel',e=>{ if(state!=='play'&&state!=='title') return; if(state==='title'&&e.target.closest('.screen')) return;
   e.preventDefault(); setZoom(CAM.zoom*Math.exp(e.deltaY*0.0012)); },{passive:false});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
@@ -1306,7 +1343,7 @@ canvas.addEventListener('pointermove',e=>{ if(!pinch.has(e.pointerId)) return; p
   if(pinch.size===2){ const [a,b]=[...pinch.values()], d=Math.hypot(a.x-b.x,a.y-b.y); if(pinchD) setZoom(CAM.zoom*pinchD/d); pinchD=d; } });
 const endPinch=e=>{ pinch.delete(e.pointerId); pinchD=0; };
 canvas.addEventListener('pointerup',endPinch); canvas.addEventListener('pointercancel',endPinch);
-$('viewBtn').addEventListener('click',()=>{ const steps=[0.7,1,1.5,2.1]; const i=steps.findIndex(s=>s>CAM.zoom+0.05); setZoom(i<0?steps[0]:steps[i]); CAM.yaw=0; CAM.pitch=0; });
+$('viewBtn').addEventListener('click',()=>{ const steps=[0.5,0.7,1,1.5,2.1]; const i=steps.findIndex(s=>s>CAM.zoom+0.05); setZoom(i<0?steps[0]:steps[i]); CAM.yaw=0; CAM.pitch=0; });
 
 /* ---------- Player state ---------- */
 const P={};
@@ -1318,7 +1355,7 @@ let state='title', elapsed=0, shake=0, slowT=0, timeScale=1;
 function resetPlayer(){
   Object.assign(P,{x:center(0),z:0,y:0,vx:0,vy:0,vz:-7,heading:0,turn:0,air:false,airT:0,spin:0,flip:0,spinRate:0,flipRate:0,
     stance:0,takeStance:0,grab:0,grabT:0,grabName:null,charge:0,crash:0,tumble:0,lean:0,vtilt:0,
-    visYaw:0,visFlip:0,squash:0,liveKey:0,slip:0,popReady:false,grind:null,ghost:0,fading:false,tuck:0,brake:0,errAt:null,eS:0,eF:0,tLand:9});
+    visYaw:0,visFlip:0,squash:0,hk:0,hkSide:0,pushT:0,liveKey:0,slip:0,popReady:false,grind:null,ghost:0,fading:false,tuck:0,brake:0,errAt:null,eS:0,eF:0,tLand:9});
   P.y=physH(P.x,P.z);
 }
 function resetWorld(){
@@ -1355,6 +1392,9 @@ let hudCache={};
 function setText(k,v){ if(hudCache[k]!==v){ hudCache[k]=v; hudEls[k].textContent=v; } }
 
 /* ---------- Tricks and scoring ---------- */
+// T: plant both poles and shove. Strong from a standstill, fading out by ~70 km/h.
+const PUSH_T=0.75;
+function startPush(){ if(BOARD || state!=='play' || P.air || P.grind || P.crash>0 || (P.pushT||0)>0.12) return; P.pushT=PUSH_T; }
 function popStrength(){ return 2.6+(P.charge/0.4)*3.0; }
 function takeoff(){
   P.air=true; P.airT=0; P.spin=0; P.flip=0; P.spinRate=0; P.flipRate=0; P.grabT=0; P.grabName=null; P.takeStance=P.stance; P.liveKey=0;
@@ -1444,9 +1484,10 @@ function tryRail(){
       const rf=mod(P.flip,TAU), flipErr=Math.min(rf,TAU-rf);
       if(P.air && flipErr>1.0){ crash('Rail check'); return true; }
       const total=(P.air?P.takeStance+P.spin:P.stance)-(P.heading-r.heading);
-      const snapped=Math.round(total/(Math.PI/2))*(Math.PI/2);
+      let snapped=Math.round(total/(Math.PI/2))*(Math.PI/2);
       if(!P.air && Math.abs(total-snapped)>0.5){ crash('Rail check'); return true; } // riding on: straight or sideways
       // jumping on from any side: you twist to the nearest straight or sideways stance as you land on it
+      if(!P.air || Math.abs(P.spin)<0.6) snapped=Math.round((total-Math.PI/2)/Math.PI)*Math.PI+Math.PI/2;   // default: swing sideways into a slide
       const spinOn=P.air?Math.round(Math.abs(P.spin)/(Math.PI/2))*90:0;
       P.grind={rail:r,t:Math.max(0,t),s:Math.max(6,spAlong),time:0,spinOn,pts:0};
       P.stance=mod(snapped,TAU); P.visYaw=total-snapped; P.visFlip=P.flip-Math.round(P.flip/TAU)*TAU;
@@ -1461,13 +1502,15 @@ function tryRail(){
 function exitGrind(popped){
   const g=P.grind, r=g.rail, full=g.t>=1;
   P.grind=null; P.railLock=0.3; // don't snap straight back onto the rail you just left
+  const scored=P.stance;
   if(g.time>0.18){
-    let name=railName(P.stance); if(g.spinOn>=180) name=g.spinOn+' on '+name;
+    let name=railName(scored); if(g.spinOn>=180) name=g.spinOn+' on '+name;
     let pts=150+g.time*420+(g.spinOn>=180?g.spinOn*0.8:0)+(full?220:0);
     addTrick({name:name+(full?' · full rail':''),pts:Math.round(pts),perfect:false});
   }
   const slope=(r.y1-r.y0)/r.len;
   P.vy=slope*g.s+1.2; P.vx=r.dx*g.s; P.vz=r.dz*g.s;
+  { const w=wrap(P.stance); if(Math.abs(Math.abs(w)-Math.PI/2)<0.3){ const st=0; P.visYaw+=w-st; P.stance=st; } }
   if(popped) doPop();
   takeoff(); P.popReady=false;
 }
@@ -1511,17 +1554,28 @@ function groundStep(dt){
   P.heading=clamp(P.heading+P.turn*rate*dt,-1.5,1.5);
   // gentler pull down the fall line: about 2.5 m/s² on the open slope, top speed near 75 km/h (95 tucked)
   const e=0.4, gx=(physH(P.x+e,P.z)-physH(P.x-e,P.z))/(2*e), gz=(physH(P.x,P.z+e)-physH(P.x,P.z-e))/(2*e);
-  P.vx-=G_SLIDE*gx*dt; P.vz-=G_SLIDE*gz*dt;
+  // hockey stop (R): skis or board swing across the hill and dig in; hold it to stay stopped
+  const hkIn = IN.stop && !P.pushT ? 1 : 0;
+  P.hk+=(hkIn-P.hk)*Math.min(1,(hkIn?10:5)*dt);
+  if(hkIn && !P.hkSide) P.hkSide = P.turn>0.15?1:P.turn<-0.15?-1:(Math.random()<0.5?1:-1);
+  if(!hkIn && P.hk<0.05) P.hkSide=0;
+  const held = hkIn && sp0<0.8;            // stopped on your edges: gravity can't pull you off
+  if(!held){ P.vx-=G_SLIDE*gx*dt; P.vz-=G_SLIDE*gz*dt; }
   const fx=Math.sin(P.heading), fz=-Math.cos(P.heading), lx=-fz, lz=fx;
   let vF=P.vx*fx+P.vz*fz, vL=P.vx*lx+P.vz*lz;
-  const lost=vL*(1-Math.exp(-10*dt)); vL-=lost; vF+=Math.abs(lost)*0.12;
-  if(vF<1.5) vF+=4*dt;
+  const lost=vL*(1-Math.exp(-10*dt)); vL-=lost;
+  // (no automatic forward creep: you can come to a full stop, and you don't get nudged up the side walls)
   if(P.noBrake && IN.y>-0.3) P.noBrake=false;   // a stick still held back from a backflip isn't a brake
+  if(P.pushT>0){ const ph=1-P.pushT/PUSH_T; P.pushT-=dt;
+    if(ph>0.3 && ph<0.8){ const sp1=Math.hypot(vF,vL); vF+=10.5*Math.max(0,1-sp1/19.5)*dt; } }
   const tuck=IN.y>0.3?IN.y:0, brake=(IN.y<-0.3&&!P.noBrake)?-IN.y:0;
   const sp=Math.hypot(vF,vL);
-  const k=(0.0044-tuck*0.002)*sp+0.03+brake*1.1+P.charge*0.15;
+  const turnDrag = sp>4 ? Math.abs(P.turn)*0.32 : 0;     // turning slows you down
+  const k=(0.0044-tuck*0.002)*sp+0.03+brake*1.1+P.charge*0.15+turnDrag+P.hk*2.4;
   const f=Math.exp(-k*dt); vF*=f; vL*=f;
-  P.vx=fx*vF+lx*vL; P.vz=fz*vF+lz*vL; P.slip=Math.abs(vL); P.brake=brake; P.tuck=tuck;
+  if(P.hk>0.05){ const s1=Math.hypot(vF,vL), d=P.hk*9*dt, q=s1>d?(s1-d)/s1:0; vF*=q; vL*=q; }   // edges dig in: about a second from cruising speed
+  if(hkIn && Math.hypot(vF,vL)<0.8){ vF=0; vL=0; }      // dead stop
+  P.vx=fx*vF+lx*vL; P.vz=fz*vF+lz*vL; P.slip=Math.abs(vL); P.brake=Math.max(brake,P.hk*Math.min(1,sp/6)); P.tuck=tuck;
   const prevY=P.y; P.x+=P.vx*dt; P.z+=P.vz*dt; bounds();
   if(tryRail()) return;
   const g=physH(P.x,P.z), pred=prevY+P.vy*dt-0.5*G*dt*dt;
@@ -1542,17 +1596,23 @@ function groundStep(dt){
   // powder spray off both skis
   const rate2=12+sp*2.6+P.slip*24+Math.abs(P.turn)*sp*1.8+brake*90;
   let n=rate2*dt; while(n>0){ if(Math.random()<n){
-      const side=-(Math.sign(P.turn)||(Math.random()<0.5?-1:1)), ski=Math.random()<0.5?-0.15:0.15;
+      const side=-(Math.sign(P.turn)||(Math.random()<0.5?-1:1)), ski=BOARD?rand(-0.12,0.12):(Math.random()<0.5?-0.15:0.15);
       const bx=P.x-fx*0.6+lx*ski, bz=P.z-fz*0.6+lz*ski;
       emit(bx+rand(-0.25,0.25), P.y+0.05, bz+rand(-0.25,0.25),
         -fx*sp*0.22+lx*side*rand(1,3+P.slip*0.6)+rand(-0.8,0.8), rand(1.2,3.4)+sp*0.07, -fz*sp*0.22+lz*side*rand(1,3+P.slip*0.6)+rand(-0.8,0.8),
         rand(0.35,0.95), rand(0.7,1.4)); }
     n-=1; }
+  // hockey stop: a low fan of snow kicked out to the side the skis are scraping toward, not a wall in front of you
+  if(P.hk>0.1 && sp>1.5){ const side=P.hkSide||1; let m=P.hk*Math.min(1,sp/8)*55*dt;
+    while(m>0){ if(Math.random()<m){ const b=rand(-0.5,0.5);
+        emit(P.x+lx*side*0.35-fx*b, P.y+0.06, P.z+lz*side*0.35-fz*b,
+          fx*vF*0.15+lx*side*rand(1.5,4)+rand(-0.5,0.5), rand(0.8,2.2), fz*vF*0.15+lz*side*rand(1.5,4)+rand(-0.5,0.5), rand(0.4,0.9), rand(0.5,1.0)); }
+      m-=1; } }
   // the big one: a hard carve at speed throws a wall of powder off the outside of the turn (like the photo).
   // It travels forward with you and out to the side, so it billows beside the rider, not over the camera.
   // only a real, committed turn at speed sets it off: stick most of the way over and moving fast
   const carve=Math.max(0,(Math.abs(P.turn)-0.65)/0.35)*Math.min(1,Math.max(0,(sp-9)/8));
-  if(carve>0.05){
+  if(carve>0.05 && P.hk<0.1){
     const side=-Math.sign(P.turn); let m=carve*(sp+P.slip*3)*16*dt;
     while(m>0){ if(Math.random()<m){ const b=rand(-0.3,0.9), out=rand(3,8.5);
         emit(P.x+lx*side*0.4-fx*b+rand(-0.2,0.2), P.y+0.15, P.z+lz*side*0.4-fz*b+rand(-0.2,0.2),
@@ -1632,7 +1692,7 @@ function updateRider(dt,now){
   if(P.crash>0){
     o.rotation.set(P.tumble*2.2, -P.heading+P.tumble*1.3, Math.sin(P.tumble*1.7)*1.2);
   } else {
-    const st=P.stance, cs=Math.cos(st), sn=Math.sin(st);
+    const st=P.stance+(BOARD?-Math.PI/2:0), cs=Math.cos(st), sn=Math.sin(st);
     const fx=Math.sin(P.heading), fz=-Math.cos(P.heading);
     let slope;
     if(P.grind){ const r=P.grind.rail; slope=(r.y1-r.y0)/r.len; }
@@ -1642,7 +1702,7 @@ function updateRider(dt,now){
     P.visYaw*=Math.exp(-12*dt); P.visFlip*=Math.exp(-12*dt);
     const leanT = (P.air||P.grind) ? 0 : -P.turn*0.75*Math.min(1,sp/10);
     P.lean+=(leanT-P.lean)*Math.min(1,9*dt);
-    o.rotation.y=-P.heading+st+(P.air?P.spin:0)+P.visYaw;
+    o.rotation.y=-P.heading+st+(P.air?P.spin:0)+P.visYaw+(P.air||P.grind?0:(P.hk||0)*(P.hkSide||1)*1.35);
     o.rotation.x=P.vtilt*cs+(P.air?P.flip:0)+P.visFlip;
     o.rotation.z=P.lean*cs+P.vtilt*sn;
   }
@@ -1650,23 +1710,25 @@ function updateRider(dt,now){
   animateRig(dt,now);
 }
 // first person hides your own helmet, jacket and sleeves (gloves, poles, legs and skis stay in view)
-function fpParts(){ return [R.torsoF,R.armL.up,R.armL.fo,R.armL.cuff,R.armR.up,R.armR.fo,R.armR.cuff]; }
+let fpList=null;
+function fpParts(){ if(!fpList){ fpList=[R.head]; R.torsoF.children.forEach(o=>{ if(o.userData.fpHide) fpList.push(o); }); } return fpList; }
 function setFPVis(fp){ for(const o of fpParts()) o.visible=!fp; }
 function setFP(on){ CAM.fp=on; try{ localStorage.setItem('off-piste-fp',on?'1':'0'); }catch(e){}
   document.querySelectorAll('.fpBtn').forEach(b=>{ b.textContent=on?'Camera: First person':'Camera: Third person'; });
   const ib=$('fpIcon'); if(ib){ ib.setAttribute('aria-pressed',on?'true':'false'); ib.classList.toggle('on',on); } }
-const fpQ=new THREE.Quaternion(), fpPitch=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-0.08), fpEye=new THREE.Vector3();
+const fpBoardYaw=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI/2);
+const fpQ=new THREE.Quaternion(), fpPitch=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-0.3), fpEye=new THREE.Vector3();
 function updateCamera(dt,now){
   const sp=Math.hypot(P.vx,P.vz);
   setFPVis(CAM.fp && state!=='title');
   if(CAM.fp && state!=='title'){
     // eyes just behind the goggles; the view turns with your body through spins and flips
-    R.head.updateWorldMatrix(true,false); fpEye.set(0,0.12,0.02); R.head.localToWorld(fpEye);
+    R.head.updateWorldMatrix(true,false); fpEye.set(0,0.13,-0.04); R.head.localToWorld(fpEye);
     camera.position.copy(fpEye);
-    R.orient.getWorldQuaternion(fpQ); fpQ.multiply(fpPitch);
+    R.orient.getWorldQuaternion(fpQ); if(BOARD) fpQ.multiply(fpBoardYaw); fpQ.multiply(fpPitch);
     camera.quaternion.slerp(fpQ,1-Math.exp(-(P.air?30:16)*dt));
     if(shake>0){ const s=shake*shake*0.12; camera.position.x+=rand(-s,s); camera.position.y+=rand(-s,s); shake=Math.max(0,shake-dt*2.2); }
-    const fov=74+Math.min(14,sp*0.32);
+    const fov=84+Math.min(12,sp*0.28);   // wide enough to see your arms, poles and ski tips
     if(Math.abs(camera.fov-fov)>0.05){ camera.fov+=(fov-camera.fov)*Math.min(1,3*dt); camera.updateProjectionMatrix(); }
     camLook.copy(camera.position).add(tmpV.set(0,0,-6).applyQuaternion(camera.quaternion));
     return;
@@ -1826,6 +1888,7 @@ function ingest(p){
   const pres=p.presence||{}; let r=NET.peers.get(p.peer);
   if(!r){ r=makeRemote(p.peer); NET.peers.set(p.peer,r); }
   if(Number.isInteger(pres.o) && pres.o>=0 && pres.o<OUTFITS.length && pres.o!==r.outfit){ r.outfit=pres.o; paintOutfit(r.mats,pres.o); { const o=OUTFITS[pres.o], c=new THREE.Color(new THREE.Color(o.jacket).getLuminance()>0.12?o.jacket:o.accent); c.lerp(new THREE.Color(0xffffff),0.3); r.col=c.getHex(); } }
+  { const b=pres.b===1; if(b!==r.board){ r.board=b; rideVis(r.g,b); } }
   r.name=cleanName(pres.n); r.st=pres.st!==0; r.score=Math.max(0,Math.min(1e9,Number(pres.s)||0));
   if(pres.k!==r.lastK && validPose(pres.k)){
     r.lastK=pres.k; const now=performance.now();
@@ -1875,7 +1938,7 @@ function netTick(rdt,now){
   if(!NET.room) return;
   for(const r of NET.peers.values()) applyRemote(r,now);
   NET.sendT+=rdt;
-  if(NET.sendT>=0.08){ NET.sendT=0; NET.room.presence({k:packPose(),s:Math.round(stats.score),n:myName(),st:state==='title'?0:1,o:OUTFIT.i}).catch(()=>{}); }
+  if(NET.sendT>=0.08){ NET.sendT=0; NET.room.presence({k:packPose(),s:Math.round(stats.score),n:myName(),st:state==='title'?0:1,o:OUTFIT.i,b:BOARD?1:0}).catch(()=>{}); }
   NET.listT+=rdt; if(NET.listT>0.5){ NET.listT=0; renderNetList(); }
 }
 
@@ -1987,9 +2050,9 @@ function joinRoom(code){
   $('gameIn').addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); closeGameChat(); } });
   $('gameIn').addEventListener('blur',()=>setTimeout(()=>{ if(document.activeElement!==$('gameIn')) closeGameChat(); },0));
   $('chatBtn').addEventListener('click',()=>{ if($('gameForm').hidden) openGameChat(); else closeGameChat(); });
-  // Enter or T opens chat while riding
+  // Enter opens chat while riding (T is the pole push)
   window.addEventListener('keydown',e=>{ if(!NET.room || state!=='play' || (e.target&&e.target.tagName==='INPUT')) return;
-    if(e.key==='Enter'||e.code==='KeyT'){ e.preventDefault(); openGameChat(); } });
+    if(e.key==='Enter'){ e.preventDefault(); openGameChat(); } });
   $('mpNew').addEventListener('click',()=>{ const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let c=''; for(let i=0;i<4;i++) c+=A[Math.floor(Math.random()*A.length)]; joinRoom(c); });
   $('mpCopy').addEventListener('click',async()=>{ const link=inviteLink(NET.code); let ok=false;
     try{ await navigator.clipboard.writeText(link); ok=true; }catch(e){}
@@ -2004,10 +2067,15 @@ document.querySelectorAll('.gfxBtn').forEach(b=>b.addEventListener('click',()=>{
   const order=['auto','low','medium','high']; setGfxMode(order[(order.indexOf(GFX.mode)+1)%order.length]); }));
 { let m='auto'; try{ m=localStorage.getItem('off-piste-gfx')||'auto'; }catch(e){} setGfxMode(['auto','low','medium','high'].includes(m)?m:'auto'); }
 
+function setRide(board){ BOARD=board; try{ localStorage.setItem('off-piste-ride',board?'board':'ski'); }catch(e){}
+  rideVis(R.rider,board); fpList=null;
+  document.querySelectorAll('.rideBtn').forEach(b=>b.textContent='Ride: '+(board?'Snowboard':'Skis'));
+  trPts=[]; trLast=null; trGeo.setDrawRange(0,0); capGeo.setDrawRange(0,0); }
+document.querySelectorAll('.rideBtn').forEach(b=>b.addEventListener('click',()=>setRide(!BOARD)));
 function syncOutfit(){ paintOutfit(R.SLOTS,OUTFIT.i); document.querySelectorAll('.outfitBtn').forEach(b=>b.textContent='Outfit: '+OUTFITS[OUTFIT.i].name);
   try{ localStorage.setItem('off-piste-outfit',String(OUTFIT.i)); }catch(e){} }
 document.querySelectorAll('.outfitBtn').forEach(b=>b.addEventListener('click',()=>{ OUTFIT.i=(OUTFIT.i+1)%OUTFITS.length; syncOutfit(); }));
-syncOutfit();
+syncOutfit(); setRide(BOARD);
 
 requestAnimationFrame(frame);
 })();
