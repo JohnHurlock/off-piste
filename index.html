@@ -1140,7 +1140,7 @@ function animateRig(dt,now){
     if(P.pressT>0){ const pr=Math.min(1,P.pressT*5); if(BOARD) roll=0.3*pr; else pitch=0.3*pr; lift+=0.22*pr; lean-=0.22*pr; c+=0.12*pr; }
   } else if(mode==='air'){
     const fr=Math.min(1,Math.abs(P.flipRate)/6);
-    c=0.24+fr*0.45+P.grab*0.62; lift=fr*0.14+P.grab*0.42; lean=0.18+fr*0.3+P.grab*0.55;
+    c=0.24+fr*0.45+P.grab*0.42; lift=fr*0.14+P.grab*0.26; lean=0.18+fr*0.3+P.grab*0.5;
     twist=clamp(P.spinRate*0.055,-0.5,0.5);
     headYaw=clamp(wrap(-(P.takeStance+P.spin)),-1.25,1.25)*0.75-twist; headPitch=0.35;
     if(gd){ pitch=gd.pitch*P.grab; cross=gd.cross*P.grab; roll=gd.roll*P.grab; }
@@ -1224,6 +1224,7 @@ function animateRig(dt,now){
     const grip=vE.copy(hS[i]).addScaledVector(fd,0.05);
     placeSeg(A.pole,grip,vF.copy(grip).addScaledVector(pD[i],1.18));
   }
+  if(CLOTH_IDX.length) bendAll(R.cloth||(R.cloth=clothBind(R.rider,false)));
 }
 
 /* landing guide ring */
@@ -1924,7 +1925,7 @@ const tmpV=new THREE.Vector3();
 function updateRider(dt,now){
   updateRing();
   const sp=Math.hypot(P.vx,P.vz);
-  const lift = P.crash>0 ? 0.3 : P.grind ? 0.72 : P.air ? 0.7 : 0.7-0.16; // skis ride down in their own groove
+  const lift = P.crash>0 ? 0.3 : P.grind ? 0.72 : P.air ? 0.7 : 0.62; // skis sit on the snow (their groove trails behind them); any lower and they vanish under it
   R.rider.position.set(P.x,P.y+lift,P.z);
   R.rider.visible = !(P.ghost>0 && Math.floor(now/90)%2===0);
   const o=R.orient;
@@ -1956,7 +1957,7 @@ function setFP(on){ CAM.fp=on; try{ localStorage.setItem('off-piste-fp',on?'1':'
   document.querySelectorAll('.fpBtn').forEach(b=>{ b.textContent=on?'First person':'Third person'; });
   const ib=$('fpIcon'); if(ib){ ib.setAttribute('aria-pressed',on?'true':'false'); ib.classList.toggle('on',on); } }
 const fpBoardYaw=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI/2);
-const fpQ=new THREE.Quaternion(), fpPitch=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-0.42), fpEye=new THREE.Vector3();
+const fpQ=new THREE.Quaternion(), fpPitch=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-0.85), fpEye=new THREE.Vector3();
 let camOff=-1;
 function updateCamera(dt,now){
   // on the menu, frame the rider in the open space to the right of the menu panel
@@ -1966,7 +1967,7 @@ function updateCamera(dt,now){
   setFPVis(CAM.fp && state!=='title');
   if(CAM.fp && state!=='title'){
     // eyes just behind the goggles; the view turns with your body through spins and flips
-    R.head.updateWorldMatrix(true,false); fpEye.set(0,0.13,-0.04); R.head.localToWorld(fpEye);
+    R.head.updateWorldMatrix(true,false); fpEye.set(0,0.15,-0.13); R.head.localToWorld(fpEye);   // just in front of the goggles, looking down past your chest at your legs and skis
     camera.position.copy(fpEye);
     R.orient.getWorldQuaternion(fpQ); if(BOARD) fpQ.multiply(fpBoardYaw); fpQ.multiply(fpPitch);
     camera.quaternion.slerp(fpQ,1-Math.exp(-(P.air?30:16)*dt));
@@ -2121,11 +2122,85 @@ function frame(now){
    their own rider. Without the room (opened outside claude.ai) the game is single-player as before. */
 const NET={room:null,user:null,peers:new Map(),sendT:0,listT:0,names:new Map(),connected:false};
 const NET_COLORS=[0x3aa0ff,0x35c98b,0xffb02e,0x9a6bff,0xff5a4e,0x2fd3d3,0xf9a8d4,0xa3e635];
+/* ---------- cloth limbs ----------
+   Each pant leg and sleeve is one continuous tube bent through the knee or elbow, rebuilt every frame from the
+   hip-knee-ankle / shoulder-elbow-wrist segments (which stay as hidden "bones"), so no capsules meet at the joints. */
+const CLOTH_KIND={
+  leg:{n1:0.45,n2:0.43,rb:0.12,ns:18,step:0.032,d0:-0.08,d1:1.04,depth:0.95,fb:[-1,0,0],
+    prof:[[-0.08,0.104],[0,0.104],[0.12,0.1],[0.25,0.095],[0.36,0.091],[0.45,0.089],[0.55,0.087],[0.65,0.089],[0.75,0.095],[0.83,0.101],[0.9,0.107],[0.97,0.111],[1.04,0.109]],
+    fold:0.03,bunch:[[0.47,0.035,0.018],[0.8,0.028,0.03],[0.87,0.028,0.04],[0.94,0.028,0.042],[1.0,0.025,0.03]]},
+  arm:{n1:0.3,n2:0.28,rb:0.085,ns:16,step:0.028,d0:-0.012,d1:0.6,depth:0.93,fb:[1,0,0],
+    prof:[[-0.012,0.072],[0.03,0.078],[0.1,0.074],[0.2,0.07],[0.3,0.067],[0.4,0.063],[0.48,0.064],[0.54,0.068],[0.6,0.07]],
+    fold:0.035,bunch:[[0.31,0.03,0.02],[0.5,0.022,0.035],[0.56,0.022,0.045]]}
+};
+function lerpProf(p,d){ if(d<=p[0][0]) return p[0][1];
+  for(let i=1;i<p.length;i++) if(d<=p[i][0]){ const t=(d-p[i-1][0])/(p[i][0]-p[i-1][0]); return p[i-1][1]+(p[i][1]-p[i-1][1])*t; }
+  return p[p.length-1][1]; }
+function clothGeo(K,seed){
+  const ds=[]; for(let d=K.d0; d<K.d1-1e-6; d+=K.step) ds.push(d); ds.push(K.d1);
+  const NR=ds.length+1, ns=K.ns;          // the extra last ring rolls the hem inward
+  const pos=new Float32Array(NR*ns*3), idx=[];
+  for(let i=0;i<NR-1;i++) for(let k=0;k<ns;k++){ const a=i*ns+k, b=i*ns+(k+1)%ns, c=(i+1)*ns+(k+1)%ns, d=(i+1)*ns+k; idx.push(a,b,d, b,c,d); }
+  const g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3)); g.setIndex(idx);
+  const mul=new Float32Array(NR*ns), rad=new Float32Array(NR), dd=new Float32Array(NR);
+  for(let i=0;i<NR;i++){ const hem=i===NR-1, d=hem?K.d1-0.018:ds[i]; dd[i]=d; rad[i]=lerpProf(K.prof,d)*(hem?0.8:1);
+    for(let k=0;k<ns;k++){ const th=k/ns*Math.PI*2;
+      let m=1+K.fold*(0.6*Math.sin(3*th+d*17+seed)+0.4*Math.sin(5*th-d*29+seed*2));
+      for(const [c,w,dp] of K.bunch) m+=dp*Math.exp(-(((d-c)/w)**2))*(0.75+0.25*Math.sin(2*th+d*23+seed));
+      mul[i*ns+k]=m; } }
+  g.userData={K,NR,ns,mul,rad,dd};
+  g.boundingSphere=new THREE.Sphere(new THREE.Vector3(0,0.7,0),1.8);   // body space; skips a per-frame recompute
+  return g;
+}
+const kcA=new THREE.Vector3(),kcB=new THREE.Vector3(),kcC=new THREE.Vector3(),kcu1=new THREE.Vector3(),kcu2=new THREE.Vector3(),kcN=new THREE.Vector3(),
+  kcT=new THREE.Vector3(),kcX=new THREE.Vector3(),kcY=new THREE.Vector3(),kcP=new THREE.Vector3(),kcQ1=new THREE.Vector3(),kcQ2=new THREE.Vector3(),kcIn=new THREE.Vector3();
+function bendCloth(c){
+  const g=c.mesh.geometry, U=g.userData, K=U.K, pos=g.attributes.position.array, ns=U.ns;
+  kcA.copy(c.a.position); kcB.copy(c.b.position);
+  if(c.c) kcC.copy(c.c.position); else kcC.set(0,1,0).applyQuaternion(c.b.quaternion).multiplyScalar(K.n2).add(kcB);
+  kcu1.subVectors(kcB,kcA); const L1=kcu1.length()||1e-4; kcu1.divideScalar(L1);
+  kcu2.subVectors(kcC,kcB); const L2=kcu2.length()||1e-4; kcu2.divideScalar(L2);
+  kcN.crossVectors(kcu1,kcu2).addScaledVector(kcX.set(K.fb[0],K.fb[1],K.fb[2]),0.06);
+  const bend=Math.min(1,1-kcu1.dot(kcu2));
+  kcIn.subVectors(kcu2,kcu1); const il=kcIn.length(); if(il>1e-4) kcIn.divideScalar(il);
+  const rb=Math.min(K.rb,L1*0.45,L2*0.45);
+  kcQ1.copy(kcB).addScaledVector(kcu1,-rb); kcQ2.copy(kcB).addScaledVector(kcu2,rb);
+  for(let i=0;i<U.NR;i++){
+    const dn=U.dd[i], D=dn<=K.n1 ? dn*L1/K.n1 : L1+(dn-K.n1)*L2/K.n2;
+    if(D<=L1-rb){ kcP.copy(kcA).addScaledVector(kcu1,D); kcT.copy(kcu1); }
+    else if(D>=L1+rb){ kcP.copy(kcB).addScaledVector(kcu2,D-L1); kcT.copy(kcu2); }
+    else { const t=(D-(L1-rb))/(2*rb), it=1-t;
+      kcP.copy(kcQ1).multiplyScalar(it*it).addScaledVector(kcB,2*t*it).addScaledVector(kcQ2,t*t);
+      kcT.copy(kcu1).multiplyScalar(it).addScaledVector(kcu2,t).normalize(); }
+    const jw=Math.exp(-(((D-L1)/(rb*1.4))**2))*bend;          // squash the inside of the bend so it creases instead of poking through
+    kcX.copy(kcN).addScaledVector(kcT,-kcN.dot(kcT)).normalize(); kcY.crossVectors(kcT,kcX);
+    const r=U.rad[i];
+    for(let k=0;k<ns;k++){ const th=k/ns*Math.PI*2, cs=Math.cos(th), sn=Math.sin(th)*K.depth;
+      const ox=kcX.x*cs+kcY.x*sn, oy=kcX.y*cs+kcY.y*sn, oz=kcX.z*cs+kcY.z*sn;
+      const inn=ox*kcIn.x+oy*kcIn.y+oz*kcIn.z, sq=inn>0?1-0.5*jw*inn:1, rr=r*U.mul[i*ns+k]*sq, o=(i*ns+k)*3;
+      pos[o]=kcP.x+ox*rr; pos[o+1]=kcP.y+oy*rr; pos[o+2]=kcP.z+oz*rr; }
+  }
+  g.attributes.position.needsUpdate=true; g.computeVertexNormals();
+}
+function bendAll(list){ for(const c of list) bendCloth(c); }
+const CLOTH_MESHES=[];
+for(const [th,sh,s] of [[R.thighL,R.shinL,0],[R.thighR,R.shinR,1]]){
+  const m=new THREE.Mesh(clothGeo(CLOTH_KIND.leg,s*3.1),R.MATS.pants); m.castShadow=true; m.name='cloth'; R.body.add(m);
+  CLOTH_MESHES.push({mesh:m,a:th,b:sh,c:null}); th.visible=false; sh.visible=false; }
+for(const [A,s] of [[R.armL,0],[R.armR,1]]){
+  const m=new THREE.Mesh(clothGeo(CLOTH_KIND.arm,1.7+s*2.3),R.MATS.jacket); m.castShadow=true; m.name='cloth'; R.body.add(m);
+  CLOTH_MESHES.push({mesh:m,a:A.up,b:A.fo,c:A.gl}); A.up.visible=false; A.fo.visible=false; A.cuff.visible=false; }
+let CLOTH_IDX=[];
+function clothIndex(){ const all=[]; R.rider.traverse(o=>all.push(o));
+  CLOTH_IDX=CLOTH_MESHES.map(m=>({mi:all.indexOf(m.mesh),ai:all.indexOf(m.a),bi:all.indexOf(m.b),ci:m.c?all.indexOf(m.c):-1})); R.cloth=null; }
+function clothBind(root,own){ const all=[]; root.traverse(o=>all.push(o));
+  return CLOTH_IDX.map(d=>{ const mesh=all[d.mi]; if(own) mesh.geometry=mesh.geometry.clone();
+    return {mesh,a:all[d.ai],b:all[d.bi],c:d.ci>=0?all[d.ci]:null}; }); }
 const poseNodes=[R.orient,R.body,R.skis,R.skiParts.L,R.skiParts.R,R.thighL,R.thighR,R.shinL,R.shinR,R.torsoF,R.head];
 for(const a of [R.armL,R.armR]) poseNodes.push(a.up,a.fo,a.cuff,a.gl,a.pole);
 const POSE_LEN=4+poseNodes.length*7;
 let poseIdx=[];
-function indexPose(){ const all=[]; R.rider.traverse(o=>all.push(o)); poseIdx=poseNodes.map(n=>all.indexOf(n)); }
+function indexPose(){ const all=[]; R.rider.traverse(o=>all.push(o)); poseIdx=poseNodes.map(n=>all.indexOf(n)); clothIndex(); }
 indexPose();
 const r3=v=>Math.round(v*1000)/1000;
 function packPose(){
@@ -2145,7 +2220,7 @@ function makeRemote(peer){
   g.visible=false; scene.add(g);
   const tag=document.createElement('div'); tag.className='nettag'; tag.hidden=true;
   const nm=document.createElement('span'), sc=document.createElement('small'); tag.append(nm,sc); tagLayer.appendChild(tag);
-  return {peer,g,nodes:poseIdx.map(i=>list[i]),jm,mats,outfit:-1,col,buf:[],lastK:null,score:0,by:null,tag,nm,sc,seen:0};
+  return {peer,g,nodes:poseIdx.map(i=>list[i]),cloth:clothBind(g,true),jm,mats,outfit:-1,col,buf:[],lastK:null,score:0,by:null,tag,nm,sc,seen:0};
 }
 function dropRemote(peer){ const r=NET.peers.get(peer); if(!r) return; scene.remove(r.g); for(const k in r.mats) r.mats[k].dispose(); r.tag.remove(); NET.peers.delete(peer); }
 function validPose(k){ if(!Array.isArray(k)||k.length!==POSE_LEN) return false; for(let i=0;i<k.length;i++){ const v=k[i]; if(typeof v!=='number'||!isFinite(v)||Math.abs(v)>1e6) return false; } return true; }
@@ -2180,6 +2255,7 @@ function applyRemote(r,now){
   for(let n=0;n<r.nodes.length;n++){ const o=4+n*7, nd=r.nodes[n];
     nd.position.set(lr(o),lr(o+1),lr(o+2));
     qa.set(a[o+3],a[o+4],a[o+5],a[o+6]); qb.set(c[o+3],c[o+4],c[o+5],c[o+6]); nd.quaternion.copy(qa).slerp(qb,f).normalize(); }
+  if(r.cloth && r.g.visible) bendAll(r.cloth);
   // name tag over the rider's head
   tagV.set(r.g.position.x,r.g.position.y+1.3,r.g.position.z);
   const dist=tagV.distanceTo(camera.position); tagV.project(camera);
