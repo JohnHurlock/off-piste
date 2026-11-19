@@ -173,9 +173,9 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
 .bigscore{font-family:var(--display);font-weight:800;font-size:clamp(44px,10vw,88px);line-height:1;font-variant-numeric:tabular-nums;color:var(--amber)}
 .newbest{color:var(--rose);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:13px}
 
-/* ===== Look: ski-poster flat. Navy, one orange accent, condensed type, square corners. ===== */
-:root{--dusk:#0a1830;--panel:#10264a;--panel2:#16325e;--ink:#f2f5fa;--muted:#94a8c8;--acc:#ff7a1a;--acc2:#ffcf5c;
-  --line:#23406c;--glass:rgba(10,24,48,.86);--amber:#ffcf5c;--rose:#ff7a1a;--violet:#2f6fe0;--glow:rgba(0,0,0,.45);--glow2:rgba(0,0,0,0);
+/* ===== Look: ski-poster flat. Navy, one ice-blue accent, condensed type, square corners. ===== */
+:root{--dusk:#0a1830;--panel:#10264a;--panel2:#16325e;--ink:#f2f5fa;--muted:#94a8c8;--acc:#5cc8ff;--acc2:#bfeaff;--onacc:#04142b;
+  --line:#23406c;--glass:rgba(10,24,48,.86);--amber:#bfeaff;--rose:#5cc8ff;--violet:#2f6fe0;--glow:rgba(0,0,0,.45);--glow2:rgba(0,0,0,0);
   --display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;--body:'Barlow',system-ui,'Segoe UI',sans-serif}
 button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .screen{padding:0;align-items:stretch;justify-content:flex-start;background:none}
@@ -187,7 +187,7 @@ button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .mark span{display:block;color:var(--acc)}
 #pause .mark{font-size:64px}
 .tagline{margin:0;color:var(--muted);font:500 15px/1.45 var(--body);max-width:32ch}
-.go{display:flex;justify-content:space-between;align-items:center;width:100%;padding:14px 20px;border:0;border-radius:3px;background:var(--acc);color:#1d0e00;
+.go{display:flex;justify-content:space-between;align-items:center;width:100%;padding:14px 20px;border:0;border-radius:3px;background:var(--acc);color:var(--onacc);
   font:italic 800 30px/1 var(--display);text-transform:uppercase;letter-spacing:.01em;box-shadow:5px 5px 0 #03091a;transition:transform .08s,box-shadow .08s}
 .go span{font-size:34px;line-height:.8}
 .go:hover{filter:none;transform:translate(-1px,-1px);box-shadow:6px 6px 0 #03091a}
@@ -221,7 +221,7 @@ button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .lvl .sign{grid-row:1/span 2;width:28px;height:28px}
 .lvl[aria-pressed="true"]{border-color:var(--acc);box-shadow:inset 4px 0 0 var(--acc)}
 .lvl:hover{border-color:var(--acc)}
-.sign.green{fill:#2fb35a}.sign.blue{fill:#2f6fe0}.sign.black{fill:#05080f;stroke:#fff;stroke-width:1.4}.sign.orange{fill:var(--acc)}
+.sign.green{fill:#2fb35a}.sign.blue{fill:#2f6fe0}.sign.black{fill:#05080f;stroke:#fff;stroke-width:1.4}.sign.double{fill:#05080f;stroke:#fff;stroke-width:1.2}
 .controls{grid-template-columns:1fr;gap:10px}
 .ctl{border-radius:3px;background:var(--panel);backdrop-filter:none}
 .ctl h3{color:var(--acc);font:700 15px var(--display);letter-spacing:.08em}
@@ -246,7 +246,7 @@ kbd{border-radius:3px;background:var(--panel2)}
 .lbl{font:600 11px var(--body);letter-spacing:.12em}
 .icon-btn{display:grid;place-items:center;width:40px;height:40px;border-radius:3px;background:rgba(10,24,48,.82);backdrop-filter:none;border:1px solid var(--line);color:var(--ink);padding:0}
 .icon-btn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.icon-btn.on{background:var(--acc);border-color:var(--acc);color:#1d0e00}
+.icon-btn.on{background:var(--acc);border-color:var(--acc);color:var(--onacc)}
 .icon-btn.off .wave{display:none}
 .icon-btn.off{color:var(--muted)}
 .speedo{border-radius:3px;background:rgba(10,24,48,.82);border:1px solid var(--line)}
@@ -261,11 +261,11 @@ kbd{border-radius:3px;background:var(--panel2)}
 .trick-name{background:none;-webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:var(--ink);color:var(--ink);
   font:italic 800 clamp(30px,6vw,58px)/1 var(--display);text-transform:uppercase;text-shadow:3px 3px 0 rgba(0,0,0,.3)}
 .trick-pts{font:700 clamp(17px,3vw,24px) var(--display);color:var(--acc2)}
-.tag{border-radius:2px;background:var(--acc);color:#1d0e00;font:700 .75em var(--display);letter-spacing:.08em;padding:1px 7px}
+.tag{border-radius:2px;background:var(--acc);color:var(--onacc);font:700 .75em var(--display);letter-spacing:.08em;padding:1px 7px}
 .tag.sketch{background:var(--muted)}
 .trick.bad .trick-name{-webkit-text-fill-color:#ff8f8f;color:#ff8f8f}
 .tbtn{font-family:var(--display);font-weight:800;font-size:16px;backdrop-filter:none;border-radius:50%}
-#btnJump{background:rgba(255,122,26,.42);border-color:rgba(255,122,26,.8)}
+#btnJump{background:rgba(92,200,255,.38);border-color:rgba(92,200,255,.85)}
 #stickKnob{background:var(--acc);box-shadow:none}
 .nettag{border-radius:3px;background:rgba(10,24,48,.8)}
 @media (max-width:520px){.menu{border-right:0}.sheet{border-right:0}}
@@ -354,6 +354,8 @@ kbd{border-radius:3px;background:var(--panel2)}
 <section class="sheet" id="sheetSettings" hidden aria-label="Settings">
   <header><button class="back">‹ Back</button><h2>Settings</h2></header>
   <div class="set"><span>Camera</span><button class="fpBtn">Third person</button></div>
+  <div class="set"><span>Camera distance</span><button class="distBtn">Close</button></div>
+  <div class="set"><span>Field of view</span><button class="fovBtn">Wide</button></div>
   <div class="set"><span>Landing assist</span><button class="assistBtn" aria-pressed="true">On</button></div>
   <div class="set"><span>Sound</span><button class="soundBtn">On</button></div>
   <div class="set"><span>Lighting</span><button class="lightBtn">Midnight</button></div>
@@ -453,6 +455,8 @@ kbd{border-radius:3px;background:var(--panel2)}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
 <script>
 (function(){
 'use strict';
@@ -607,7 +611,7 @@ const LEVELS={
   back:  {name:'Backcountry', sign:'blue',   desc:'The original. Endless powder, pillows, trees, kickers and rails.'},
   park:  {name:'Terrain Park', sign:'green', desc:'A groomed run packed with kickers, rails and wide boxes.'},
   glades:{name:'Tree Glades', sign:'black',  desc:'Tight trees and deep pillows. Pick a line and hold it.'},
-  mega:  {name:'Mega Ramp',   sign:'orange', desc:'A huge drop-in, a giant kicker and a long steep landing. Over and over.'},
+  mega:  {name:'Mega Ramp',   sign:'double', desc:'A huge drop-in, a giant kicker and a long steep landing. Over and over.'},
   pipe:  {name:'Halfpipe',    sign:'black',  desc:'Carve up the walls and launch straight up. Spin and grab above the lip.'}
 };
 let LEVEL='back'; try{ const l=localStorage.getItem('off-piste-level'); if(LEVELS[l]) LEVEL=l; }catch(e){}
@@ -724,8 +728,18 @@ function resetPools(){
   for(let i=0;i<MAXR;i++){ freeR.push(i); rocks.setMatrixAt(i,ZERO); }
   markPools();
 }
+const ART={tree:false};
 function setTree(slot,x,y,z,s){
   const ry = wrand(0,TAU);
+  if(ART.tree){
+    const slim=wrand(0.8,1.05), snowy=wrand(0.55,1); const tilt=[];
+    for(let i=0;i<TI;i++){ tilt.push(wrand(-0.05,0.05)); wrand(-0.05,0.05); WR(); }
+    dummy.rotation.set(tilt[0]*0.5,ry,tilt[1]*0.5); dummy.position.set(x,y-0.2,z); dummy.scale.set(s*slim*1.05,s,s*slim*1.05); dummy.updateMatrix();
+    trunks.setMatrixAt(slot,dummy.matrix); foliage.setMatrixAt(slot*TI,dummy.matrix);
+    if(snowy>0.62){ caps.setMatrixAt(slot*TI,dummy.matrix); } else caps.setMatrixAt(slot*TI,ZERO);
+    for(let i=1;i<TI;i++){ foliage.setMatrixAt(slot*TI+i,ZERO); caps.setMatrixAt(slot*TI+i,ZERO); }
+    return;
+  }
   dummy.rotation.set(0,ry,0);
   dummy.position.set(x,y-0.3,z); dummy.scale.set(s,2.2*s,s); dummy.updateMatrix(); trunks.setMatrixAt(slot,dummy.matrix);
   const slim=wrand(0.8,1.05), snowy=wrand(0.55,1);
@@ -752,7 +766,7 @@ const lipMat = new THREE.MeshStandardMaterial({color:L(0x2f56c9), roughness:0.9}
 const flagMat = new THREE.MeshLambertMaterial({color:L(0xe0306a), side:THREE.DoubleSide});
 const poleMat = new THREE.MeshLambertMaterial({color:L(0x1c1a22)});
 const railMat = new THREE.MeshStandardMaterial({color:L(0xd6dae6), roughness:0.22, metalness:0.55, emissive:L(0x241c36)});
-const boxMat = new THREE.MeshStandardMaterial({color:L(0xff7a1a), roughness:0.45, metalness:0.1});
+const boxMat = new THREE.MeshStandardMaterial({color:L(0x2f6fe0), roughness:0.45, metalness:0.1});
 const postMat = new THREE.MeshStandardMaterial({color:L(0x2a2833), roughness:0.6, metalness:0.3});
 function buildKicker(k){
   const v=[], NL=14, NW=6;
@@ -796,7 +810,7 @@ function buildRail(r){
 }
 const gateTex=(function(){
   const c=document.createElement('canvas'); c.width=1024; c.height=64; const x=c.getContext('2d');
-  x.fillStyle='#e8642c'; x.fillRect(0,0,1024,64); x.fillStyle='#fff3e6'; x.font='bold 34px system-ui,Segoe UI,Arial,sans-serif'; x.textBaseline='middle';
+  x.fillStyle='#1f4f9e'; x.fillRect(0,0,1024,64); x.fillStyle='#eef6ff'; x.font='bold 34px system-ui,Segoe UI,Arial,sans-serif'; x.textBaseline='middle';
   for(let i=0;i<4;i++) x.fillText('CHECKPOINT', 30+i*256, 33);
   const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; return t;
 })();
@@ -952,18 +966,18 @@ const FAB={puffer:fabricTex('puffer'), twill:fabricTex('twill'), shell:fabricTex
 FAB.knit.map.repeat.set(3,3); FAB.knit.normalMap.repeat.set(3,3);
 // goggle lens: a mirrored gradient that reads as a reflective lens from any angle
 const lensTex=(()=>{ const c=document.createElement('canvas'); c.width=4; c.height=128; const g=c.getContext('2d'), gr=g.createLinearGradient(0,0,0,128);
-  gr.addColorStop(0,'#2a0b3a'); gr.addColorStop(0.45,'#ff5a8a'); gr.addColorStop(0.62,'#ffd36a'); gr.addColorStop(1,'#3a1a10');
+  gr.addColorStop(0,'#141a24'); gr.addColorStop(0.42,'#9fb0c8'); gr.addColorStop(0.56,'#f4f8ff'); gr.addColorStop(1,'#2a3446');
   g.fillStyle=gr; g.fillRect(0,0,4,128); const t=new THREE.CanvasTexture(c); t.encoding=THREE.sRGBEncoding; return t; })();
 // outfits: jacket, contrast panels, pants, helmet, lens tint, gloves
 const OUTFITS=[
-  {name:'Glacier', jacket:0x2f7de1, accent:0xeef2f7, pants:0x1d2433, helmet:0x1b1e26, lens:0x7fd8ff, glove:0x15171c},
-  {name:'Ember',   jacket:0xe5562b, accent:0x26221f, pants:0x3a3f47, helmet:0xf2f0ea, lens:0xffc04a, glove:0x1d1a18},
-  {name:'Moss',    jacket:0x58743a, accent:0xd8c8a0, pants:0x2b2a25, helmet:0xd8c8a0, lens:0xff8a3a, glove:0x2b2a25},
-  {name:'Orchid',  jacket:0xd93a72, accent:0x2a2346, pants:0x2a2738, helmet:0xeeeaf4, lens:0xff8a3a, glove:0x17161c},
-  {name:'Mono',    jacket:0xefeee9, accent:0x16171a, pants:0x16171a, helmet:0x16171a, lens:0xff5a8a, glove:0x16171a},
-  {name:'Citrus',  jacket:0xf2c21b, accent:0x1b2a4a, pants:0x1b2a4a, helmet:0xf4f4f0, lens:0x6fd3ff, glove:0x1b2a4a},
-  {name:'Arctic',  jacket:0x9fd4e6, accent:0x2c3e50, pants:0xe9ecef, helmet:0x2c3e50, lens:0xffb86a, glove:0x2c3e50},
-  {name:'Night',   jacket:0x22252e, accent:0xff6b2b, pants:0x22252e, helmet:0x22252e, lens:0x7fd8ff, glove:0x101114}
+  {name:'Fog',      jacket:0xe4e6e9, accent:0x16171a, pants:0x141518, helmet:0x141518, lens:0xc9d6ea, glove:0x111214},
+  {name:'Sand',     jacket:0xdfe2e4, accent:0x2a2622, pants:0xbf9a62, helmet:0x17181b, lens:0xd8e2ef, glove:0x221f1c},
+  {name:'Blackout', jacket:0x17181b, accent:0x2a2c31, pants:0x4b4e55, helmet:0x101113, lens:0xe6edf6, glove:0x101113},
+  {name:'Sage',     jacket:0x8f9a80, accent:0x1d1f1c, pants:0x232522, helmet:0xe8e8e4, lens:0xc9d6ea, glove:0x1d1f1c},
+  {name:'Ice',      jacket:0xbcdcea, accent:0x1b2230, pants:0x1b2230, helmet:0x14161b, lens:0xd8e2ef, glove:0x14161b},
+  {name:'Navy',     jacket:0x1f2a42, accent:0xd9d3c4, pants:0xd9d3c4, helmet:0x101113, lens:0xc9d6ea, glove:0x101113},
+  {name:'Olive',    jacket:0x4d5236, accent:0x18191a, pants:0x6b6658, helmet:0x18191a, lens:0xe6edf6, glove:0x18191a},
+  {name:'Grey',     jacket:0x8d9096, accent:0x111214, pants:0x111214, helmet:0xe9e9e6, lens:0xc9d6ea, glove:0x111214}
 ];
 const OUTFIT={i:0};
 let BOARD=false; try{ BOARD=localStorage.getItem('off-piste-ride')==='board'; }catch(e){}
@@ -974,7 +988,7 @@ function paintOutfit(mats,i){ const o=OUTFITS[i]||OUTFITS[0];
   for(const k of ['jacket','accent','pants','helmet','glove']) if(mats[k]) mats[k].color.copy(L(o[k]));
   if(mats.pack) mats.pack.color.copy(L(o.glove)).lerp(L(o.pants),0.5);
   if(mats.gaiter) mats.gaiter.color.copy(L(o.glove)).lerp(L(o.accent),0.12);
-  if(mats.lens){ mats.lens.color.copy(L(0xffffff)); mats.lens.emissive.copy(L(o.lens)).multiplyScalar(0.35); }
+  if(mats.lens){ mats.lens.color.copy(L(0xffffff)); mats.lens.emissive.copy(L(o.lens)).multiplyScalar(0.25); }
 }
 const R = (function(){
   const rider=new THREE.Group(), orient=new THREE.Group(); orient.rotation.order='YXZ'; rider.add(orient);
@@ -983,8 +997,8 @@ const R = (function(){
   const F=(c,r,fab,rep,slot)=>{ const m=new THREE.MeshStandardMaterial({color:L(c),roughness:r,map:fab.map,normalMap:fab.normalMap});
     m.normalScale.set(1,1); m.userData.slot=slot; m.userData.rep=rep; return m; };
   const jacketM=F(0xd93a72,0.78,FAB.puffer,null,'jacket'), accentM=F(0x2a2346,0.7,FAB.shell,null,'accent'), pantsM=F(0x2a2738,0.9,FAB.twill,null,'pants'),
-        helmetM=Object.assign(M(0xeeeaf4,0.42),{}), lensM=new THREE.MeshStandardMaterial({color:0xffffff,map:lensTex,roughness:0.12,metalness:0.55,emissive:L(0xff8a3a).multiplyScalar(0.35),emissiveMap:lensTex}),
-        frameM=M(0x121016,0.5), gloveM=F(0x17161c,0.85,FAB.shell,null,'glove'), bootM=M(0x2b2d3a,0.35,0.1), bootAcc=M(0xf0a24f,0.4), skiTop=M(0xf0a24f,0.32,0.1), skiEdge=M(0x16141b,0.4,0.3),
+        helmetM=Object.assign(M(0xeeeaf4,0.42),{}), lensM=new THREE.MeshStandardMaterial({color:0xffffff,map:lensTex,roughness:0.12,metalness:0.55,emissive:L(0xc9d6ea).multiplyScalar(0.25),emissiveMap:lensTex}),
+        frameM=M(0x121016,0.5), gloveM=F(0x17161c,0.85,FAB.shell,null,'glove'), bootM=M(0x2b2d3a,0.35,0.1), bootAcc=M(0xc9d2de,0.35,0.5), skiTop=M(0x5cc8ff,0.32,0.1), skiEdge=M(0x16141b,0.4,0.3),
         bindM=M(0x9aa0ad,0.35,0.6), poleM=M(0x2c2c33,0.3,0.6), packM=F(0x3a3352,0.85,FAB.shell,null,'pack'), gaiterM=F(0x2a2346,0.95,FAB.knit,null,'gaiter'),
         zipM=M(0xc9ced6,0.3,0.8), reflM=new THREE.MeshStandardMaterial({color:L(0xd8dde4),roughness:0.25,metalness:0.6,emissive:L(0x2a2e35)});
   helmetM.userData.slot='helmet'; lensM.userData.slot='lens'; reflM.userData.slot='refl';
@@ -1085,7 +1099,9 @@ const R = (function(){
     const cf=new THREE.Mesh(new THREE.BoxGeometry(0.034,0.025,0.104),accentM); cf.position.set(sx*0.097,0.29,0); th.add(cf); }
   paintOutfit(SLOTS,OUTFIT.i);
   scene.add(rider);
-  return {rider,orient,body,skis,skiParts,ankles,thighL,thighR,shinL,shinR,torsoF,head,armL,armR,SLOTS,board};
+  const MATS={jacket:jacketM,accent:accentM,pants:pantsM,helmet:helmetM,lens:lensM,frame:frameM,glove:gloveM,boot:bootM,bootAcc,skiTop,skiEdge,
+    bind:bindM,pole:poleM,pack:packM,gaiter:gaiterM,zip:zipM,refl:reflM,boardTop:board.material[2]};
+  return {rider,orient,body,skis,skiParts,ankles,thighL,thighR,shinL,shinR,torsoF,head,armL,armR,SLOTS,board,MATS};
 })();
 
 const _u=new THREE.Vector3(), _p=new THREE.Vector3();
@@ -1117,9 +1133,9 @@ function animateRig(dt,now){
   const mode = state==='title' ? 'idle' : P.crash>0 ? 'crash' : P.grind ? 'grind' : P.air ? 'air' : 'ride';
   const gd = (mode==='air' && P.grab>0.02) ? (GRABDEF[P.grabName]||GRABDEF.Mute) : null;
   let c=0.3, lean=0.3, twist=0, side=0, lift=0, pitch=0, cross=0, roll=0, headYaw=0, headPitch=0.2;
-  if(mode==='idle'){ c=0.16+Math.sin(now*0.0021)*0.03; lean=0.16; headYaw=Math.sin(now*0.0007)*0.5; }
+  if(mode==='idle'){ c=0.1+Math.sin(now*0.0021)*0.025; lean=0.24; headYaw=Math.sin(now*0.0007)*0.5; }
   else if(mode==='ride'){
-    c=0.3+tuck*0.4+charge*0.62+P.squash*0.55+Math.abs(P.turn)*0.1; lean=0.3+tuck*0.55+charge*0.18+P.squash*0.2;
+    c=0.17+tuck*0.45+charge*0.62+P.squash*0.55+Math.abs(P.turn)*0.12; lean=0.26+tuck*0.55+charge*0.18+P.squash*0.2;
     side=-P.lean*0.6; twist=charge*IN.x*0.6 + P.turn*0.12; headYaw=-P.turn*0.25;
     if(P.pressT>0){ const pr=Math.min(1,P.pressT*5); if(BOARD) roll=0.3*pr; else pitch=0.3*pr; lift+=0.22*pr; lean-=0.22*pr; c+=0.12*pr; }
   } else if(mode==='air'){
@@ -1175,10 +1191,10 @@ function animateRig(dt,now){
   for(const [i,sgn,A,side2] of [[0,-1,R.armL,'L'],[1,1,R.armR,'R']]){
     const shoulder=vB.set(sgn*0.205,0.44,0.005).applyMatrix4(R.torsoF.matrix);
     let t=vT;
-    if(mode==='idle') t.set(sgn*0.27,0.1+Math.sin(now*0.002+i)*0.02,-0.2);
+    if(mode==='idle') t.set(sgn*0.26,-0.02+Math.sin(now*0.002+i)*0.02,-0.12);
     else if(mode==='ride'){
       const inside = sgn*P.turn>0.25 ? Math.min(1,Math.abs(P.turn)) : 0;
-      t.set(sgn*0.3,0.15-inside*0.16,-0.3-tuck*0.14);
+      t.set(sgn*0.27,0.03-inside*0.1,-0.2-tuck*0.16);
       if(charge>0) t.lerp(vC.set(sgn*0.26,0.06,0.32),charge);
     } else if(mode==='air') t.set(sgn*(0.2+0.42*armSpread),0.44-0.12*(1-armSpread),-0.1-0.16*(1-armSpread));
     else if(mode==='grind') t.set(sgn*0.62,0.42+wob*0.09*sgn,-0.04);
@@ -1194,7 +1210,7 @@ function animateRig(dt,now){
       t.lerp(vC,Math.min(1,P.grab*1.2)); grabbing=true;
     }
     hS[i].lerp(t,k(grabbing?24:(mode==='crash'?9:14)));
-    const elbow=ik(shoulder,hS[i],0.3,0.28,vD.set(sgn*0.7,-0.35,0.6),vE);
+    const elbow=ik(shoulder,hS[i],0.3,0.28,vD.set(sgn*0.45,-0.5,0.75),vE);
     placeSeg(A.up,shoulder,elbow); placeSeg(A.fo,elbow,hS[i]);
     const fd=vC.subVectors(hS[i],elbow).normalize();
     placeSeg(A.cuff,vF.copy(hS[i]).addScaledVector(fd,-0.035),hS[i]);
@@ -1202,7 +1218,7 @@ function animateRig(dt,now){
     // pole
     if(pushPh>=0 && pushPh<0.3) vPole.set(sgn*0.08,-0.95,-0.3);         // tips planted ahead of the bindings
     else if(pushPh>=0 && pushPh<0.85) vPole.set(sgn*0.1,-0.55,0.85);    // driving back
-    else if(mode==='ride'||mode==='idle') vPole.set(sgn*0.1,-0.8,0.6-charge*0.2);
+    else if(mode==='ride'||mode==='idle') vPole.set(sgn*0.14,-0.75,0.72-charge*0.2);
     else vPole.set(sgn*0.38,-0.38,0.84);
     pD[i].lerp(vPole.normalize(),k(pushPh>=0?16:10)).normalize();
     const grip=vE.copy(hS[i]).addScaledVector(fd,0.05);
@@ -1503,9 +1519,15 @@ holdBtn($('btnJump'),v=>tJump=v); holdBtn($('btnGrab'),v=>tGrab=v); holdBtn($('b
 /* camera controls: wheel / +- zoom, right-drag orbit, C or middle-click resets, right stick on a controller, pinch on touch */
 const CAM={zoom:1,yaw:0,pitch:0,drag:false,id:null,lx:0,ly:0,fp:false};
 try{ CAM.fp=localStorage.getItem('off-piste-fp')==='1'; }catch(e){}
-const ZOOM0=0.7;   // default chase distance: closer in
-CAM.zoom=ZOOM0; try{ const z=+localStorage.getItem('off-piste-zoom'); if(z) CAM.zoom=clamp(z,0.45,2.6); }catch(e){}
-function setZoom(z){ CAM.zoom=clamp(z,0.45,2.6); try{ localStorage.setItem('off-piste-zoom',CAM.zoom.toFixed(2)); }catch(e){} }
+const FOVS=[[0,'Normal'],[12,'Wide'],[24,'Ultra wide']];
+let FOVX=12; try{ const f=localStorage.getItem('off-piste-fov'); if(f!==null && FOVS.some(v=>v[0]===+f)) FOVX=+f; }catch(e){}
+function syncFov(){ const f=FOVS.find(v=>v[0]===FOVX)||FOVS[0]; document.querySelectorAll('.fovBtn').forEach(e=>e.textContent=f[1]); }
+const ZOOM0=0.62;   // default chase distance: close behind the rider (new key, so old far-out saves don't stick)
+const DISTS=[[0.48,'Very close'],[0.62,'Close'],[0.8,'Medium'],[1.1,'Far'],[1.6,'Very far']];
+CAM.zoom=ZOOM0; try{ const z=+localStorage.getItem('off-piste-zoom2'); if(z) CAM.zoom=clamp(z,0.45,2.6); }catch(e){}
+function syncDist(){ let b=DISTS[0]; for(const d of DISTS) if(Math.abs(d[0]-CAM.zoom)<Math.abs(b[0]-CAM.zoom)) b=d;
+  document.querySelectorAll('.distBtn').forEach(e=>e.textContent=b[1]); }
+function setZoom(z){ CAM.zoom=clamp(z,0.45,2.6); try{ localStorage.setItem('off-piste-zoom2',CAM.zoom.toFixed(2)); }catch(e){} syncDist(); }
 function resetCam(){ CAM.yaw=0; CAM.pitch=0; setZoom(ZOOM0); }
 window.addEventListener('wheel',e=>{ if(state!=='play'&&state!=='title') return; if(state==='title'&&e.target.closest('.screen')) return;
   e.preventDefault(); setZoom(CAM.zoom*Math.exp(e.deltaY*0.0012)); },{passive:false});
@@ -1528,7 +1550,7 @@ canvas.addEventListener('pointermove',e=>{ if(!pinch.has(e.pointerId)) return; p
   if(pinch.size===2){ const [a,b]=[...pinch.values()], d=Math.hypot(a.x-b.x,a.y-b.y); if(pinchD) setZoom(CAM.zoom*pinchD/d); pinchD=d; } });
 const endPinch=e=>{ pinch.delete(e.pointerId); pinchD=0; };
 canvas.addEventListener('pointerup',endPinch); canvas.addEventListener('pointercancel',endPinch);
-$('viewBtn').addEventListener('click',()=>{ const steps=[0.5,0.7,1,1.5,2.1]; const i=steps.findIndex(s=>s>CAM.zoom+0.05); setZoom(i<0?steps[0]:steps[i]); CAM.yaw=0; CAM.pitch=0; });
+$('viewBtn').addEventListener('click',()=>{ const steps=DISTS.map(d=>d[0]); const i=steps.findIndex(s=>s>CAM.zoom+0.05); setZoom(i<0?steps[0]:steps[i]); CAM.yaw=0; CAM.pitch=0; });
 
 /* ---------- Player state ---------- */
 const P={};
@@ -1945,7 +1967,7 @@ function updateCamera(dt,now){
     R.orient.getWorldQuaternion(fpQ); if(BOARD) fpQ.multiply(fpBoardYaw); fpQ.multiply(fpPitch);
     camera.quaternion.slerp(fpQ,1-Math.exp(-(P.air?30:16)*dt));
     if(shake>0){ const s=shake*shake*0.12; camera.position.x+=rand(-s,s); camera.position.y+=rand(-s,s); shake=Math.max(0,shake-dt*2.2); }
-    const fov=84+Math.min(12,sp*0.28);   // wide enough to see your arms, poles and ski tips
+    const fov=84+FOVX*0.6+Math.min(12,sp*0.28);   // wide enough to see your arms, poles and ski tips
     if(Math.abs(camera.fov-fov)>0.05){ camera.fov+=(fov-camera.fov)*Math.min(1,3*dt); camera.updateProjectionMatrix(); }
     camLook.copy(camera.position).add(tmpV.set(0,0,-6).applyQuaternion(camera.quaternion));
     return;
@@ -1971,7 +1993,7 @@ function updateCamera(dt,now){
   camera.lookAt(camLook);
   camera.rotateZ(P.lean*0.1);
   if(shake>0){ const s=shake*shake*0.35; camera.position.x+=rand(-s,s); camera.position.y+=rand(-s,s); shake=Math.max(0,shake-dt*2.2); }
-  const fov=60+Math.min(16,sp*0.38)+(slowT>0?-3:0);
+  const fov=60+FOVX+Math.min(16,sp*0.38)+(slowT>0?-3:0);
   if(Math.abs(camera.fov-fov)>0.05){ camera.fov+=(fov-camera.fov)*Math.min(1,3*dt); camera.updateProjectionMatrix(); }
 }
 function updateEnvironment(){
@@ -2017,7 +2039,7 @@ function openSheet(id){ const el=$(id); if(!el) return; sheetFrom=document.activ
 function closeSheet(quiet){ if(!sheetOpen) return; sheetOpen.hidden=true; sheetOpen=null; if(!quiet && sheetFrom && sheetFrom.focus) sheetFrom.focus(); }
 function renderLevels(){ const box=$('lvlList'); if(!box) return; box.textContent='';
   for(const [id,l] of Object.entries(LEVELS)){ const b=document.createElement('button'); b.className='lvl'; b.setAttribute('aria-pressed',String(id===LEVEL));
-    b.innerHTML='<svg class="sign '+l.sign+'" viewBox="0 0 24 24" aria-hidden="true">'+(l.sign==='green'?'<circle cx="12" cy="12" r="10"/>':l.sign==='blue'?'<rect x="3" y="3" width="18" height="18"/>':'<path d="M12 1.5 22.5 12 12 22.5 1.5 12Z"/>')+'</svg><b></b><small></small>';
+    b.innerHTML='<svg class="sign '+l.sign+'" viewBox="0 0 24 24" aria-hidden="true">'+(l.sign==='green'?'<circle cx="12" cy="12" r="10"/>':l.sign==='blue'?'<rect x="3" y="3" width="18" height="18"/>':(l.sign==='double'?'<path d="M7 5 12 12 7 19 2 12Z"/><path d="M17 5 22 12 17 19 12 12Z"/>':'<path d="M12 1.5 22.5 12 12 22.5 1.5 12Z"/>'))+'</svg><b></b><small></small>';
     b.querySelector('b').textContent=l.name; b.querySelector('small').textContent=l.desc;
     b.addEventListener('click',()=>{ setLevel(id); closeSheet(); }); box.appendChild(b); }
   document.querySelectorAll('.lvlSum').forEach(e=>e.textContent=LEVELS[LEVEL].name); }
@@ -2026,6 +2048,10 @@ function setLevel(id){ if(!LEVELS[id]) return; LEVEL=id; try{ localStorage.setIt
 function syncRiderSum(){ const t=(BOARD?'Snowboard':'Skis')+' · '+OUTFITS[OUTFIT.i].name; document.querySelectorAll('.riderSum').forEach(e=>e.textContent=t); }
 document.querySelectorAll('[data-sheet]').forEach(b=>b.addEventListener('click',()=>openSheet(b.dataset.sheet)));
 document.querySelectorAll('.sheet .back').forEach(b=>b.addEventListener('click',()=>closeSheet()));
+document.querySelectorAll('.distBtn').forEach(b=>b.addEventListener('click',()=>{ const i=DISTS.findIndex(d=>d[0]>CAM.zoom+0.03); setZoom(DISTS[i<0?0:i][0]); CAM.yaw=0; CAM.pitch=0; }));
+document.querySelectorAll('.fovBtn').forEach(b=>b.addEventListener('click',()=>{ const i=FOVS.findIndex(v=>v[0]===FOVX); FOVX=FOVS[(i+1)%FOVS.length][0];
+  try{ localStorage.setItem('off-piste-fov',String(FOVX)); }catch(e){} syncFov(); }));
+syncDist(); syncFov();
 document.querySelectorAll('.soundBtn').forEach(b=>b.addEventListener('click',()=>{ initAudio(); setMuted(!muted); }));
 window.addEventListener('keydown',e=>{ if(e.key==='Escape' && sheetOpen){ e.preventDefault(); e.stopImmediatePropagation(); closeSheet(); } },true);
 function startRun(){ try{ const ae=document.activeElement; if(ae&&ae.tagName==='INPUT') ae.blur(); }catch(e){}
@@ -2094,7 +2120,9 @@ const NET_COLORS=[0x3aa0ff,0x35c98b,0xffb02e,0x9a6bff,0xff5a4e,0x2fd3d3,0xf9a8d4
 const poseNodes=[R.orient,R.body,R.skis,R.skiParts.L,R.skiParts.R,R.thighL,R.thighR,R.shinL,R.shinR,R.torsoF,R.head];
 for(const a of [R.armL,R.armR]) poseNodes.push(a.up,a.fo,a.cuff,a.gl,a.pole);
 const POSE_LEN=4+poseNodes.length*7;
-const poseIdx=(()=>{ const all=[]; R.rider.traverse(o=>all.push(o)); return poseNodes.map(n=>all.indexOf(n)); })();
+let poseIdx=[];
+function indexPose(){ const all=[]; R.rider.traverse(o=>all.push(o)); poseIdx=poseNodes.map(n=>all.indexOf(n)); }
+indexPose();
 const r3=v=>Math.round(v*1000)/1000;
 function packPose(){
   const rp=R.rider.position, a=[r3(rp.x),r3(rp.y),r3(rp.z),R.rider.visible?1:0];
@@ -2106,7 +2134,8 @@ const tagLayer=document.createElement('div'); document.body.appendChild(tagLayer
 function makeRemote(peer){
   setFPVis(false); const g=R.rider.clone(true), list=[]; g.traverse(o=>list.push(o)); setFPVis(CAM.fp && state!=='title');
   const col=peerColor(peer), mats={}; for(const k in R.SLOTS) mats[k]=R.SLOTS[k].clone();
-  g.traverse(o=>{ if(!o.isMesh || Array.isArray(o.material)) return; for(const k in R.SLOTS) if(o.material===R.SLOTS[k]){ o.material=mats[k]; break; } });
+  const swap=m=>{ for(const k in R.SLOTS) if(m===R.SLOTS[k]) return mats[k]; return m; };
+  g.traverse(o=>{ if(!o.isMesh) return; o.material = Array.isArray(o.material) ? o.material.map(swap) : swap(o.material); });
   paintOutfit(mats, Math.abs((()=>{ let h=0; for(let i=0;i<peer.length;i++) h=(h*31+peer.charCodeAt(i))|0; return h; })())%OUTFITS.length);
   const jm=mats.jacket;
   g.visible=false; scene.add(g);
@@ -2121,7 +2150,7 @@ const cleanName=v=>String(v||'').replace(/[^\p{L}\p{N} _.'-]/gu,'').trim().slice
 function ingest(p){
   const pres=p.presence||{}; let r=NET.peers.get(p.peer);
   if(!r){ r=makeRemote(p.peer); NET.peers.set(p.peer,r); }
-  if(Number.isInteger(pres.o) && pres.o>=0 && pres.o<OUTFITS.length && pres.o!==r.outfit){ r.outfit=pres.o; paintOutfit(r.mats,pres.o); { const o=OUTFITS[pres.o], c=new THREE.Color(new THREE.Color(o.jacket).getLuminance()>0.12?o.jacket:o.accent); c.lerp(new THREE.Color(0xffffff),0.3); r.col=c.getHex(); } }
+  if(Number.isInteger(pres.o) && pres.o>=0 && pres.o<OUTFITS.length && pres.o!==r.outfit){ r.outfit=pres.o; paintOutfit(r.mats,pres.o); { const o=OUTFITS[pres.o], c=new THREE.Color((c0=>0.2126*c0.r+0.7152*c0.g+0.0722*c0.b)(new THREE.Color(o.jacket))>0.12?o.jacket:o.accent); c.lerp(new THREE.Color(0xffffff),0.3); r.col=c.getHex(); } }
   { const b=pres.b===1; if(b!==r.board){ r.board=b; rideVis(r.g,b); } }
   r.name=cleanName(pres.n); r.st=pres.st!==0;
   { const lv=LEVELS[pres.lv]?pres.lv:'back'; if(r.lv!==lv){ const first=!r.lv; r.lv=lv;
@@ -2183,20 +2212,25 @@ function netTick(rdt,now){
 /* Peer-to-peer rooms. The first player to claim a room code hosts it; everyone else connects to the host,
    who relays each rider's updates to the rest (a star). If the host leaves, the others race to take over.
    Exposes the same small interface the game uses: presence(patch) and onPeers(handler). */
+// Relays. shiftr.io's public relay runs on the normal web port (443), which school and college wifi lets
+// through; the others use ports 8084/8884/8081 that some networks block. Everyone sends through every relay
+// they can reach, so a player stuck on one relay still sees players connected to the others.
+const RELAYS=['wss://public:public@public.cloud.shiftr.io','wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt','wss://test.mosquitto.org:8081'];
 function myName(){ return cleanName($('mpName').value)||'Rider'; }
 function peerRoom(code){
   // Everyone in a room talks through public MQTT relays over a normal secure web connection (wss),
   // so it works on school, office and phone networks where direct peer-to-peer links get blocked.
   // We connect to two relays and send to both, so the room still works if one is down or blocked;
   // a sequence number drops the duplicate copy.
-  const BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'];
+  const BROKERS=RELAYS;
   const me=(Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)).replace(/[^a-z0-9]/g,'');
   const base='offpiste/v1/'+code+'/';
   const peers=new Map(), hs=[], chs=[], seenChat=new Map(); let mine={}, seq=0, cseq=0, closed=false, lastSay=0;
   const fire=ch=>{ const snap=[...peers.values()]; hs.forEach(h=>h(Object.assign({peers:snap,joined:[],left:[],updated:[]},ch))); };
   const remove=id=>{ const p=peers.get(id); if(!p) return; peers.delete(id); fire({left:[p]}); };
   const anyUp=()=>clients.some(c=>c.connected);
-  const status=()=>{ if(closed) return; const t=anyUp()?'':`Room ${code}: connecting…`; if(NET.status!==t){ NET.status=t; renderNetList(); } };
+  const born=Date.now();
+  const status=()=>{ if(closed) return; const t=anyUp()?'':(Date.now()-born>12000?`Room ${code}: can't reach the online relays on this network. Try another wifi or a hotspot.`:`Room ${code}: connecting…`); if(NET.status!==t){ NET.status=t; renderNetList(); } };
   function onMsg(topic,buf){
     if(closed || !buf || buf.length>6000 || !topic.startsWith(base)) return;
     const rest=topic.slice(base.length), kind=rest[0], id=rest.slice(2);
@@ -2234,7 +2268,7 @@ function peerRoom(code){
     say(text){ const now=Date.now(); if(now-lastSay<700) return false; text=String(text||'').replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,140); if(!text) return false;
       lastSay=now; const msg=JSON.stringify({q:++cseq,n:myName(),t:text}); let sent=false;
       for(const c of clients) if(c.connected){ c.publish(base+'c/'+me,msg,{qos:0}); sent=true; } return sent; },
-    info:()=>({id:me,relays:clients.map((c,i)=>BROKERS[i].split('/')[2]+':'+(c.connected?'up':'down')),riders:[...peers.keys()]}),
+    info:()=>({id:me,relays:clients.map((c,i)=>BROKERS[i].split('/')[2].split('@').pop()+':'+(c.connected?'up':'down')),riders:[...peers.keys()]}),
     leave(){ if(closed) return; for(const c of clients){ try{ if(c.connected) c.publish(base+'x/'+me,'1'); c.end(false); }catch(e){} } closed=true; clearInterval(sweep); for(const id of [...peers.keys()]) remove(id); }
   };
 }
@@ -2292,7 +2326,7 @@ const isPub=c=>/^PUB[A-Z0-9]{2,3}$/.test(c||'');
 function startDirectory(){
   if(typeof mqtt!=='object'&&typeof mqtt!=='function'){ $('pubList').innerHTML='<p class="note">Online play needs the multiplayer library, which did not load.</p>'; return; }
   const id='opd'+Math.random().toString(36).slice(2,10);
-  PUB.clients=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'].map((url,i)=>{
+  PUB.clients=RELAYS.map((url,i)=>{
     const c=mqtt.connect(url,{clientId:id+i,keepalive:30,reconnectPeriod:4000,connectTimeout:8000,clean:true});
     c.on('connect',()=>c.subscribe('offpiste/v1/dir/+',{qos:0})); c.on('error',()=>{});
     c.on('message',(topic,buf)=>{ if(!buf||buf.length>400) return; let d; try{ d=JSON.parse(new TextDecoder().decode(buf)); }catch(e){ return; }
@@ -2365,6 +2399,49 @@ function syncOutfit(){ paintOutfit(R.SLOTS,OUTFIT.i); document.querySelectorAll(
   try{ localStorage.setItem('off-piste-outfit',String(OUTFIT.i)); }catch(e){} }
 document.querySelectorAll('.outfitBtn').forEach(b=>b.addEventListener('click',()=>{ OUTFIT.i=(OUTFIT.i+1)%OUTFITS.length; syncOutfit(); }));
 syncOutfit(); setRide(BOARD); renderLevels();
+
+/* ---------- Blender art ---------- */
+function artGeo(root,name){ const n=root.getObjectByName(name); if(!n) return null;
+  const parts=[]; n.traverse(o=>{ if(o.isMesh) parts.push(o); }); if(!parts.length) return null;
+  const geos=[], mats=[];
+  for(const m of parts){ const g=m.geometry.clone(); g.applyMatrix4(m.matrixWorld);
+    for(const k of Object.keys(g.attributes)) if(k!=='position'&&k!=='normal'&&k!=='uv') g.deleteAttribute(k);
+    if(!g.attributes.uv) g.setAttribute('uv',new THREE.BufferAttribute(new Float32Array(g.attributes.position.count*2),2));
+    if(!g.index){ const ix=[]; for(let i=0;i<g.attributes.position.count;i++) ix.push(i); g.setIndex(ix); }
+    geos.push(g); mats.push((m.material&&m.material.name)||'frame'); }
+  const geo=geos.length===1?geos[0]:THREE.BufferGeometryUtils.mergeBufferGeometries(geos,true);
+  if(geos.length===1){ geo.clearGroups(); geo.addGroup(0,geo.index.count,0); }
+  return geo?{geo,mats}:null; }
+function applyArt(root){
+  root.updateMatrixWorld(true);
+  const M=R.MATS, A=n=>artGeo(root,n), mm=a=>a.mats.map(n=>M[n]||M.frame);
+  const use=(mesh,a)=>{ if(!mesh||!a) return; for(const c of [...mesh.children]) if(c.isMesh) mesh.remove(c); mesh.geometry=a.geo; mesh.material=mm(a); };
+  const put=(parent,a,name,fp)=>{ if(!a) return null; const m=new THREE.Mesh(a.geo,mm(a)); m.castShadow=true; if(name) m.name=name; if(fp) m.userData.fpHide=true; parent.add(m); return m; };
+  const clear=g=>{ for(const c of [...g.children]) if(c.isMesh) g.remove(c); };
+  // rider
+  use(R.thighL,A('thighL')); use(R.thighR,A('thighR')); use(R.shinL,A('shinL')); use(R.shinR,A('shinR'));
+  const up=A('armUp'), fo=A('armFo'), cu=A('cuff'), gl=A('glove'), po=A('pole');
+  for(const arm of [R.armL,R.armR]){ use(arm.up,up); use(arm.fo,fo); use(arm.cuff,cu); use(arm.gl,gl); use(arm.pole,po); }
+  const to=A('torso'), tf=A('torsoFP');
+  if(to&&tf){ clear(R.torsoF); put(R.torsoF,to); put(R.torsoF,tf,'',true); }
+  const he=A('helmet'); if(he){ clear(R.head); put(R.head,he); }
+  const sk=A('ski'), bo=A('boot'), bi=A('bind');
+  if(sk&&bo&&bi) for(const side of ['L','R']){ const g=R.skiParts[side]; clear(g); put(g,sk,'ski'); put(g,bo,''); put(g,bi,'bind'); }
+  const bd=A('board'); if(bd){ use(R.board,bd); R.board.position.y=0; }
+  for(const k of ['jacket','accent','pants','glove','gaiter','pack']){ const m=M[k]; if(!m) continue; m.map=null; m.normalMap=null; m.roughness=0.93; m.needsUpdate=true; }
+  M.helmet.roughness=0.7; M.helmet.needsUpdate=true;
+  rideVis(R.rider,BOARD); fpList=null; setFPVis(CAM.fp && state!=='title'); indexPose();
+  // trees and rocks
+  const tF=A('treeFol'), tS=A('treeSnow'), tT=A('treeTrunk');
+  if(tF&&tS&&tT){ foliage.geometry=tF.geo; caps.geometry=tS.geo; trunks.geometry=tT.geo; ART.tree=true;
+    const saved=WR; WR=Math.random;   // re-dress the trees already standing without touching the world's random sequence
+    for(const o of objs) if(o.type==='tree') setTree(o.slot,o.x,o.y,o.z,o.r/0.45);
+    WR=saved; markPools(); }
+  const rk=A('rock'); if(rk) rocks.geometry=rk.geo;
+}
+function loadArt(){ if(!THREE.GLTFLoader || !THREE.BufferGeometryUtils) return;
+  new THREE.GLTFLoader().load('offpiste.glb', g=>{ try{ applyArt(g.scene); }catch(e){ console.warn('Off Piste art failed to apply', e); } }, undefined, ()=>{}); }
+loadArt();
 
 requestAnimationFrame(frame);
 })();
