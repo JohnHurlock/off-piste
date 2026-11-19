@@ -1336,9 +1336,15 @@ function updateFlakes(dt){
    Nothing sits on top of the snow. A hidden "cap" strip over each groove marks those pixels in the
    stencil buffer, then the groove interior (walls and floor, below the surface) is drawn only there
    and writes its real depth, so the skis show inside the slot while the rest of the ski stays buried. */
-const TN=440, PROF=[-0.06,-0.05,-0.035,0.035,0.05,0.06], PH=[0,-0.17,-0.26,-0.26,-0.17,0], NPV=PROF.length*2;
-// shade per profile vertex: lit lip, cool shadow down the walls and floor (like the photo)
-const SH=[[0.9,0.9,1],[0.5,0.5,0.74],[0.38,0.38,0.62],[0.38,0.38,0.62],[0.66,0.65,0.86],[0.95,0.95,1]];
+// cross-section: a smooth rounded trough (soft lip, curved walls, rounded floor), sampled at 11 points
+const TROUGH_W=0.075, TROUGH_D=0.17, PROF=[], PH=[], SH=[], NT=[], NU=[];
+for(let j=0;j<11;j++){ const t=-1+2*j/10, a=Math.abs(t);
+  const h=-TROUGH_D*Math.pow(Math.max(0,1-a*a),0.85);            // depth: flat-ish rounded floor easing up to the lip
+  PROF.push(t*TROUGH_W); PH.push(h);
+  const e=0.01, a2=Math.min(1,a+e), h2=-TROUGH_D*Math.pow(Math.max(0,1-a2*a2),0.85), sl=(h2-h)/(e*TROUGH_W)*Math.sign(t||1);
+  NT.push(-sl*0.9); NU.push(1);                                    // normal from the slope across the groove
+  const f=-h/TROUGH_D; SH.push([0.95-0.5*f,0.95-0.5*f,1-0.32*f]); } // lit lip, cool shadow toward the floor
+const TN=440, NPV=PROF.length*2;
 const SKI_OFF=0.14; // matches the rider's ski spacing; grooves are ski width (9.5 cm) + about an inch
 const trPos=new Float32Array(TN*NPV*3), trNor=new Float32Array(TN*NPV*3), trIdx=new Uint16Array((TN-1)*2*(PROF.length-1)*6);
 const trGeo=new THREE.BufferGeometry();
@@ -1360,8 +1366,6 @@ const trail=new THREE.Mesh(trGeo, new THREE.MeshStandardMaterial({color:L(0xf4ee
 trail.frustumCulled=false; trail.receiveShadow=true; trail.renderOrder=-1; scene.add(trail);
 terrain.renderOrder=-3;
 let trPts=[], trLast=null;
-// normal tilt per profile vertex: walls lean hard toward the groove centre, floor faces up
-const NT=[1.3,1.5,0.3,-0.3,-1.5,-1.3], NU=[0.6,0.55,1,1,0.55,0.6];
 function trailPush(on){
   const fx=Math.sin(P.heading), fz=-Math.cos(P.heading);
   const gx=(groundH(P.x+0.5,P.z)-groundH(P.x-0.5,P.z)), gz=(groundH(P.x,P.z+0.5)-groundH(P.x,P.z-0.5));
