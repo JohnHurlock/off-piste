@@ -9,7 +9,7 @@
 <title>Off Piste</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Outfit:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,700;1,800&family=Barlow:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: full-bleed 3D canvas, thin HUD pinned to the safe corners, glass cards for menus. Single committed dusk look. */
 :root{
@@ -63,14 +63,21 @@ body.touch .gamechat{top:calc(120px + env(safe-area-inset-top,0px));bottom:auto}
 .gamechat .chatlog p.old{opacity:0}
 .gamechat.open .chatlog p.old{opacity:1}
 .gamechat .chatform{pointer-events:auto}
-.mp{display:grid;gap:10px;padding:14px 16px;border:1px solid var(--line);border-radius:16px;background:var(--glass);max-width:760px}
-.mp h3{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
+.mp{display:grid;gap:12px}
+.mp h3{margin:8px 0 0;font:700 15px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--acc)}
 .mprow{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
-.mpfield{display:grid;gap:4px;font-size:12px;opacity:.95}
-.mpfield input{width:150px;padding:11px 14px;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.25);color:var(--ink);font:600 15px var(--body);-webkit-user-select:text;user-select:text;outline:none}
-.mpfield input:focus{border-color:var(--ink)}
-#mpCode{text-transform:uppercase;letter-spacing:.12em;width:120px}
-.mp .ghost{padding:11px 18px}
+.mpfield{display:grid;gap:5px;font:600 13px var(--body);color:var(--muted)}
+.mpfield input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid var(--line);border-radius:3px;background:var(--panel);color:var(--ink);font:600 16px var(--body);-webkit-user-select:text;user-select:text;outline:none}
+.mpfield input:focus{border-color:var(--acc)}
+.mprow .mpfield{flex:1;min-width:110px}
+#mpCode{text-transform:uppercase;letter-spacing:.14em}
+.mp .ghost{padding:11px 16px}
+.publist{display:grid;gap:8px}
+.pub{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 12px;padding:10px 12px;border:1px solid var(--line);border-radius:3px;background:var(--panel)}
+.pub b{font:700 19px var(--display);text-transform:uppercase;letter-spacing:.04em}
+.pub small{color:var(--muted);font:400 13px var(--body)}
+.pub button{grid-row:1/span 2;grid-column:2}
+.pub.here{border-color:var(--acc)}
 .score{font-family:var(--display);font-weight:800;font-size:clamp(26px,5.4vw,42px);letter-spacing:-.01em;font-variant-numeric:tabular-nums;text-shadow:0 2px 18px var(--glow)}
 .combo{display:grid;gap:4px;min-height:30px}
 .combo-txt{font-family:var(--display);font-weight:500;font-size:14px;letter-spacing:.04em;color:var(--amber);font-variant-numeric:tabular-nums}
@@ -165,6 +172,103 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
 .res b{font-family:var(--display);font-size:clamp(18px,3.4vw,26px);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .bigscore{font-family:var(--display);font-weight:800;font-size:clamp(44px,10vw,88px);line-height:1;font-variant-numeric:tabular-nums;color:var(--amber)}
 .newbest{color:var(--rose);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:13px}
+
+/* ===== Look: ski-poster flat. Navy, one orange accent, condensed type, square corners. ===== */
+:root{--dusk:#0a1830;--panel:#10264a;--panel2:#16325e;--ink:#f2f5fa;--muted:#94a8c8;--acc:#ff7a1a;--acc2:#ffcf5c;
+  --line:#23406c;--glass:rgba(10,24,48,.86);--amber:#ffcf5c;--rose:#ff7a1a;--violet:#2f6fe0;--glow:rgba(0,0,0,.45);--glow2:rgba(0,0,0,0);
+  --display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;--body:'Barlow',system-ui,'Segoe UI',sans-serif}
+button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.screen{padding:0;align-items:stretch;justify-content:flex-start;background:none}
+#results.screen{align-items:center;justify-content:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));background:rgba(6,14,30,.72)}
+.menu{width:min(400px,100%);min-height:100%;box-sizing:border-box;background:var(--dusk);border-right:3px solid var(--acc);
+  padding:calc(36px + env(safe-area-inset-top,0px)) 30px calc(28px + env(safe-area-inset-bottom,0px)) max(30px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:22px}
+.brand{display:grid;gap:8px}
+.mark{font:italic 800 clamp(64px,15vw,92px)/.82 var(--display);text-transform:uppercase;letter-spacing:-.01em;color:var(--ink)}
+.mark span{display:block;color:var(--acc)}
+#pause .mark{font-size:64px}
+.tagline{margin:0;color:var(--muted);font:500 15px/1.45 var(--body);max-width:32ch}
+.go{display:flex;justify-content:space-between;align-items:center;width:100%;padding:14px 20px;border:0;border-radius:3px;background:var(--acc);color:#1d0e00;
+  font:italic 800 30px/1 var(--display);text-transform:uppercase;letter-spacing:.01em;box-shadow:5px 5px 0 #03091a;transition:transform .08s,box-shadow .08s}
+.go span{font-size:34px;line-height:.8}
+.go:hover{filter:none;transform:translate(-1px,-1px);box-shadow:6px 6px 0 #03091a}
+.go:active{transform:translate(3px,3px);box-shadow:2px 2px 0 #03091a}
+#results .go{width:auto;gap:18px}
+.mlist{display:grid}
+.mi{display:flex;justify-content:space-between;align-items:baseline;gap:14px;width:100%;padding:13px 2px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;
+  font:700 23px/1.1 var(--display);text-transform:uppercase;letter-spacing:.02em;color:var(--ink);transition:padding .12s,color .12s}
+.mi:first-child{border-top:1px solid var(--line)}
+.mi em{font:500 14px var(--body);font-style:normal;text-transform:none;letter-spacing:0;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mi:hover,.mi:focus-visible{color:var(--acc);padding-left:8px}
+.best{margin-top:auto;font:500 14px var(--body);color:var(--muted)}
+.best b{color:var(--acc2);font:italic 800 20px var(--display)}
+.sheet{position:fixed;top:0;bottom:0;left:0;width:min(440px,100%);box-sizing:border-box;z-index:30;overflow-y:auto;background:var(--dusk);border-right:3px solid var(--acc);
+  padding:calc(24px + env(safe-area-inset-top,0px)) 26px calc(32px + env(safe-area-inset-bottom,0px)) max(26px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px;box-shadow:12px 0 40px rgba(0,0,0,.35)}
+.sheet header{display:grid;gap:6px;margin-bottom:6px}
+.sheet h2{margin:0;font:italic 800 46px/.9 var(--display);text-transform:uppercase}
+.back{justify-self:start;padding:6px 0;border:0;background:none;color:var(--muted);font:600 14px var(--body)}
+.back:hover{color:var(--acc)}
+.set{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.set>span{font:600 16px var(--body)}
+.set button{display:flex;justify-content:space-between;align-items:center;gap:10px;min-width:160px;padding:9px 12px;border:1px solid var(--line);border-radius:3px;background:var(--panel);
+  font:700 16px var(--display);text-transform:uppercase;letter-spacing:.04em;color:var(--ink)}
+.set button::after{content:'›';color:var(--acc);font-size:20px;line-height:.8}
+.set button:hover{border-color:var(--acc)}
+.note{margin:0;color:var(--muted);font:400 15px/1.5 var(--body)}
+.lvls{display:grid;gap:10px}
+.lvl{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:2px 12px;padding:12px 14px;border:1px solid var(--line);border-radius:3px;background:var(--panel);text-align:left;color:var(--ink)}
+.lvl b{font:700 22px/1.1 var(--display);text-transform:uppercase}
+.lvl small{grid-column:2;color:var(--muted);font:400 14px/1.4 var(--body)}
+.lvl .sign{grid-row:1/span 2;width:28px;height:28px}
+.lvl[aria-pressed="true"]{border-color:var(--acc);box-shadow:inset 4px 0 0 var(--acc)}
+.lvl:hover{border-color:var(--acc)}
+.sign.green{fill:#2fb35a}.sign.blue{fill:#2f6fe0}.sign.black{fill:#05080f;stroke:#fff;stroke-width:1.4}.sign.orange{fill:var(--acc)}
+.controls{grid-template-columns:1fr;gap:10px}
+.ctl{border-radius:3px;background:var(--panel);backdrop-filter:none}
+.ctl h3{color:var(--acc);font:700 15px var(--display);letter-spacing:.08em}
+kbd{border-radius:3px;background:var(--panel2)}
+.ghost{border-radius:3px;background:var(--panel);backdrop-filter:none;font:600 15px var(--body)}
+.ghost:hover{border-color:var(--acc)}
+.netnote{color:var(--muted);font:400 15px/1.5 var(--body);opacity:1}
+/* results */
+.card{max-width:720px}
+.eyebrow{font:700 16px var(--display);letter-spacing:.12em;color:var(--acc)}
+.bigscore{font:italic 800 clamp(64px,13vw,120px)/.9 var(--display);color:var(--ink)}
+.res{border-radius:3px;background:var(--panel);border-color:var(--line)}
+.res b{font:italic 800 clamp(22px,4vw,30px) var(--display)}
+.newbest{color:var(--acc);font:700 16px var(--display)}
+/* HUD */
+.score{font:italic 800 clamp(34px,6.5vw,52px)/1 var(--display);text-shadow:2px 2px 0 rgba(0,0,0,.35)}
+.combo-txt{font:italic 700 18px var(--display);color:var(--acc2)}
+.combo-bar{border-radius:0;height:5px}
+.combo-bar i{background:var(--acc)}
+.bank{font:italic 800 24px var(--display);color:var(--acc2)}
+.stat b{font:italic 800 clamp(22px,4vw,30px) var(--display)}
+.lbl{font:600 11px var(--body);letter-spacing:.12em}
+.icon-btn{display:grid;place-items:center;width:40px;height:40px;border-radius:3px;background:rgba(10,24,48,.82);backdrop-filter:none;border:1px solid var(--line);color:var(--ink);padding:0}
+.icon-btn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.icon-btn.on{background:var(--acc);border-color:var(--acc);color:#1d0e00}
+.icon-btn.off .wave{display:none}
+.icon-btn.off{color:var(--muted)}
+.speedo{border-radius:3px;background:rgba(10,24,48,.82);border:1px solid var(--line)}
+.speedo .arc{stroke:var(--acc)}
+.speedo.fast .arc{stroke:var(--acc2);filter:none}
+.speedo b{font:italic 800 36px/1 var(--display)}
+.toast{font:italic 800 clamp(18px,3vw,26px) var(--display);color:var(--acc2)}
+.charge{border-radius:0}
+.charge i{background:var(--acc)}
+.live .deg{font:italic 800 clamp(52px,11vw,110px)/1 var(--display);text-shadow:3px 3px 0 rgba(0,0,0,.3)}
+.live .sub{font:700 clamp(15px,2.6vw,20px) var(--display);color:var(--acc2);letter-spacing:.12em}
+.trick-name{background:none;-webkit-background-clip:border-box;background-clip:border-box;-webkit-text-fill-color:var(--ink);color:var(--ink);
+  font:italic 800 clamp(30px,6vw,58px)/1 var(--display);text-transform:uppercase;text-shadow:3px 3px 0 rgba(0,0,0,.3)}
+.trick-pts{font:700 clamp(17px,3vw,24px) var(--display);color:var(--acc2)}
+.tag{border-radius:2px;background:var(--acc);color:#1d0e00;font:700 .75em var(--display);letter-spacing:.08em;padding:1px 7px}
+.tag.sketch{background:var(--muted)}
+.trick.bad .trick-name{-webkit-text-fill-color:#ff8f8f;color:#ff8f8f}
+.tbtn{font-family:var(--display);font-weight:800;font-size:16px;backdrop-filter:none;border-radius:50%}
+#btnJump{background:rgba(255,122,26,.42);border-color:rgba(255,122,26,.8)}
+#stickKnob{background:var(--acc);box-shadow:none}
+.nettag{border-radius:3px;background:rgba(10,24,48,.8)}
+@media (max-width:520px){.menu{border-right:0}.sheet{border-right:0}}
 @media (prefers-reduced-motion:reduce){.trick.show,.bank.show,.toast.show,.live .deg.bump{animation-duration:.01s}}
 </style>
 </head>
@@ -191,11 +295,11 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
     <b id="spd">0</b><span>km/h</span>
   </div>
   <div class="icon-btns">
-    <button class="icon-btn" id="fpIcon" aria-label="First-person view" aria-pressed="false">👁</button>
-    <button class="icon-btn" id="chatBtn" aria-label="Chat" hidden>💬</button>
-    <button class="icon-btn" id="viewBtn" aria-label="Change camera distance">⤢</button>
-    <button class="icon-btn" id="muteBtn" aria-label="Mute sound">♪</button>
-    <button class="icon-btn" id="pauseBtn" aria-label="Pause">II</button>
+    <button class="icon-btn" id="fpIcon" aria-label="First-person view" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+    <button class="icon-btn" id="chatBtn" aria-label="Chat" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4Z"/></svg></button>
+    <button class="icon-btn" id="viewBtn" aria-label="Change camera distance"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 15v5h-5M4 4l6 6M20 20l-6-6"/></svg></button>
+    <button class="icon-btn" id="muteBtn" aria-label="Mute sound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9Z"/><path class="wave" d="M16.5 8.5a5 5 0 0 1 0 7"/></svg></button>
+    <button class="icon-btn" id="pauseBtn" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></button>
   </div>
   <div class="toast" id="toast">CHECKPOINT</div>
   <div class="nettoast" id="netToast" aria-live="polite"></div>
@@ -215,11 +319,86 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
 </div>
 
 <div class="screen" id="title">
-  <div class="card">
-    <div class="eyebrow">Backcountry powder · free ski, no time limit</div>
-    <h1>Off<br>Piste</h1>
-    <p class="lede">An endless backcountry run. Carve through deep powder, sink into a crouch and spring off kickers, slide the rails, and stomp spins, flips and grabs. Chain tricks to stack your multiplier. Bail and you restart at the last checkpoint gate.</p>
-    <div class="controls">
+  <div class="menu">
+    <div class="brand">
+      <div class="mark">Off <span>Piste</span></div>
+      <p class="tagline">Endless backcountry. Powder, rails, kickers and your friends.</p>
+    </div>
+    <button class="go" id="startBtn">Drop in<span aria-hidden="true">›</span></button>
+    <nav class="mlist" aria-label="Main menu">
+      <button class="mi" data-sheet="sheetLevels"><span>Mountain</span><em class="lvlSum">Backcountry</em></button>
+      <button class="mi" data-sheet="sheetPlay"><span>Multiplayer</span><em id="mpSum">Solo</em></button>
+      <button class="mi" data-sheet="sheetRider"><span>Rider</span><em class="riderSum">Skis</em></button>
+      <button class="mi" data-sheet="sheetSettings"><span>Settings</span><em></em></button>
+      <button class="mi" data-sheet="sheetHelp"><span>How to play</span><em></em></button>
+    </nav>
+    <div class="best">Best run <b id="bestTitle">—</b></div>
+  </div>
+</div>
+
+<div class="screen" id="pause" hidden>
+  <div class="menu">
+    <div class="brand"><div class="mark">Paused</div></div>
+    <button class="go" id="resumeBtn">Resume<span aria-hidden="true">›</span></button>
+    <nav class="mlist" aria-label="Pause menu">
+      <button class="mi" id="restartBtn"><span>Restart run</span><em></em></button>
+      <button class="mi" data-sheet="sheetRider"><span>Rider</span><em class="riderSum">Skis</em></button>
+      <button class="mi" data-sheet="sheetSettings"><span>Settings</span><em></em></button>
+      <button class="mi" data-sheet="sheetHelp"><span>Controls</span><em></em></button>
+      <button class="mi" id="endBtn"><span>End run</span><em>see your score</em></button>
+      <button class="mi" id="menuBtn"><span>Main menu</span><em></em></button>
+    </nav>
+  </div>
+</div>
+
+<section class="sheet" id="sheetSettings" hidden aria-label="Settings">
+  <header><button class="back">‹ Back</button><h2>Settings</h2></header>
+  <div class="set"><span>Camera</span><button class="fpBtn">Third person</button></div>
+  <div class="set"><span>Landing assist</span><button class="assistBtn" aria-pressed="true">On</button></div>
+  <div class="set"><span>Sound</span><button class="soundBtn">On</button></div>
+  <div class="set"><span>Lighting</span><button class="lightBtn">Midnight</button></div>
+  <div class="set"><span>Weather</span><button class="weatherBtn">Light snow</button></div>
+  <div class="set"><span>Graphics</span><button class="gfxBtn">Auto</button></div>
+</section>
+<section class="sheet" id="sheetRider" hidden aria-label="Rider">
+  <header><button class="back">‹ Back</button><h2>Rider</h2></header>
+  <div class="set"><span>Ride</span><button class="rideBtn">Skis</button></div>
+  <div class="set"><span>Outfit</span><button class="outfitBtn">Outfit</button></div>
+  <p class="note">Your friends see the same gear you pick here.</p>
+</section>
+<section class="sheet" id="sheetLevels" hidden aria-label="Mountain">
+  <header><button class="back">‹ Back</button><h2>Mountain</h2></header>
+  <div class="lvls" id="lvlList"></div>
+</section>
+<section class="sheet" id="sheetPlay" hidden aria-label="Multiplayer">
+  <header><button class="back">‹ Back</button><h2>Multiplayer</h2></header>
+  <div class="mp">
+    <label class="mpfield"><span>Your name</span><input id="mpName" maxlength="16" placeholder="Rider" autocomplete="off" spellcheck="false"></label>
+    <button class="go" id="mpOnline">Play online<span aria-hidden="true">›</span></button>
+    <p class="note">Drops you into a public room on the mountain you picked, with whoever is riding it.</p>
+    <h3>Public rooms</h3>
+    <div class="publist" id="pubList"><p class="note">Looking for rooms…</p></div>
+    <h3>Private room</h3>
+    <div class="mprow">
+      <label class="mpfield"><span>Room code</span><input id="mpCode" maxlength="6" placeholder="PWDR" autocomplete="off" spellcheck="false"></label>
+      <button class="ghost" id="mpJoin">Join</button>
+      <button class="ghost" id="mpNew">New room</button>
+    </div>
+    <div class="mprow">
+      <button class="ghost" id="mpCopy" hidden>Copy invite link</button>
+      <button class="ghost" id="mpLeave" hidden>Leave room</button>
+    </div>
+    <p class="netnote" id="netNote">Playing solo.</p>
+    <div class="lobbychat" id="lobbyChat" hidden>
+      <div class="chatlog" id="lobbyLog"></div>
+      <form class="chatform" id="lobbyForm" autocomplete="off"><input id="lobbyIn" maxlength="140" placeholder="Say something to your room…" enterkeyhint="send"><button class="ghost" type="submit">Send</button></form>
+    </div>
+  </div>
+</section>
+<section class="sheet" id="sheetHelp" hidden aria-label="How to play">
+  <header><button class="back">‹ Back</button><h2>How to play</h2></header>
+  <p class="note">Carve through powder, sink into a crouch and spring off kickers, slide the rails and land spins, flips and grabs. Chain tricks to stack your multiplier. Bail and you restart at the last checkpoint.</p>
+  <div class="controls">
       <div class="ctl"><h3>Keyboard</h3><dl>
         <dt><kbd>←</kbd><kbd>→</kbd></dt><dd>Carve · spin in air</dd>
         <dt><kbd>↑</kbd><kbd>↓</kbd></dt><dd>Tuck, brake · flip in air</dd>
@@ -251,53 +430,7 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
         <dt>Camera</dt><dd>Pinch on the right side, or tap ⤢</dd>
       </dl></div>
     </div>
-    <div class="mp">
-      <h3>Ski with friends</h3>
-      <div class="mprow">
-        <label class="mpfield"><span>Your name</span><input id="mpName" maxlength="16" placeholder="Rider" autocomplete="off" spellcheck="false"></label>
-        <label class="mpfield"><span>Room code</span><input id="mpCode" maxlength="6" placeholder="e.g. PWDR" autocomplete="off" spellcheck="false"></label>
-        <button class="ghost" id="mpJoin">Join room</button>
-        <button class="ghost" id="mpNew">New room</button>
-        <button class="ghost" id="mpCopy" hidden>Copy invite link</button>
-      </div>
-      <div class="lobbychat" id="lobbyChat" hidden>
-        <div class="chatlog" id="lobbyLog"></div>
-        <form class="chatform" id="lobbyForm" autocomplete="off"><input id="lobbyIn" maxlength="140" placeholder="Say something to your room…" enterkeyhint="send"><button class="ghost" type="submit">Send</button></form>
-      </div>
-      <p class="netnote" id="netNote">Playing solo. Make a room and send friends the invite link.</p>
-    </div>
-    <div class="row">
-      <button class="go" id="startBtn">Drop in</button>
-      <button class="ghost assistBtn" aria-pressed="true">Landing assist: On</button>
-      <button class="ghost rideBtn">Ride: Skis</button>
-      <button class="ghost outfitBtn">Outfit</button>
-      <button class="ghost fpBtn">Camera: Third person</button>
-      <button class="ghost lightBtn">Lighting: Midnight</button>
-      <button class="ghost weatherBtn">Weather: Light snow</button>
-      <button class="ghost gfxBtn">Graphics: Auto</button>
-      <span class="best">Best run <b id="bestTitle">—</b></span>
-    </div>
-  </div>
-</div>
-
-<div class="screen" id="pause" hidden>
-  <div class="card" style="max-width:520px">
-    <h2>Paused</h2>
-    <div class="row">
-      <button class="go" id="resumeBtn">Resume</button>
-      <button class="ghost" id="restartBtn">Restart run</button>
-      <button class="ghost" id="endBtn">End run</button>
-      <button class="ghost" id="menuBtn">Main menu</button>
-      <button class="ghost assistBtn" aria-pressed="true">Landing assist: On</button>
-      <button class="ghost rideBtn">Ride: Skis</button>
-      <button class="ghost outfitBtn">Outfit</button>
-      <button class="ghost fpBtn">Camera: Third person</button>
-      <button class="ghost lightBtn">Lighting: Midnight</button>
-      <button class="ghost weatherBtn">Weather: Light snow</button>
-      <button class="ghost gfxBtn">Graphics: Auto</button>
-    </div>
-  </div>
-</div>
+</section>
 
 <div class="screen" id="results" hidden>
   <div class="card">
@@ -339,7 +472,7 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isTouch = ('ontouchstart' in window) || matchMedia('(pointer: coarse)').matches;
 if(isTouch) document.body.classList.add('touch');
 const RUN_TIME = 150;
-const G = 14, SLOPE = 0.32, G_SLIDE = 7.8;
+const G = 14, SLOPE = 0.32, G_SLIDE = 9.4;   // more pull down the hill: faster runs
 const L = h => new THREE.Color(h).convertSRGBToLinear();
 
 let best = 0;
@@ -348,7 +481,7 @@ const showBest = ()=>{ const t = best ? fmt(best) : '—'; $('bestTitle').textCo
 showBest();
 let ASSIST=true;
 try{ ASSIST=localStorage.getItem('violet-hour-assist')!=='off'; }catch(e){}
-function syncAssist(){ document.querySelectorAll('.assistBtn').forEach(b=>{ b.textContent='Landing assist: '+(ASSIST?'On':'Off'); b.setAttribute('aria-pressed',String(ASSIST)); }); }
+function syncAssist(){ document.querySelectorAll('.assistBtn').forEach(b=>{ b.textContent=ASSIST?'On':'Off'; b.setAttribute('aria-pressed',String(ASSIST)); }); }
 document.querySelectorAll('.assistBtn').forEach(b=>b.addEventListener('click',()=>{ ASSIST=!ASSIST; try{ localStorage.setItem('violet-hour-assist',ASSIST?'on':'off'); }catch(e){} syncAssist(); }));
 syncAssist();
 let LIGHT='night', WEATHER='snow';
@@ -356,8 +489,8 @@ try{ const l=localStorage.getItem('off-piste-light'), w=localStorage.getItem('vi
 function syncSky(){
   if(!LIGHTS[LIGHT]) LIGHT='night'; if(!WEATHERS[WEATHER]) WEATHER='snow';
   PAL=LIGHTS[LIGHT]; document.documentElement.dataset.light=LIGHT;
-  document.querySelectorAll('.lightBtn').forEach(b=>b.textContent='Lighting: '+LIGHTS[LIGHT].name);
-  document.querySelectorAll('.weatherBtn').forEach(b=>b.textContent='Weather: '+WEATHERS[WEATHER].name);
+  document.querySelectorAll('.lightBtn').forEach(b=>b.textContent=LIGHTS[LIGHT].name);
+  document.querySelectorAll('.weatherBtn').forEach(b=>b.textContent=WEATHERS[WEATHER].name);
   $('timeLbl').textContent='Riding';
   try{ localStorage.setItem('off-piste-light',LIGHT); localStorage.setItem('violet-hour-weather',WEATHER); }catch(e){}
 }
@@ -470,10 +603,37 @@ const sunDir = new THREE.Vector3();
 const lamp = new THREE.PointLight(0xffd9b0, 0, 16, 2); scene.add(lamp); // headlamp glow for night runs
 
 /* ---------- World: height field ---------- */
-function center(z){ return 22*Math.sin(z*0.0055) + 9*Math.sin(z*0.016+1.3); }
+const LEVELS={
+  back:  {name:'Backcountry', sign:'blue',   desc:'The original. Endless powder, pillows, trees, kickers and rails.'},
+  park:  {name:'Terrain Park', sign:'green', desc:'A groomed run packed with kickers, rails and wide boxes.'},
+  glades:{name:'Tree Glades', sign:'black',  desc:'Tight trees and deep pillows. Pick a line and hold it.'},
+  mega:  {name:'Mega Ramp',   sign:'orange', desc:'A huge drop-in, a giant kicker and a long steep landing. Over and over.'},
+  pipe:  {name:'Halfpipe',    sign:'black',  desc:'Carve up the walls and launch straight up. Spin and grab above the lip.'}
+};
+let LEVEL='back'; try{ const l=localStorage.getItem('off-piste-level'); if(LEVELS[l]) LEVEL=l; }catch(e){}
+function center(z){
+  if(LEVEL==='pipe'||LEVEL==='mega') return 0;
+  const a = LEVEL==='park' ? 0.5 : 1;
+  return a*(22*Math.sin(z*0.0055) + 9*Math.sin(z*0.016+1.3)); }
+/* Mega ramp: the hill repeats every MEGA_C metres: a steep in-run, a giant kicker at its foot, a long steep landing, then a flat runout. */
+const MEGA_C=330, MEGA_LIP=118;
+const megaT=(()=>{ const n=MEGA_C, sl=new Float32Array(n);
+  for(let i=0;i<n;i++) sl[i]= i<MEGA_LIP ? 0.46 : i<MEGA_LIP+90 ? 0.64 : 0.12;
+  const sm=new Float32Array(n); for(let i=0;i<n;i++){ let a=0; for(let j=-6;j<=6;j++) a+=sl[(i+j+n)%n]; sm[i]=a/13; }
+  const cum=new Float32Array(n+1); for(let i=0;i<n;i++) cum[i+1]=cum[i]+sm[i]; return cum; })();
+function megaDrop(s){ if(s<0) return s*0.12;
+  const c=Math.floor(s/MEGA_C), f=s-c*MEGA_C, i=Math.min(MEGA_C-1,Math.floor(f)), t=f-i;
+  return c*megaT[MEGA_C]+megaT[i]+(megaT[i+1]-megaT[i])*t; }
+/* Halfpipe: flat bottom, quarter-circle walls, a deck on top. */
+const PIPE_F=4.5, PIPE_R=6.5, PIPE_TOP=PIPE_F+PIPE_R*0.985;
+function pipeWall(ax){ const d=ax-PIPE_F; if(d<=0) return 0;
+  const dm=PIPE_R*0.985; if(d<dm) return PIPE_R-Math.sqrt(PIPE_R*PIPE_R-d*d);
+  const top=PIPE_R-Math.sqrt(PIPE_R*PIPE_R-dm*dm), e=d-dm; return top + (e>5 ? (e-5)*(e-5)*0.03 : 0); }
 function baseH(x,z){
-  let h = z*SLOPE + 1.1*Math.sin(x*0.09+z*0.045) + 0.7*Math.sin(z*0.12-x*0.06) + 0.32*Math.sin(x*0.21+z*0.17);
-  const e = Math.abs(x-center(z)) - 20; if(e>0) h += e*e*0.05;
+  if(LEVEL==='pipe') return z*0.36 + pipeWall(Math.abs(x)) + 0.12*Math.sin(z*0.05);
+  const bump = LEVEL==='park'||LEVEL==='mega' ? 0.22 : 1;
+  let h = (LEVEL==='mega' ? -megaDrop(-z) : z*SLOPE) + bump*(1.1*Math.sin(x*0.09+z*0.045) + 0.7*Math.sin(z*0.12-x*0.06) + 0.32*Math.sin(x*0.21+z*0.17));
+  const e = Math.abs(x-center(z)) - (LEVEL==='park'||LEVEL==='mega' ? 26 : 20); if(e>0) h += e*e*0.05;
   return h;
 }
 const buckets = new Map();
@@ -592,6 +752,7 @@ const lipMat = new THREE.MeshStandardMaterial({color:L(0x2f56c9), roughness:0.9}
 const flagMat = new THREE.MeshLambertMaterial({color:L(0xe0306a), side:THREE.DoubleSide});
 const poleMat = new THREE.MeshLambertMaterial({color:L(0x1c1a22)});
 const railMat = new THREE.MeshStandardMaterial({color:L(0xd6dae6), roughness:0.22, metalness:0.55, emissive:L(0x241c36)});
+const boxMat = new THREE.MeshStandardMaterial({color:L(0xff7a1a), roughness:0.45, metalness:0.1});
 const postMat = new THREE.MeshStandardMaterial({color:L(0x2a2833), roughness:0.6, metalness:0.3});
 function buildKicker(k){
   const v=[], NL=14, NW=6;
@@ -623,8 +784,8 @@ function buildKicker(k){
 function buildRail(r){
   const grp=new THREE.Group();
   const a=new THREE.Vector3(r.x0,r.y0,r.z0), b=new THREE.Vector3(r.x1,r.y1,r.z1);
-  const tg=new THREE.CylinderGeometry(0.045,0.045,1,12); tg.translate(0,0.5,0);
-  const tube=new THREE.Mesh(tg,railMat); tube.userData.len=1; placeSeg(tube,a,b); tube.castShadow=true; grp.add(tube);
+  const tg=r.box ? new THREE.BoxGeometry(0.62,1,0.14) : new THREE.CylinderGeometry(0.045,0.045,1,12); tg.translate(0,0.5,r.box?0.07:0);
+  const tube=new THREE.Mesh(tg,r.box?boxMat:railMat); tube.userData.len=1; placeSeg(tube,a,b); tube.castShadow=true; grp.add(tube);
   const n=Math.max(2,Math.round(r.len/3));
   for(let i=0;i<=n;i++){
     const t=i/n, p=new THREE.Vector3().lerpVectors(a,b,t), gy=groundH(p.x,p.z);
@@ -668,38 +829,54 @@ function spawnKicker(kz){
   clears.push({x, w:sz.W/2+5, top:kz+32, bot:kz-sz.L-45});
   makeKicker(x,kz,sz,false);
 }
-function spawnRail(zTop){
-  const H=wrand(0.8,1.05), len=wrand(11,19), ang=wrand(-0.1,0.1);
-  const x0=center(zTop)+wrand(-5,5), FL=5;
+function spawnRail(zTop,box,xOff){
+  const H=box?wrand(0.55,0.75):wrand(0.8,1.05), len=wrand(11,19), ang=wrand(-0.1,0.1);
+  const x0=center(zTop)+(xOff!=null?xOff:wrand(-5,5)), FL=5;
   const lipZ=zTop-FL, z0=lipZ-0.15;   // rail starts right where the feeder ends
   const x1=x0+Math.sin(ang)*len, z1=z0-Math.cos(ang)*len;
   const y0=groundH(x0,z0)+H, y1=groundH(x1,z1)+H;
   const kH=Math.max(0.45, y0-groundH(x0,lipZ)+0.03); // lip a touch above the rail, so you drop onto it
   clears.push({x:(x0+x1)/2, w:7, top:zTop+28, bot:z1-30});
   makeKicker(x0,zTop,{H:kH,L:FL,W:2.2},true);
-  const r={type:'rail',x0,z0,x1,z1,y0,y1,len,dx:(x1-x0)/len,dz:(z1-z0)/len,heading:ang,z:z0,zEnd:z1};
+  const r={type:'rail',x0,z0,x1,z1,y0,y1,len,dx:(x1-x0)/len,dz:(z1-z0)/len,heading:ang,z:z0,zEnd:z1,box:!!box};
   rails.push(r); objs.push(r); buildRail(r);
 }
 function spawnGate(z){ const g={type:'gate',x:center(z),z,passed:false}; objs.push(g); buildGate(g); }
+let megaNext=0;
+function spawnMega(c){
+  const lipZ=-(c*MEGA_C+MEGA_LIP), sz={H:5.2,L:17,W:15};
+  clears.push({x:0, w:sz.W/2+8, top:lipZ+sz.L+40, bot:lipZ-100});
+  makeKicker(0,lipZ+sz.L,sz,false);
+  spawnGate(-(c*MEGA_C+8));                                    // checkpoint at the top of every in-run
+  spawnRail(-(c*MEGA_C+MEGA_LIP+150),false,-6); spawnRail(-(c*MEGA_C+MEGA_LIP+175),true,6);   // something to hit on the runout
+}
 function genChunk(z0,z1){
-  while(nextFeatureZ > z1-80){ if(WR()<0.45) spawnRail(nextFeatureZ); else spawnKicker(nextFeatureZ); nextFeatureZ -= wrand(70,115); }
-  while(nextGateZ > z1){ spawnGate(nextGateZ); nextGateZ -= 160; }
-  const nP = WR()<0.75 ? (WR()<0.45?2:1) : 0;
+  if(LEVEL==='mega'){ while(-(megaNext*MEGA_C) > z1-260){ spawnMega(megaNext); megaNext++; } }
+  else if(LEVEL==='pipe'){ while(nextGateZ > z1){ spawnGate(nextGateZ); nextGateZ -= 160; } }
+  else {
+    while(nextFeatureZ > z1-80){ const r=WR();
+      if(LEVEL==='park'){ if(r<0.33) spawnKicker(nextFeatureZ); else spawnRail(nextFeatureZ, r>0.66); nextFeatureZ -= wrand(34,52); }
+      else if(LEVEL==='glades'){ spawnKicker(nextFeatureZ); nextFeatureZ -= wrand(150,210); }
+      else { if(r<0.45) spawnRail(nextFeatureZ); else spawnKicker(nextFeatureZ); nextFeatureZ -= wrand(70,115); } }
+    while(nextGateZ > z1){ spawnGate(nextGateZ); nextGateZ -= 160; }
+  }
+  const nP = LEVEL==='park'||LEVEL==='mega'||LEVEL==='pipe' ? 0 : LEVEL==='glades' ? 1+Math.floor(WR()*3) : WR()<0.75 ? (WR()<0.45?2:1) : 0;
   for(let i=0;i<nP;i++){
     const z=wrand(z1,z0), x=center(z)+wrand(-16,16);
     if(z>-45 || inClear(x,z)) continue;
     const R=wrand(3.5,6.5), p={type:'pillow',x,z,R,R2:R*R,H:wrand(0.8,1.9),key:Math.floor(z/16)};
     if(!buckets.has(p.key)) buckets.set(p.key,[]); buckets.get(p.key).push(p); objs.push(p);
   }
-  for(let i=0;i<26;i++){
+  const nT = LEVEL==='glades' ? 46 : 26, open = LEVEL==='park'||LEVEL==='mega' ? 27 : LEVEL==='pipe' ? 19 : 13, keep = LEVEL==='glades' ? 0.62 : 0.16;
+  for(let i=0;i<nT;i++){
     const z=wrand(z1,z0), dx=wrand(-58,58);
-    if(Math.abs(dx)<13 && WR()>0.16) continue;
+    if(Math.abs(dx)<open && (LEVEL==='park'||LEVEL==='mega'||LEVEL==='pipe'||WR()>keep)) continue;
     if(z>-50 && Math.abs(dx)<16) continue;
     const x=center(z)+dx; if(inClear(x,z) || !freeT.length) continue;
     const s=wrand(0.85,1.6)*(Math.abs(dx)>25?1.3:1), slot=freeT.pop(), y=groundH(x,z);
     setTree(slot,x,y,z,s); objs.push({type:'tree',x,z,y,r:0.45*s,h:7*s,slot});
   }
-  for(let i=0;i<2;i++){
+  for(let i=0;i<(LEVEL==='back'||LEVEL==='glades'?2:0);i++){
     const z=wrand(z1,z0), x=center(z)+wrand(-28,28);
     if(z>-50 || inClear(x,z) || !freeR.length) continue;
     const s=wrand(0.5,1.3), slot=freeR.pop(), y=groundH(x,z);
@@ -1107,7 +1284,7 @@ function applyGfx(level){
   if(sunLight.shadow.mapSize.x!==ms){ sunLight.shadow.mapSize.set(ms,ms); if(sunLight.shadow.map){ sunLight.shadow.map.dispose(); sunLight.shadow.map=null; } }
   const st=L2.soft?THREE.PCFSoftShadowMap:THREE.PCFShadowMap;
   if(renderer.shadowMap.type!==st){ renderer.shadowMap.type=st; scene.traverse(o=>{ if(o.material){ (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>m.needsUpdate=true); } }); }
-  document.querySelectorAll('.gfxBtn').forEach(b=>b.textContent='Graphics: '+(GFX.mode==='auto'?'Auto ('+L2.name+')':L2.name));
+  document.querySelectorAll('.gfxBtn').forEach(b=>b.textContent=(GFX.mode==='auto'?'Auto ('+L2.name+')':L2.name));
 }
 function setGfxMode(mode){
   GFX.mode=mode; try{ localStorage.setItem('off-piste-gfx',mode); }catch(e){}
@@ -1248,7 +1425,7 @@ function sfxClank(){ if(!AC) return; const t=AC.currentTime; tone(1240,t,0.25,0.
 function sfxCrash(){ if(!AC) return; const t=AC.currentTime; noiseHit(t,0.9,0.7,500); tone(180,t,0.3,0.12,'sawtooth'); tone(130,t+0.1,0.4,0.1,'sawtooth'); }
 function sfxBank(){ if(!AC) return; const t=AC.currentTime; [5,7,9,10].forEach((s,i)=>tone(SCALE[s],t+i*0.05,0.5,0.09,'sine')); }
 function sfxGate(){ if(!AC) return; const t=AC.currentTime; [4,7,9].forEach((s,i)=>tone(SCALE[s],t+i*0.08,0.6,0.08,'sine')); }
-function setMuted(m){ muted=m; $('muteBtn').textContent=m?'✕':'♪'; $('muteBtn').setAttribute('aria-label',m?'Unmute sound':'Mute sound'); if(master) master.gain.setTargetAtTime(m?0:0.75,AC.currentTime,0.05); }
+function setMuted(m){ muted=m; $('muteBtn').classList.toggle('off',m); document.querySelectorAll('.soundBtn').forEach(b=>b.textContent=m?'Off':'On'); $('muteBtn').setAttribute('aria-label',m?'Unmute sound':'Mute sound'); if(master) master.gain.setTargetAtTime(m?0:0.75,AC.currentTime,0.05); }
 
 /* ---------- Input ---------- */
 const keys=new Set();
@@ -1368,7 +1545,7 @@ function resetPlayer(){
 }
 function resetWorld(){
   for(const o of objs) disposeMesh(o);
-  objs=[]; kickers=[]; rails=[]; clears=[]; buckets.clear(); WR=mulberry(WORLD_SEED); genZ=20; nextFeatureZ=-90; nextGateZ=-170;
+  objs=[]; kickers=[]; rails=[]; clears=[]; buckets.clear(); WR=mulberry(WORLD_SEED); genZ=20; nextFeatureZ=-90; nextGateZ=-170; megaNext=0;
   resetPools(); resetPlayer(); CP.x=P.x; CP.z=-1;
   generateUntil(P.z-340); updateTerrain(true);
   trPts=[]; trLast=null; trGeo.setDrawRange(0,0); capGeo.setDrawRange(0,0);
@@ -1409,6 +1586,8 @@ function popStrength(){ return 2.6+(P.charge/0.4)*3.0; }
 function takeoff(){
   if(P.pressT>0) endPress();
   P.air=true; P.airT=0; P.spin=0; P.flip=0; P.spinRate=0; P.flipRate=0; P.grabT=0; P.grabName=null; P.takeStance=P.stance; P.liveKey=0;
+  if(LEVEL==='pipe' && Math.abs(P.x)>PIPE_F+PIPE_R*0.55){ const sg=Math.sign(P.x), vo=P.vx*sg;
+    if(vo>0.5){ P.vy=Math.max(vo*1.22, 2); P.vx=-sg*0.7; P.pipeAir=true; } }
   P.popReady = P.charge>0; P.errAt=null; P.eS=0; P.eF=0; P.tLand=9; P.railOut=false; trailPush(false);
 }
 function doPop(){ const v=P.charge/0.4; P.vy+=popStrength(); P.charge=0; RS.popT=1; sfxPop(v); burst(P.x,P.y,P.z,8+v*22,0.5+v*0.3); }
@@ -1445,7 +1624,7 @@ function bankCombo(){
   combo.mult=0; combo.pts=0; combo.t=0;
 }
 function crash(msg){
-  P.crash=1.15; P.air=false; P.grind=null; P.pressT=0; P.spin=P.flip=P.spinRate=P.flipRate=0; P.grab=0; P.charge=0; P.tumble=0; P.fading=false; hideLive();
+  P.crash=1.15; P.air=false; P.grind=null; P.pressT=0; P.pipeAir=false; P.spin=P.flip=P.spinRate=P.flipRate=0; P.grab=0; P.charge=0; P.tumble=0; P.fading=false; hideLive();
   burst(P.x,P.y,P.z,170,1.5); shake=reduceMotion?0.2:1; sfxCrash(); facePowder(1);
   if(combo.mult>0) showTrick('Combo lost', fmt(combo.pts*combo.mult)+' pts gone', true); else showTrick(msg,'',true);
   combo.mult=0; combo.pts=0; combo.t=0; trailPush(false);
@@ -1458,11 +1637,15 @@ function respawn(){
   hudEls.fade.classList.remove('on'); P.fading=false;
 }
 function land(){
-  const spin=P.spin, flip=P.flip, airT=P.airT, total=P.takeStance+spin;
+  const spin=P.spin, flip=P.flip, airT=P.airT;
+  let total=P.takeStance+spin;
+  // in the pipe you come down the wall you went up: your heading swings round with you
+  if(P.pipeAir){ const hs=Math.hypot(P.vx,P.vz); if(hs>1){ const nh=clamp(Math.atan2(P.vx,-P.vz),-1.5,1.5); total+=nh-P.heading; } }
   P.air=false; hideLive();
   const rs=mod(total,Math.PI), spinErr=Math.min(rs,Math.PI-rs);
   const rf=mod(flip,TAU), flipErr=Math.min(rf,TAU-rf);
-  if(spinErr>(ASSIST?1.13:0.95)||flipErr>(ASSIST?1.23:1.05)){ crash(airT>0.6?'Bailed':'Caught an edge'); return; }
+  const pipeOk=P.pipeAir; P.pipeAir=false;
+  if((spinErr>(ASSIST?1.13:0.95) && !pipeOk)||flipErr>(ASSIST?1.23:1.05)){ crash(airT>0.6?'Bailed':'Caught an edge'); return; }
   const sketchy=spinErr>0.55||flipErr>0.65;
   // keep your speed: skis line up with the way you're travelling (no sideways scrub), and a clean
   // landing turns some of the drop into forward speed instead of losing it
@@ -1497,7 +1680,7 @@ function tryRail(){
     if(t<-0.02||t>0.97) continue;
     const lat=-px*r.dz+pz*r.dx, latV=-P.vx*r.dz+P.vz*r.dx, latPrev=lat-latV/60;
     const crossed = P.air && Math.sign(lat)!==Math.sign(latPrev) && Math.abs(latPrev)<1.2;   // flew over it this frame
-    if(Math.abs(lat)>0.42 && !crossed) continue;
+    if(Math.abs(lat)>(r.box?0.72:0.42) && !crossed) continue;
     const ry=r.y0+(r.y1-r.y0)*t, dy=P.y-ry;
     const slope=(r.y1-r.y0)/r.len, spAlong=P.vx*r.dx+P.vz*r.dz;
     if(dy>(P.air?-0.3:-0.22) && dy<(P.air?0.55:0.45) && (P.vy-slope*spAlong)<0.8){
@@ -1575,8 +1758,8 @@ function passGates(){
 function groundStep(dt){
   const sp0=Math.hypot(P.vx,P.vz);
   // responsive carving: input eases in fast, turn rate stays high at speed
-  P.turn+=(IN.x-P.turn)*Math.min(1,9*dt);
-  const rate=2.25+0.75*(1-Math.min(1,sp0/30));
+  P.turn+=(IN.x-P.turn)*Math.min(1,6*dt);                 // turns build in a little more gently
+  const rate=1.8+0.6*(1-Math.min(1,sp0/30));
   P.heading=clamp(P.heading+P.turn*rate*dt,-1.5,1.5);
   // gentler pull down the fall line: about 2.5 m/s² on the open slope, top speed near 75 km/h (95 tucked)
   const e=0.4, gx=(physH(P.x+e,P.z)-physH(P.x-e,P.z))/(2*e), gz=(physH(P.x,P.z+e)-physH(P.x,P.z-e))/(2*e);
@@ -1596,8 +1779,8 @@ function groundStep(dt){
     if(ph>0.3 && ph<0.8){ const sp1=Math.hypot(vF,vL); vF+=10.5*Math.max(0,1-sp1/19.5)*dt; } }
   const tuck=IN.y>0.3?IN.y:0, brake=(IN.y<-0.3&&!P.noBrake)?-IN.y:0;
   const sp=Math.hypot(vF,vL);
-  const turnDrag = sp>4 ? Math.abs(P.turn)*0.32 : 0;     // turning slows you down
-  const k=(0.0044-tuck*0.002)*sp+0.03+brake*1.1+P.charge*0.15+turnDrag+P.hk*2.4;
+  const turnDrag = sp>4 && LEVEL!=='pipe' ? Math.abs(P.turn)*0.32 : 0;     // turning slows you down
+  const k=(0.0032-tuck*0.0015)*sp+0.025+brake*1.1+P.charge*0.15+turnDrag+P.hk*2.4;
   const f=Math.exp(-k*dt); vF*=f; vL*=f;
   if(P.hk>0.05){ const s1=Math.hypot(vF,vL), d=P.hk*9*dt, q=s1>d?(s1-d)/s1:0; vF*=q; vL*=q; }   // edges dig in: about a second from cruising speed
   if(hkIn && Math.hypot(vF,vL)<0.8){ vF=0; vL=0; }      // dead stop
@@ -1744,11 +1927,15 @@ let fpList=null;
 function fpParts(){ if(!fpList){ fpList=[R.head]; R.torsoF.children.forEach(o=>{ if(o.userData.fpHide) fpList.push(o); }); } return fpList; }
 function setFPVis(fp){ for(const o of fpParts()) o.visible=!fp; }
 function setFP(on){ CAM.fp=on; try{ localStorage.setItem('off-piste-fp',on?'1':'0'); }catch(e){}
-  document.querySelectorAll('.fpBtn').forEach(b=>{ b.textContent=on?'Camera: First person':'Camera: Third person'; });
+  document.querySelectorAll('.fpBtn').forEach(b=>{ b.textContent=on?'First person':'Third person'; });
   const ib=$('fpIcon'); if(ib){ ib.setAttribute('aria-pressed',on?'true':'false'); ib.classList.toggle('on',on); } }
 const fpBoardYaw=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI/2);
 const fpQ=new THREE.Quaternion(), fpPitch=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-0.3), fpEye=new THREE.Vector3();
+let camOff=-1;
 function updateCamera(dt,now){
+  // on the menu, frame the rider in the open space to the right of the menu panel
+  { const w=window.innerWidth, h=window.innerHeight, want=(state==='title' && w>700) ? Math.round(Math.min(400,w)/2)+(w|0)*1e4+(h|0)*1e9 : 0;
+    if(want!==camOff){ camOff=want; if(want) camera.setViewOffset(w,h,-Math.round(Math.min(400,w)/2),0,w,h); else camera.clearViewOffset(); } }
   const sp=Math.hypot(P.vx,P.vz);
   setFPVis(CAM.fp && state!=='title');
   if(CAM.fp && state!=='title'){
@@ -1823,7 +2010,24 @@ function updateHud(){
 }
 
 /* ---------- Flow ---------- */
-function show(id){ ['title','pause','results'].forEach(s=>$(s).hidden=s!==id); }
+function show(id){ closeSheet(); ['title','pause','results'].forEach(s=>$(s).hidden=s!==id); }
+let sheetOpen=null, sheetFrom=null;
+function openSheet(id){ const el=$(id); if(!el) return; sheetFrom=document.activeElement; closeSheet(true); el.hidden=false; sheetOpen=el;
+  const b=el.querySelector('.back'); if(b) b.focus(); }
+function closeSheet(quiet){ if(!sheetOpen) return; sheetOpen.hidden=true; sheetOpen=null; if(!quiet && sheetFrom && sheetFrom.focus) sheetFrom.focus(); }
+function renderLevels(){ const box=$('lvlList'); if(!box) return; box.textContent='';
+  for(const [id,l] of Object.entries(LEVELS)){ const b=document.createElement('button'); b.className='lvl'; b.setAttribute('aria-pressed',String(id===LEVEL));
+    b.innerHTML='<svg class="sign '+l.sign+'" viewBox="0 0 24 24" aria-hidden="true">'+(l.sign==='green'?'<circle cx="12" cy="12" r="10"/>':l.sign==='blue'?'<rect x="3" y="3" width="18" height="18"/>':'<path d="M12 1.5 22.5 12 12 22.5 1.5 12Z"/>')+'</svg><b></b><small></small>';
+    b.querySelector('b').textContent=l.name; b.querySelector('small').textContent=l.desc;
+    b.addEventListener('click',()=>{ setLevel(id); closeSheet(); }); box.appendChild(b); }
+  document.querySelectorAll('.lvlSum').forEach(e=>e.textContent=LEVELS[LEVEL].name); }
+function setLevel(id){ if(!LEVELS[id]) return; LEVEL=id; try{ localStorage.setItem('off-piste-level',id); }catch(e){}
+  resetWorld(); renderLevels(); }
+function syncRiderSum(){ const t=(BOARD?'Snowboard':'Skis')+' · '+OUTFITS[OUTFIT.i].name; document.querySelectorAll('.riderSum').forEach(e=>e.textContent=t); }
+document.querySelectorAll('[data-sheet]').forEach(b=>b.addEventListener('click',()=>openSheet(b.dataset.sheet)));
+document.querySelectorAll('.sheet .back').forEach(b=>b.addEventListener('click',()=>closeSheet()));
+document.querySelectorAll('.soundBtn').forEach(b=>b.addEventListener('click',()=>{ initAudio(); setMuted(!muted); }));
+window.addEventListener('keydown',e=>{ if(e.key==='Escape' && sheetOpen){ e.preventDefault(); e.stopImmediatePropagation(); closeSheet(); } },true);
 function startRun(){ try{ const ae=document.activeElement; if(ae&&ae.tagName==='INPUT') ae.blur(); }catch(e){}
   initAudio(); resetWorld(); state='play'; show(null);
   $('hud').hidden=false; $('touch').hidden=!isTouch; hudCache={}; hudEls.fade.classList.remove('on');
@@ -1919,7 +2123,11 @@ function ingest(p){
   if(!r){ r=makeRemote(p.peer); NET.peers.set(p.peer,r); }
   if(Number.isInteger(pres.o) && pres.o>=0 && pres.o<OUTFITS.length && pres.o!==r.outfit){ r.outfit=pres.o; paintOutfit(r.mats,pres.o); { const o=OUTFITS[pres.o], c=new THREE.Color(new THREE.Color(o.jacket).getLuminance()>0.12?o.jacket:o.accent); c.lerp(new THREE.Color(0xffffff),0.3); r.col=c.getHex(); } }
   { const b=pres.b===1; if(b!==r.board){ r.board=b; rideVis(r.g,b); } }
-  r.name=cleanName(pres.n); r.st=pres.st!==0; r.score=Math.max(0,Math.min(1e9,Number(pres.s)||0));
+  r.name=cleanName(pres.n); r.st=pres.st!==0;
+  { const lv=LEVELS[pres.lv]?pres.lv:'back'; if(r.lv!==lv){ const first=!r.lv; r.lv=lv;
+      // joining a friend who is already on another mountain: follow them there (only from the menu)
+      if(first && lv!==LEVEL && state==='title'){ setLevel(lv); netToast('Switched to '+LEVELS[lv].name+' to ride with '+(r.name||'your friend')); } } }
+  r.score=Math.max(0,Math.min(1e9,Number(pres.s)||0));
   if(pres.k!==r.lastK && validPose(pres.k)){
     r.lastK=pres.k; const now=performance.now();
     const last=r.buf[r.buf.length-1];
@@ -1934,7 +2142,7 @@ function applyRemote(r,now){
   if(rt>=b[b.length-1].t){ A=B=b[b.length-1]; }
   else for(let i=0;i<b.length-1;i++){ if(b[i].t<=rt && rt<b[i+1].t){ A=b[i]; B=b[i+1]; f=(rt-A.t)/(B.t-A.t); break; } }
   const a=A.k, c=B.k, lr=(i)=>a[i]+(c[i]-a[i])*f;
-  r.g.position.set(lr(0),lr(1),lr(2)); r.g.visible=(f<0.5?a[3]:c[3])>0.5;
+  r.g.position.set(lr(0),lr(1),lr(2)); r.g.visible=(f<0.5?a[3]:c[3])>0.5 && (r.lv||'back')===LEVEL;
   for(let n=0;n<r.nodes.length;n++){ const o=4+n*7, nd=r.nodes[n];
     nd.position.set(lr(o),lr(o+1),lr(o+2));
     qa.set(a[o+3],a[o+4],a[o+5],a[o+6]); qb.set(c[o+3],c[o+4],c[o+5],c[o+6]); nd.quaternion.copy(qa).slerp(qb,f).normalize(); }
@@ -1960,7 +2168,7 @@ function renderNetList(){
   if(!n){ el.hidden=true; return; }
   el.hidden=false; el.textContent='';
   const head=document.createElement('div'); head.className='netlive'; head.textContent=`● Live · ${n+1} riders`; el.appendChild(head);
-  const rows=[{name:'You',score:stats.score,col:0xd93a72},...[...NET.peers.values()].map(r=>({name:nameFor(r)+(r.st?'':' · lobby'),score:r.score,col:r.col}))].sort((x,y)=>y.score-x.score).slice(0,6);
+  const rows=[{name:'You',score:stats.score,col:0xd93a72},...[...NET.peers.values()].map(r=>({name:nameFor(r)+(r.lv&&r.lv!==LEVEL?' · '+LEVELS[r.lv].name:r.st?'':' · lobby'),score:r.score,col:r.col}))].sort((x,y)=>y.score-x.score).slice(0,6);
   for(const row of rows){ const d=document.createElement('div'), dot=document.createElement('span'); dot.className='dot'; dot.style.background='#'+new THREE.Color(row.col).getHexString();
     d.append(dot, document.createTextNode(row.name+'  '+fmt(Math.round(row.score)))); el.appendChild(d); }
 }
@@ -1968,7 +2176,7 @@ function netTick(rdt,now){
   if(!NET.room) return;
   for(const r of NET.peers.values()) applyRemote(r,now);
   NET.sendT+=rdt;
-  if(NET.sendT>=0.08){ NET.sendT=0; NET.room.presence({k:packPose(),s:Math.round(stats.score),n:myName(),st:state==='title'?0:1,o:OUTFIT.i,b:BOARD?1:0}).catch(()=>{}); }
+  if(NET.sendT>=0.08){ NET.sendT=0; NET.room.presence({k:packPose(),s:Math.round(stats.score),n:myName(),st:state==='title'?0:1,o:OUTFIT.i,b:BOARD?1:0,lv:LEVEL}).catch(()=>{}); }
   NET.listT+=rdt; if(NET.listT>0.5){ NET.listT=0; renderNetList(); }
 }
 
@@ -2067,8 +2275,55 @@ function joinRoom(code){
     for(const p of ch.joined){ ingest(p); const r=NET.peers.get(p.peer); if(r){ netToast(nameFor(r)+' is in the room with you'); addChat({sys:true,text:nameFor(r)+' joined.'}); } renderNetList(); }
     for(const p of ch.updated) ingest(p);
   });
+  $('mpLeave').hidden=false; if(isPub(code) && !PUB.rooms.has(code)) PUB.rooms.set(code,{code,lv:LEVEL,n:1,t:Date.now()}); renderPub();
   renderNetList();
 }
+function leaveRoom(){ if(!NET.room) return; NET.room.leave(); NET.room=null; for(const k of [...NET.peers.keys()]) dropRemote(k);
+  addChat({sys:true,text:'You left room '+NET.code+'.'}); NET.code=null; NET.status='';
+  $('mpCopy').hidden=true; $('mpLeave').hidden=true; $('lobbyChat').hidden=true; $('gameChat').hidden=true; $('chatBtn').hidden=true; $('mpCode').value='';
+  try{ history.replaceState(null,'',location.pathname); }catch(e){}
+  renderPub(); renderNetList(); }
+
+/* Public rooms. Rooms whose code starts with PUB announce themselves on a shared directory topic every few
+   seconds (code, mountain, rider count). Anyone with the menu open sees the list; "Play online" joins the
+   busiest public room on your mountain that still has space, or opens a new one. */
+const PUB_MAX=10, PUB={rooms:new Map(), clients:[]};
+const isPub=c=>/^PUB[A-Z0-9]{2,3}$/.test(c||'');
+function startDirectory(){
+  if(typeof mqtt!=='object'&&typeof mqtt!=='function'){ $('pubList').innerHTML='<p class="note">Online play needs the multiplayer library, which did not load.</p>'; return; }
+  const id='opd'+Math.random().toString(36).slice(2,10);
+  PUB.clients=['wss://broker.emqx.io:8084/mqtt','wss://broker.hivemq.com:8884/mqtt'].map((url,i)=>{
+    const c=mqtt.connect(url,{clientId:id+i,keepalive:30,reconnectPeriod:4000,connectTimeout:8000,clean:true});
+    c.on('connect',()=>c.subscribe('offpiste/v1/dir/+',{qos:0})); c.on('error',()=>{});
+    c.on('message',(topic,buf)=>{ if(!buf||buf.length>400) return; let d; try{ d=JSON.parse(new TextDecoder().decode(buf)); }catch(e){ return; }
+      const code=cleanCode(topic.split('/').pop()); if(!isPub(code)||!d||!LEVELS[d.lv]) return;
+      const n=clamp(Math.round(+d.n||1),1,PUB_MAX+5), ex=PUB.rooms.get(code), now=Date.now();
+      // several riders in one room all announce it: keep the biggest count heard recently
+      PUB.rooms.set(code,{code,lv:d.lv,n:ex&&now-ex.t<6000?Math.max(ex.n,n):n,t:now}); renderPub(); });
+    return c; });
+  setInterval(()=>{ const now=Date.now(); for(const [k,r] of PUB.rooms) if(now-r.t>12000) PUB.rooms.delete(k);
+    if(NET.room && isPub(NET.code)){ const msg=JSON.stringify({lv:LEVEL,n:NET.peers.size+1});
+      for(const c of PUB.clients) if(c.connected) c.publish('offpiste/v1/dir/'+NET.code,msg,{qos:0}); }
+    renderPub(); },4000);
+}
+let pubKey='';
+function renderPub(){ const box=$('pubList'); if(!box) return;
+  const list=[...PUB.rooms.values()].sort((a,b)=>(b.lv===LEVEL)-(a.lv===LEVEL)||b.n-a.n).slice(0,8);
+  const key=list.map(r=>r.code+r.lv+r.n).join()+'|'+NET.code+LEVEL; if(key===pubKey) return; pubKey=key;
+  box.textContent='';
+  if(!list.length){ box.innerHTML='<p class="note">No public rooms right now. Hit Play online to open one.</p>'; return; }
+  for(const r of list){ const d=document.createElement('div'); d.className='pub'+(r.code===NET.code?' here':'');
+    d.innerHTML='<b></b><small></small><button class="ghost"></button>';
+    d.querySelector('b').textContent=LEVELS[r.lv].name; d.querySelector('small').textContent=r.n+(r.n===1?' rider':' riders')+' · room '+r.code;
+    const b=d.querySelector('button'); const full=r.n>=PUB_MAX && r.code!==NET.code;
+    b.textContent=r.code===NET.code?'You\'re here':full?'Full':'Join'; b.disabled=r.code===NET.code||full;
+    b.addEventListener('click',()=>{ if(r.lv!==LEVEL) setLevel(r.lv); joinRoom(r.code); });
+    box.appendChild(d); } }
+function playOnline(){
+  const open=[...PUB.rooms.values()].filter(r=>r.lv===LEVEL && r.n<PUB_MAX && r.code!==NET.code).sort((a,b)=>b.n-a.n)[0];
+  if(open){ joinRoom(open.code); return; }
+  const A='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let c='PUB'; for(let i=0;i<3;i++) c+=A[Math.floor(Math.random()*A.length)];
+  joinRoom(c); }
 (function(){
   try{ $('mpName').value=localStorage.getItem('violet-hour-name')||''; }catch(e){}
   $('mpName').addEventListener('input',()=>{ try{ localStorage.setItem('violet-hour-name',myName()); }catch(e){} });
@@ -2087,6 +2342,10 @@ function joinRoom(code){
   $('mpCopy').addEventListener('click',async()=>{ const link=inviteLink(NET.code); let ok=false;
     try{ await navigator.clipboard.writeText(link); ok=true; }catch(e){}
     $('mpCopy').textContent= ok ? 'Link copied!' : link; setTimeout(()=>{ $('mpCopy').textContent='Copy invite link'; },2500); });
+  $('mpLeave').addEventListener('click',leaveRoom);
+  $('mpOnline').addEventListener('click',playOnline);
+  setInterval(()=>{ const n=NET.room?NET.peers.size:0; $('mpSum').textContent = NET.room ? 'Room '+NET.code+' · '+(n+1)+(n?' riders':' rider') : 'Solo'; },1000);
+  startDirectory();
   const h=cleanCode(location.hash.slice(1)); if(h.length>=3) joinRoom(h);
   window.addEventListener('pagehide',()=>{ if(NET.room) NET.room.leave(); });
   window.addEventListener('pageshow',e=>{ if(e.persisted && NET.code) joinRoom(NET.code); });
@@ -2099,13 +2358,13 @@ document.querySelectorAll('.gfxBtn').forEach(b=>b.addEventListener('click',()=>{
 
 function setRide(board){ BOARD=board; try{ localStorage.setItem('off-piste-ride',board?'board':'ski'); }catch(e){}
   rideVis(R.rider,board); fpList=null;
-  document.querySelectorAll('.rideBtn').forEach(b=>b.textContent='Ride: '+(board?'Snowboard':'Skis'));
+  document.querySelectorAll('.rideBtn').forEach(b=>b.textContent=board?'Snowboard':'Skis'); syncRiderSum();
   trPts=[]; trLast=null; trGeo.setDrawRange(0,0); capGeo.setDrawRange(0,0); }
 document.querySelectorAll('.rideBtn').forEach(b=>b.addEventListener('click',()=>setRide(!BOARD)));
-function syncOutfit(){ paintOutfit(R.SLOTS,OUTFIT.i); document.querySelectorAll('.outfitBtn').forEach(b=>b.textContent='Outfit: '+OUTFITS[OUTFIT.i].name);
+function syncOutfit(){ paintOutfit(R.SLOTS,OUTFIT.i); document.querySelectorAll('.outfitBtn').forEach(b=>b.textContent=OUTFITS[OUTFIT.i].name); syncRiderSum();
   try{ localStorage.setItem('off-piste-outfit',String(OUTFIT.i)); }catch(e){} }
 document.querySelectorAll('.outfitBtn').forEach(b=>b.addEventListener('click',()=>{ OUTFIT.i=(OUTFIT.i+1)%OUTFITS.length; syncOutfit(); }));
-syncOutfit(); setRide(BOARD);
+syncOutfit(); setRide(BOARD); renderLevels();
 
 requestAnimationFrame(frame);
 })();
