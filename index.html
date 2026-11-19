@@ -967,8 +967,15 @@ function animateRig(dt,now){
 
   // skis
   R.skis.position.set(0,RS.lift,RS.lift*0.12); R.skis.rotation.set(RS.pitch,0,RS.roll);
-  if(BOARD){ R.skiParts.L.position.x=-0.27; R.skiParts.R.position.x=0.27; R.skiParts.L.rotation.y=0.26; R.skiParts.R.rotation.y=-0.12; }
-  else { R.skiParts.L.position.x=-0.14; R.skiParts.R.position.x=0.14; R.skiParts.L.rotation.y=RS.cross; R.skiParts.R.rotation.y=-RS.cross; }
+  if(BOARD){ R.skiParts.L.position.set(-0.27,0,0); R.skiParts.R.position.set(0.27,0,0); R.skiParts.L.rotation.y=0.26; R.skiParts.R.rotation.y=-0.12; }
+  else {
+    // racer stance: skis pull in tight, almost touching, as you turn or hockey stop; the inside ski leads a little
+    const nT=(mode==='ride'||mode==='idle') ? Math.max(Math.min(1,Math.abs(P.turn)*1.6), P.hk||0) : 0;
+    RS.narrow=(RS.narrow||0)+(nT-(RS.narrow||0))*k(8);
+    const w=0.14-0.066*RS.narrow, lead=0.07*RS.narrow*Math.sign(P.turn||P.hkSide||0);
+    R.skiParts.L.position.x=-w; R.skiParts.R.position.x=w;
+    R.skiParts.L.position.z=-lead; R.skiParts.R.position.z=lead;
+    R.skiParts.L.rotation.y=RS.cross*(1-RS.narrow); R.skiParts.R.rotation.y=-RS.cross*(1-RS.narrow); }
   R.skis.updateMatrix(); R.skiParts.L.updateMatrix(); R.skiParts.R.updateMatrix();
   const ankle=(s,out)=>out.copy(R.ankles[s].position).applyMatrix4(R.skiParts[s].matrix).applyMatrix4(R.skis.matrix);
   // hips
@@ -1165,7 +1172,7 @@ function trailPush(on){
   const fx=Math.sin(P.heading), fz=-Math.cos(P.heading);
   const gx=(groundH(P.x+0.5,P.z)-groundH(P.x-0.5,P.z)), gz=(groundH(P.x,P.z+0.5)-groundH(P.x,P.z-0.5));
   const nl=Math.hypot(gx,1,gz);
-  const off=BOARD?0:SKI_OFF, pw=BOARD?2.75:1;   // board: one groove ~30 cm wide (board 27 cm + about an inch)
+  const off=BOARD?0:SKI_OFF*(1-0.5*(RS.narrow||0)), pw=BOARD?2.75:1;   // board: one groove ~30 cm wide (board 27 cm + about an inch)
   const hs=new Float32Array(NPV); for(let s2=0;s2<2;s2++) for(let j=0;j<PROF.length;j++){ const o=(s2?off:-off)+PROF[j]*pw; hs[s2*PROF.length+j]=groundH(P.x-fz*o,P.z+fx*o)+0.03; }
   trPts.push({x:P.x,z:P.z,hs,sx:-fz,sz:fx,nx:-gx/nl,ny:1/nl,nz:-gz/nl,on}); if(trPts.length>TN) trPts.shift();
   const n=trPts.length, last=PROF.length-1;
