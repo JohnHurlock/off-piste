@@ -423,9 +423,9 @@ kbd{border-radius:3px;background:var(--panel2)}
         <dt><kbd>Shift</kbd></dt><dd>Grab (hold in air) · tail press on the snow</dd>
         <dt><kbd>←</kbd><kbd>→</kbd> on a rail</dt><dd>Switch-up</dd>
         <dt><kbd>T</kbd></dt><dd>Push with both poles</dd>
-        <dt>Mouse</dt><dd>Scroll or <kbd>+</kbd> <kbd>−</kbd> to zoom · right-drag to look around · <kbd>C</kbd> resets</dd>
-        <dt><kbd>V</kbd></dt><dd>First / third person</dd>
-        <dt>Tricks</dt><dd>Spin + flip = cork or misty · spin off a rail end = "out" · repeats score less</dd>
+        <dt>Mouse</dt><dd>Right-drag to turn the camera · scroll or <kbd>I</kbd> <kbd>O</kbd> to zoom · <kbd>C</kbd> resets</dd>
+        <dt><kbd>V</kbd></dt><dd>First / third person (or zoom all the way in)</dd>
+        <dt>Tricks</dt><dd>Backflip + 360 = cork, + 540 = rodeo · frontflip + spin = misty · flick the stick and back for a shifty · hold a grab long to tweak it · repeats score less</dd>
         <dt><kbd>Esc</kbd></dt><dd>Pause</dd>
       </dl></div>
       <div class="ctl"><h3>Controller</h3><dl>
@@ -1134,7 +1134,11 @@ const GRABDEF={
   'Stalefish':{hand:'R',ski:'L',pt:[0.06,0.04,0.1],pitch:0.1,cross:-0.22,roll:-0.4},
   'Indy':{hand:'R',ski:'R',pt:[-0.05,0.04,-0.15],pitch:0.05,cross:-0.15,roll:0.25},
   'Truck driver':{hand:'B',pt:[0,0.05,-0.45],pitch:-0.35,cross:0,roll:0},
-  'Octo':{hand:'L',ski:'L',pt:[0,0.04,0.42],pitch:0.3,cross:0.25,roll:-0.3}
+  'Octo':{hand:'L',ski:'L',pt:[0,0.04,0.42],pitch:0.3,cross:0.25,roll:-0.3},
+  'Nose':{hand:'L',ski:'L',pt:[0,0.04,-0.62],pitch:-0.45,cross:0,roll:0.1},
+  'Blunt':{hand:'R',ski:'R',pt:[0.02,0.04,0.66],pitch:0.6,cross:0,roll:-0.2},
+  'Critical':{hand:'L',ski:'R',pt:[0.05,0.04,0.25],pitch:0.1,cross:-0.25,roll:0.35},
+  'Seatbelt':{hand:'L',ski:'R',pt:[0,0.04,0.58],pitch:0.4,cross:0.15,roll:0.3}
 };
 const GRABS=Object.keys(GRABDEF);
 const RS={c:0.3,lean:0.3,twist:0,side:0,lift:0,pitch:0,cross:0,roll:0,headYaw:0,headPitch:0,popT:0};
@@ -1156,9 +1160,11 @@ function animateRig(dt,now){
   } else if(mode==='air'){
     const fr=Math.min(1,Math.abs(P.flipRate)/6);
     c=0.24+fr*0.45+P.grab*0.5; lift=fr*0.14+P.grab*0.44; lean=0.18+fr*0.3+P.grab*0.72;
-    twist=clamp(P.spinRate*0.055,-0.5,0.5);
+    { const k=Math.min(1,Math.abs(P.spinRate)/5);                      // committed spin: shoulders lead; slow tweak: shifty (upper body stays put)
+      twist=k*clamp(P.spinRate*0.075,-0.55,0.55)+(1-k)*clamp(-P.spin*0.85,-0.95,0.95);
+      c+=k*0.16; lift+=k*0.06; }
     headYaw=clamp(wrap(-(P.takeStance+P.spin)),-1.25,1.25)*0.75-twist; headPitch=0.35;
-    if(gd){ pitch=gd.pitch*P.grab; cross=gd.cross*P.grab; roll=gd.roll*P.grab; side=(gd.hand==='L'?0.22:gd.hand==='R'?-0.22:0)*P.grab; }
+    if(gd){ const tw=1+0.5*clamp((P.grabT-0.35)/0.4,0,1); pitch=gd.pitch*P.grab*tw; cross=gd.cross*P.grab*tw; roll=gd.roll*P.grab*tw; side=(gd.hand==='L'?0.22:gd.hand==='R'?-0.22:0)*P.grab; }
   } else if(mode==='grind'){
     c=0.36+wob*0.05+charge*0.5; lean=0.2+charge*0.15; side=wob*0.12;
     twist=wrap(-P.stance)*0.45; headYaw=clamp(wrap(-P.stance),-1.3,1.3)*0.8-twist;
@@ -1193,7 +1199,7 @@ function animateRig(dt,now){
   for(const [s,sgn,th,sh] of [['L',-1,R.thighL,R.shinL],['R',1,R.thighR,R.shinR]]){
     const hip=vB.set(pel.x+sgn*0.095*ct, pel.y-0.04, pel.z-sgn*0.095*st);
     const an=ankle(s,vC);
-    const knee=ik(hip,an,0.45,0.43,vD.set(sgn*0.18,0.05,-1),vE);
+    const knee=ik(hip,an,0.45,0.43,vD.set(sgn*0.3*ct-st,0.05,-ct-sgn*0.3*st),vE);   // knees point where the hips point, a little apart
     placeSeg(th,hip,knee); placeSeg(sh,knee,an);
   }
   // torso and head
@@ -1496,7 +1502,7 @@ function readInput(){
     if(PAD.rs && !padPrev.rs) resetCam();
     if(PAD.yb && !padPrev.yb && state==='play') setFP(!CAM.fp);
     if(PAD.push && !padPrev.push) startPush();
-    if(PAD.rx) CAM.yaw-=PAD.rx*0.04;
+    if(PAD.rx) orbit(PAD.rx*6,0);
     if(PAD.ry) setZoom(CAM.zoom*Math.exp(PAD.ry*0.025));
     padPrev={a:PAD.a,start:PAD.start,rs:PAD.rs,yb:PAD.yb,push:PAD.push};
   }
@@ -1509,6 +1515,8 @@ window.addEventListener('keydown',e=>{
   if(e.code==='KeyM'){ setMuted(!muted); return; }
   if(e.code==='Equal'||e.code==='NumpadAdd'){ setZoom(CAM.zoom/1.15); return; }
   if(e.code==='Minus'||e.code==='NumpadSubtract'){ setZoom(CAM.zoom*1.15); return; }
+  if(e.code==='KeyI'){ setZoom(CAM.zoom/1.25); return; }
+  if(e.code==='KeyO'){ setZoom(CAM.fp?CAM.zoom+1:CAM.zoom*1.25); return; }
   if(e.code==='KeyC'){ resetCam(); return; }
   if(e.code==='KeyV'){ setFP(!CAM.fp); return; }
   if(e.code==='KeyT'){ startPush(); return; }
@@ -1537,23 +1545,34 @@ function holdBtn(el,set){
 }
 holdBtn($('btnJump'),v=>tJump=v); holdBtn($('btnGrab'),v=>tGrab=v); holdBtn($('btnPush'),v=>{ if(v) startPush(); });
 
-/* camera controls: wheel / +- zoom, right-drag orbit, C or middle-click resets, right stick on a controller, pinch on touch */
-const CAM={zoom:1,yaw:0,pitch:0,drag:false,id:null,lx:0,ly:0,fp:false};
+/* camera controls, Roblox style: right-drag (or one-finger drag on touch) orbits round the rider, scroll / pinch / I O zooms,
+   zoom all the way in for first person and back out for third. CAM.zoom is the distance in metres. */
+const CAM={zoom:3.4,yaw:0,pitch:0.14,drag:false,id:null,lx:0,ly:0,fp:false,held:0,dist:3.4};
 try{ CAM.fp=localStorage.getItem('off-piste-fp')==='1'; }catch(e){}
-const FOVS=[[0,'Normal'],[12,'Wide'],[24,'Ultra wide']];
-let FOVX=12; try{ const f=localStorage.getItem('off-piste-fov'); if(f!==null && FOVS.some(v=>v[0]===+f)) FOVX=+f; }catch(e){}
+const FOVS=[[0,'Normal'],[10,'Wide'],[20,'Ultra wide']];
+let FOVX=0; try{ const f=localStorage.getItem('off-piste-fov2'); if(f!==null && FOVS.some(v=>v[0]===+f)) FOVX=+f; }catch(e){}
 function syncFov(){ const f=FOVS.find(v=>v[0]===FOVX)||FOVS[0]; document.querySelectorAll('.fovBtn').forEach(e=>e.textContent=f[1]); }
-const ZOOM0=0.62;   // default chase distance: close behind the rider (new key, so old far-out saves don't stick)
-const DISTS=[[0.48,'Very close'],[0.62,'Close'],[0.8,'Medium'],[1.1,'Far'],[1.6,'Very far']];
-CAM.zoom=ZOOM0; try{ const z=+localStorage.getItem('off-piste-zoom2'); if(z) CAM.zoom=clamp(z,0.45,2.6); }catch(e){}
+const ZOOM0=3.4, ZMIN=0.5, ZMAX=22, FP_IN=1.25;   // default: pretty close behind; under FP_IN you're in first person
+const DISTS=[[2.4,'Very close'],[3.4,'Close'],[6.5,'Medium'],[10,'Far'],[15,'Very far']];
+const PITCH0=0.14;
+CAM.zoom=ZOOM0; try{ const z=+localStorage.getItem('off-piste-zoom3'); if(z) CAM.zoom=clamp(z,FP_IN+0.1,ZMAX); }catch(e){}
+CAM.dist=CAM.zoom;
 function syncDist(){ let b=DISTS[0]; for(const d of DISTS) if(Math.abs(d[0]-CAM.zoom)<Math.abs(b[0]-CAM.zoom)) b=d;
   document.querySelectorAll('.distBtn').forEach(e=>e.textContent=b[1]); }
-function setZoom(z){ CAM.zoom=clamp(z,0.45,2.6); try{ localStorage.setItem('off-piste-zoom2',CAM.zoom.toFixed(2)); }catch(e){} syncDist(); }
-function resetCam(){ CAM.yaw=0; CAM.pitch=0; setZoom(ZOOM0); }
+function setZoom(z){
+  z=clamp(z,ZMIN,ZMAX);
+  if(state==='play'){
+    if(!CAM.fp && z<FP_IN){ setFP(true); return; }                      // scrolled all the way in: first person
+    if(CAM.fp){ if(z>CAM.zoom+0.01){ setFP(false); CAM.zoom=Math.max(FP_IN+0.6,2); CAM.dist=CAM.zoom; syncDist(); } return; }
+  }
+  CAM.zoom=Math.max(z,FP_IN+0.1); try{ localStorage.setItem('off-piste-zoom3',CAM.zoom.toFixed(2)); }catch(e){} syncDist(); }
+function behindYaw(){ return Math.atan2(-camDir.x,-camDir.z); }
+function resetCam(){ CAM.yaw=behindYaw(); CAM.pitch=PITCH0; CAM.held=0; if(CAM.fp) setFP(false); setZoom(ZOOM0); }
 window.addEventListener('wheel',e=>{ if(state!=='play'&&state!=='title') return; if(state==='title'&&e.target.closest('.screen')) return;
-  e.preventDefault(); setZoom(CAM.zoom*Math.exp(e.deltaY*0.0012)); },{passive:false});
+  e.preventDefault(); setZoom(CAM.fp?(e.deltaY>0?CAM.zoom+1:CAM.zoom):CAM.zoom*Math.exp(e.deltaY*0.0016)); },{passive:false});
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('contextmenu',e=>{ if(state==='play') e.preventDefault(); });
+function orbit(dx,dy){ CAM.yaw-=dx*0.0065; CAM.pitch=clamp(CAM.pitch+dy*0.0055,-0.25,1.35); CAM.held=2.5; }
 window.addEventListener('pointerdown',e=>{
   if(e.pointerType!=='mouse') return;
   if(e.button===1 && state==='play'){ e.preventDefault(); resetCam(); return; }
@@ -1561,17 +1580,19 @@ window.addEventListener('pointerdown',e=>{
   CAM.drag=true; CAM.id=e.pointerId; CAM.lx=e.clientX; CAM.ly=e.clientY; document.body.style.cursor='grabbing';
 });
 window.addEventListener('pointermove',e=>{ if(!CAM.drag||e.pointerId!==CAM.id) return;
-  CAM.yaw-=(e.clientX-CAM.lx)*0.006; CAM.pitch=clamp(CAM.pitch+(e.clientY-CAM.ly)*0.004,-0.35,0.9); CAM.lx=e.clientX; CAM.ly=e.clientY; });
+  orbit(e.clientX-CAM.lx,e.clientY-CAM.ly); CAM.lx=e.clientX; CAM.ly=e.clientY; });
 const endDrag=e=>{ if(e.pointerId!==CAM.id) return; CAM.drag=false; CAM.id=null; document.body.style.cursor=''; };
 window.addEventListener('pointerup',endDrag); window.addEventListener('pointercancel',endDrag);
-// pinch to zoom on the open (right) side of a touch screen
+// touch: one finger on open screen orbits, two fingers pinch-zoom
 const pinch=new Map(); let pinchD=0;
-canvas.addEventListener('pointerdown',e=>{ if(e.pointerType==='touch'){ pinch.set(e.pointerId,{x:e.clientX,y:e.clientY}); } });
-canvas.addEventListener('pointermove',e=>{ if(!pinch.has(e.pointerId)) return; pinch.set(e.pointerId,{x:e.clientX,y:e.clientY});
+canvas.addEventListener('pointerdown',e=>{ if(e.pointerType==='touch'){ pinch.set(e.pointerId,{x:e.clientX,y:e.clientY}); pinchD=0; } });
+canvas.addEventListener('pointermove',e=>{ const o=pinch.get(e.pointerId); if(!o) return; const nx=e.clientX, ny=e.clientY;
+  if(pinch.size===1 && state==='play' && !CAM.fp) orbit(nx-o.x,ny-o.y);
+  pinch.set(e.pointerId,{x:nx,y:ny});
   if(pinch.size===2){ const [a,b]=[...pinch.values()], d=Math.hypot(a.x-b.x,a.y-b.y); if(pinchD) setZoom(CAM.zoom*pinchD/d); pinchD=d; } });
 const endPinch=e=>{ pinch.delete(e.pointerId); pinchD=0; };
 canvas.addEventListener('pointerup',endPinch); canvas.addEventListener('pointercancel',endPinch);
-$('viewBtn').addEventListener('click',()=>{ const steps=DISTS.map(d=>d[0]); const i=steps.findIndex(s=>s>CAM.zoom+0.05); setZoom(i<0?steps[0]:steps[i]); CAM.yaw=0; CAM.pitch=0; });
+$('viewBtn').addEventListener('click',()=>{ if(CAM.fp) setFP(false); const steps=DISTS.map(d=>d[0]); const i=steps.findIndex(s=>s>CAM.zoom+0.05); setZoom(i<0?steps[0]:steps[i]); CAM.yaw=behindYaw(); CAM.pitch=PITCH0; });
 
 /* ---------- Player state ---------- */
 const P={};
@@ -1596,7 +1617,7 @@ function resetWorld(){
   combo.mult=0; combo.pts=0; combo.t=0;
   Object.assign(stats,{score:0,best:null,count:0,air:0,top:0});
   elapsed=0; shake=0; slowT=0; timeScale=1;
-  camera.position.set(P.x, P.y+4, P.z+9); camLook.set(P.x,P.y,P.z-6); camDir.set(0,0,-1);
+  camera.position.set(P.x, P.y+4, P.z+9); camLook.set(P.x,P.y,P.z-6); camDir.set(0,0,-1); camFocus.set(P.x,P.y+1.7,P.z); CAM.yaw=0; CAM.held=0;
 }
 
 /* ---------- HUD helpers ---------- */
@@ -1628,7 +1649,7 @@ function endPress(){ const t=P.pressT||0; P.pressT=0; hideLive();
 function popStrength(){ return 2.6+(P.charge/0.4)*3.0; }
 function takeoff(){
   if(P.pressT>0) endPress();
-  P.air=true; P.airT=0; P.spin=0; P.flip=0; P.spinRate=0; P.flipRate=0; P.grabT=0; P.grabName=null; P.takeStance=P.stance; P.liveKey=0;
+  P.air=true; P.airT=0; P.spinMax=0; P.spin=0; P.flip=0; P.spinRate=0; P.flipRate=0; P.grabT=0; P.grabName=null; P.takeStance=P.stance; P.liveKey=0;
   if(LEVEL==='pipe' && Math.abs(P.x)>PIPE_F+PIPE_R*0.55){ const sg=Math.sign(P.x), vo=P.vx*sg;
     if(vo>0.5){ P.vy=Math.max(vo*1.22, 2); P.vx=-sg*0.7; P.pipeAir=true; } }
   P.popReady = P.charge>0; P.errAt=null; P.eS=0; P.eF=0; P.tLand=9; P.railOut=false; trailPush(false);
@@ -1639,11 +1660,15 @@ function scoreTrick(half,flips,flipSign,grabT,airT,sw,perfect){
   if(sw&&(half||flips)) parts.push('Switch');
   const cork = flips && half>=2;
   if(flips){ const m=['','Double ','Triple ','Quad '][Math.min(flips,4)-1];
-    parts.push(cork ? m+(flipSign>0?'Cork':'Misty')+' '+half*180 : m+(flipSign>0?'Backflip':'Frontflip'));
+    // backflip + 360 = cork, backflip + 540 or more = rodeo, frontflip + spin = misty, 180 + flip = flatspin-ish "D-spin"
+    const kind = flipSign>0 ? (half>=3?'Rodeo':'Cork') : 'Misty';
+    if(!cork && half===1) parts.push(m+'D-spin 180');
+    else parts.push(cork ? m+kind+' '+half*180 : m+(flipSign>0?'Backflip':'Frontflip'));
     pts+=flips*500+(flips-1)*250+(cork?300*flips:0); }
-  if(half){ if(!cork) parts.push(String(half*180)); pts+=half*120+Math.max(0,half-2)*60; }
+  if(half){ if(!cork && !(flips&&half===1)) parts.push(String(half*180)); pts+=half*120+Math.max(0,half-2)*60; }
+  if(!half && !flips && P.spinMax>0.6){ parts.push('Shifty'); pts+=120+Math.round(Math.min(1.5,P.spinMax)*60); }
   let name=parts.join(' ');
-  if(grabT>0.12){ const g=(P.grabName||'Mute')+' grab'; name=name?name+' · '+g:g; pts+=Math.round(grabT*450); }
+  if(grabT>0.12){ const tw=grabT>0.75, g=(tw?'Tweaked ':'')+(P.grabName||'Mute')+' grab'; name=name?name+' · '+g:g; pts+=Math.round(grabT*450*(tw?1.25:1)); }
   if(!pts){ if(airT<0.75) return null; name=airT>1.6?'Big air':'Straight air'; pts=airT*90; }
   if(airT>1.6) pts+=(airT-1.6)*250;
   if(sw&&(half||flips)) pts*=1.2;
@@ -1676,7 +1701,7 @@ function respawn(){
   P.crash=0; P.air=false; P.grind=null; P.stance=0; P.tumble=0; P.visYaw=0; P.visFlip=0; P.charge=0; P.turn=0; P.lean=0;
   P.x=CP.x; P.z=CP.z; P.y=physH(P.x,P.z); P.heading=0; P.vx=0; P.vz=-9; P.vy=-9*SLOPE; P.ghost=1.6;
   trailPush(false); updateTerrain(true);
-  camDir.set(0,0,-1); camera.position.set(P.x,P.y+4,P.z+9); camLook.set(P.x,P.y+0.6,P.z-6);
+  camDir.set(0,0,-1); camera.position.set(P.x,P.y+4,P.z+9); camLook.set(P.x,P.y+0.6,P.z-6); camFocus.set(P.x,P.y+1.7,P.z); CAM.yaw=0;
   hudEls.fade.classList.remove('on'); P.fading=false;
 }
 function land(){
@@ -1905,7 +1930,7 @@ function airStep(dt){
       if(!iy) P.flipRate+=(clamp(eF/tt,-6,6)-P.flipRate)*k;
     }
   }
-  P.spin+=P.spinRate*dt; P.flip+=P.flipRate*dt;
+  P.spin+=P.spinRate*dt; P.flip+=P.flipRate*dt; P.spinMax=Math.max(P.spinMax||0,Math.abs(P.spin));
   if(IN.grab){ if(!P.grabName) P.grabName=GRABS[Math.floor(Math.random()*GRABS.length)]; P.grab=Math.min(1,P.grab+dt*6); if(P.grab>0.7) P.grabT+=dt; }
   else P.grab=Math.max(0,P.grab-dt*6);
   const d=Math.exp(-0.05*dt); P.vx*=d; P.vz*=d; P.vy-=G*dt;
@@ -1956,8 +1981,8 @@ function updateRider(dt,now){
     const tgtTilt=P.air ? P.vtilt*0.97 : Math.atan(slope);
     P.vtilt+=(tgtTilt-P.vtilt)*Math.min(1,(P.air?2:14)*dt);
     P.visYaw*=Math.exp(-12*dt); P.visFlip*=Math.exp(-12*dt);
-    const leanT = (P.air||P.grind) ? 0 : -P.turn*0.75*Math.min(1,sp/10);
-    P.lean+=(leanT-P.lean)*Math.min(1,9*dt);
+    const leanT = P.air ? clamp(P.spinRate/7,-1,1)*0.2*(1-Math.min(1,Math.abs(P.flipRate)/4)) : P.grind ? 0 : -P.turn*0.75*Math.min(1,sp/10);   // in the air: tip a little off-axis into the spin
+    P.lean+=(leanT-P.lean)*Math.min(1,(P.air?5:9)*dt);
     o.rotation.y=-P.heading+st+(P.air?P.spin:0)+P.visYaw+(P.air||P.grind?0:(P.hk||0)*(P.hkSide||1)*1.35);
     o.rotation.x=P.vtilt*cs+(P.air?P.flip:0)+P.visFlip;
     o.rotation.z=P.lean*cs+P.vtilt*sn;
@@ -1974,7 +1999,7 @@ function setFP(on){ CAM.fp=on; try{ localStorage.setItem('off-piste-fp',on?'1':'
   const ib=$('fpIcon'); if(ib){ ib.setAttribute('aria-pressed',on?'true':'false'); ib.classList.toggle('on',on); } }
 const fpBoardYaw=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI/2);
 const fpQ=new THREE.Quaternion(), fpPitch=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-0.85), fpEye=new THREE.Vector3();
-let camOff=-1;
+let camOff=-1, camSlope=0; const camFocus=new THREE.Vector3();
 function updateCamera(dt,now){
   // on the menu, frame the rider in the open space to the right of the menu panel
   { const w=window.innerWidth, h=window.innerHeight, want=(state==='title' && w>700) ? Math.round(Math.min(400,w)/2)+(w|0)*1e4+(h|0)*1e9 : 0;
@@ -1995,27 +2020,36 @@ function updateCamera(dt,now){
   }
   if(state==='title'){
     const a=now*0.00018;
-    const rr=6.5*CAM.zoom; tmpV.set(P.x+Math.sin(a+CAM.yaw)*rr, P.y+2.6*CAM.zoom+rr*CAM.pitch, P.z+Math.cos(a+CAM.yaw)*rr);
+    const rr=6.5; tmpV.set(P.x+Math.sin(a)*rr, P.y+2.6, P.z+Math.cos(a)*rr);
     camera.position.lerp(tmpV,1-Math.exp(-2*dt));
     camLook.lerp(tmpV.set(P.x,P.y+1,P.z),1-Math.exp(-4*dt));
     camera.lookAt(camLook); camera.fov=56; camera.updateProjectionMatrix(); return;
   }
   if(sp>2 && P.crash<=0){ tmpV.set(P.vx,0,P.vz).normalize(); camDir.lerp(tmpV,1-Math.exp(-(P.air?1.2:3.5)*dt)).normalize(); }
-  // player camera: scroll to zoom, right-drag to orbit around the rider
-  camAirK+=((P.air?1:0)-camAirK)*Math.min(1,(P.air?3:1.2)*dt);
-  const back=(8.2+sp*0.06+camAirK*1.5)*CAM.zoom, up=(3.4+sp*0.035+camAirK*0.6)*CAM.zoom+back*CAM.pitch-P.squash*0.25;
-  const cy=Math.cos(CAM.yaw), sy=Math.sin(CAM.yaw), dx=camDir.x*cy-camDir.z*sy, dzc=camDir.x*sy+camDir.z*cy;
-  tmpV.set(P.x-dx*back, P.y+up, P.z-dzc*back);
-  const gy=physH(tmpV.x,tmpV.z)+1.2; if(tmpV.y<gy) tmpV.y=gy;   // physH: stays above kickers and feeders too
-  camera.position.lerp(tmpV,1-Math.exp(-(CAM.drag?14:(P.air?4:6))*dt));
-  { const cg=physH(camera.position.x,camera.position.z)+0.9; if(camera.position.y<cg) camera.position.y=cg; } // never inside a ramp
-  const ahead=6*Math.min(1,CAM.zoom);
-  camLook.lerp(tmpV.set(P.x+dx*ahead,P.y+0.6,P.z+dzc*ahead),1-Math.exp(-(CAM.drag?14:8)*dt));
+  // Roblox-style orbit: the camera circles a point on the rider at a set distance and angle. Drag to turn it;
+  // a couple of seconds after you let go it eases back round behind you as you ride (like Roblox's follow camera).
+  if(CAM.held>0 && !CAM.drag) CAM.held-=dt;
+  if(!CAM.drag && CAM.held<=0 && sp>2 && P.crash<=0){
+    const dy=wrap(behindYaw()-CAM.yaw); CAM.yaw+=dy*Math.min(1,(P.air?1.2:2.6)*dt); }
+  CAM.dist+=(CAM.zoom-CAM.dist)*Math.min(1,12*dt);
+  const fy=P.y+0.62+1.05-P.squash*0.15;                          // focus: about the rider's neck
+  camFocus.x+=(P.x-camFocus.x)*Math.min(1,25*dt); camFocus.z+=(P.z-camFocus.z)*Math.min(1,25*dt); camFocus.y+=(fy-camFocus.y)*Math.min(1,(P.air?10:18)*dt);
+  if(camFocus.distanceToSquared(tmpV.set(P.x,fy,P.z))>25) camFocus.set(P.x,fy,P.z);
+  // pitch is measured from the slope, not the horizon: on a steep pitch the camera rides up with the hill behind you
+  const hx=Math.sin(CAM.yaw), hz=Math.cos(CAM.yaw), g0=physH(P.x,P.z), up=(physH(P.x+hx*3,P.z+hz*3)-g0)/3;
+  camSlope+=(Math.atan(up)-camSlope)*Math.min(1,4*dt);
+  const pe=clamp(CAM.pitch+camSlope*0.75,-0.4,1.45), cp=Math.cos(pe), ox=hx*cp, oy=Math.sin(pe), oz=hz*cp;
+  // pull in if the slope or a ramp is between the camera and the rider, so it never looks through the snow
+  let d=CAM.dist;
+  for(let k=1;k<=6;k++){ const t=k/6*d, x=camFocus.x+ox*t, y=camFocus.y+oy*t, z=camFocus.z+oz*t;
+    if(y<physH(x,z)+0.35){ d=Math.max(0.8,(k-1)/6*d); break; } }
+  camera.position.set(camFocus.x+ox*d, camFocus.y+oy*d, camFocus.z+oz*d);
+  { const cg=physH(camera.position.x,camera.position.z)+0.35; if(camera.position.y<cg) camera.position.y=cg; }
+  camLook.copy(camFocus); camLook.y+=0.22;          // aim a little over the rider's head so you see down the hill
   camera.lookAt(camLook);
-  camera.rotateZ(P.lean*0.1);
-  if(shake>0){ const s=shake*shake*0.35; camera.position.x+=rand(-s,s); camera.position.y+=rand(-s,s); shake=Math.max(0,shake-dt*2.2); }
-  const fov=60+FOVX+Math.min(16,sp*0.38)+(slowT>0?-3:0);
-  if(Math.abs(camera.fov-fov)>0.05){ camera.fov+=(fov-camera.fov)*Math.min(1,3*dt); camera.updateProjectionMatrix(); }
+  if(shake>0){ const s=shake*shake*0.25; camera.position.x+=rand(-s,s); camera.position.y+=rand(-s,s); shake=Math.max(0,shake-dt*2.2); }
+  const fov=70+FOVX;
+  if(Math.abs(camera.fov-fov)>0.05){ camera.fov+=(fov-camera.fov)*Math.min(1,4*dt); camera.updateProjectionMatrix(); }
 }
 function updateEnvironment(){
   const t=0.22;   // free ski: the light holds instead of fading out
@@ -2069,9 +2103,9 @@ function setLevel(id){ if(!LEVELS[id]) return; LEVEL=id; try{ localStorage.setIt
 function syncRiderSum(){ const t=(BOARD?'Snowboard':'Skis')+' · '+OUTFITS[OUTFIT.i].name; document.querySelectorAll('.riderSum').forEach(e=>e.textContent=t); }
 document.querySelectorAll('[data-sheet]').forEach(b=>b.addEventListener('click',()=>openSheet(b.dataset.sheet)));
 document.querySelectorAll('.sheet .back').forEach(b=>b.addEventListener('click',()=>closeSheet()));
-document.querySelectorAll('.distBtn').forEach(b=>b.addEventListener('click',()=>{ const i=DISTS.findIndex(d=>d[0]>CAM.zoom+0.03); setZoom(DISTS[i<0?0:i][0]); CAM.yaw=0; CAM.pitch=0; }));
+document.querySelectorAll('.distBtn').forEach(b=>b.addEventListener('click',()=>{ const i=DISTS.findIndex(d=>d[0]>CAM.zoom+0.03); setZoom(DISTS[i<0?0:i][0]); }));
 document.querySelectorAll('.fovBtn').forEach(b=>b.addEventListener('click',()=>{ const i=FOVS.findIndex(v=>v[0]===FOVX); FOVX=FOVS[(i+1)%FOVS.length][0];
-  try{ localStorage.setItem('off-piste-fov',String(FOVX)); }catch(e){} syncFov(); }));
+  try{ localStorage.setItem('off-piste-fov2',String(FOVX)); }catch(e){} syncFov(); }));
 syncDist(); syncFov();
 document.querySelectorAll('.soundBtn').forEach(b=>b.addEventListener('click',()=>{ initAudio(); setMuted(!muted); }));
 window.addEventListener('keydown',e=>{ if(e.key==='Escape' && sheetOpen){ e.preventDefault(); e.stopImmediatePropagation(); closeSheet(); } },true);
