@@ -211,7 +211,6 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
   <div id="stickZone"><div id="stickBase"><div id="stickKnob"></div></div></div>
   <button class="tbtn" id="btnGrab" aria-label="Grab">GRAB</button>
   <button class="tbtn" id="btnPush" aria-label="Push with poles">PUSH</button>
-  <button class="tbtn" id="btnStop" aria-label="Hockey stop">STOP</button>
   <button class="tbtn" id="btnJump" aria-label="Jump">JUMP</button>
 </div>
 
@@ -227,7 +226,6 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
         <dt><kbd>Space</kbd></dt><dd>Hold to crouch, let go to jump</dd>
         <dt><kbd>Shift</kbd></dt><dd>Grab (hold in air)</dd>
         <dt><kbd>T</kbd></dt><dd>Push with both poles</dd>
-        <dt><kbd>R</kbd></dt><dd>Hockey stop (hold to stay stopped)</dd>
         <dt>Mouse</dt><dd>Scroll or <kbd>+</kbd> <kbd>−</kbd> to zoom · right-drag to look around · <kbd>C</kbd> resets</dd>
         <dt><kbd>V</kbd></dt><dd>First / third person</dd>
         <dt><kbd>Esc</kbd></dt><dd>Pause</dd>
@@ -239,7 +237,6 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
         <dt><kbd>RT</kbd></dt><dd>Tuck for speed</dd>
         <dt>Right stick</dt><dd>Look around and zoom · click to reset</dd>
         <dt><kbd>B</kbd></dt><dd>Push with both poles</dd>
-        <dt><kbd>LT</kbd></dt><dd>Hockey stop</dd>
         <dt><kbd>Y</kbd></dt><dd>First / third person</dd>
         <dt><kbd>Start</kbd></dt><dd>Pause</dd>
       </dl></div>
@@ -1273,7 +1270,7 @@ function readInput(){
   if(PAD){ x+=PAD.x; y+=PAD.y; if(PAD.rt>0.3 && y<PAD.rt) y=Math.max(y,PAD.rt); }
   IN.x=clamp(x,-1,1); IN.y=clamp(y,-1,1);
   IN.jump=keys.has('Space')||(PAD&&PAD.a)||tJump;
-  IN.stop=keys.has('KeyR')||(PAD&&PAD.lt>0.4)||tStop;
+  IN.stop=false;   // hockey stop switched off for now (was R / LT / STOP)
   IN.grab=keys.has('ShiftLeft')||keys.has('ShiftRight')||keys.has('KeyJ')||keys.has('KeyK')||(PAD&&PAD.grab)||tGrab;
   if(PAD){
     if(PAD.a && !padPrev.a){ if(state==='title'||state==='results') startRun(); else if(state==='paused') resume(); }
@@ -1320,7 +1317,7 @@ function holdBtn(el,set){
   el.addEventListener('pointerup',up); el.addEventListener('pointercancel',up); el.addEventListener('lostpointercapture',up);
   el.addEventListener('contextmenu',e=>e.preventDefault());
 }
-holdBtn($('btnJump'),v=>tJump=v); holdBtn($('btnGrab'),v=>tGrab=v); holdBtn($('btnPush'),v=>{ if(v) startPush(); }); holdBtn($('btnStop'),v=>tStop=v);
+holdBtn($('btnJump'),v=>tJump=v); holdBtn($('btnGrab'),v=>tGrab=v); holdBtn($('btnPush'),v=>{ if(v) startPush(); });
 
 /* camera controls: wheel / +- zoom, right-drag orbit, C or middle-click resets, right stick on a controller, pinch on touch */
 const CAM={zoom:1,yaw:0,pitch:0,drag:false,id:null,lx:0,ly:0,fp:false};
