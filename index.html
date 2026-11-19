@@ -2126,7 +2126,7 @@ const NET_COLORS=[0x3aa0ff,0x35c98b,0xffb02e,0x9a6bff,0xff5a4e,0x2fd3d3,0xf9a8d4
    Each pant leg and sleeve is one continuous tube bent through the knee or elbow, rebuilt every frame from the
    hip-knee-ankle / shoulder-elbow-wrist segments (which stay as hidden "bones"), so no capsules meet at the joints. */
 const CLOTH_KIND={
-  leg:{n1:0.45,n2:0.43,rb:0.12,ns:18,step:0.032,d0:-0.08,d1:1.04,depth:0.95,fb:[-1,0,0],
+  leg:{n1:0.45,n2:0.43,rb:0.12,ns:18,step:0.032,d0:-0.04,d1:1.04,depth:0.95,fb:[-1,0,0],
     prof:[[-0.08,0.104],[0,0.104],[0.12,0.1],[0.25,0.095],[0.36,0.091],[0.45,0.089],[0.55,0.087],[0.65,0.089],[0.75,0.095],[0.83,0.101],[0.9,0.107],[0.97,0.111],[1.04,0.109]],
     fold:0.03,bunch:[[0.47,0.035,0.018],[0.8,0.028,0.03],[0.87,0.028,0.04],[0.94,0.028,0.042],[1.0,0.025,0.03]]},
   arm:{n1:0.3,n2:0.28,rb:0.085,ns:16,step:0.028,d0:-0.012,d1:0.6,depth:0.93,fb:[1,0,0],
@@ -2182,7 +2182,26 @@ function bendCloth(c){
   }
   g.attributes.position.needsUpdate=true; g.computeVertexNormals();
 }
-function bendAll(list){ for(const c of list) bendCloth(c); }
+/* the jacket below the waist: bend it back against the lean so it hangs over the hips like real fabric */
+const SK_Y0=-0.02, SK_Y1=-0.17;
+function skirtInit(mesh){ const g=mesh.geometry, pa=g.attributes.position, na=g.attributes.normal;
+  g.userData.base=Float32Array.from(pa.array); g.userData.baseN=na?Float32Array.from(na.array):null;
+  for(let i=CLOTH_MESHES.length-1;i>=0;i--) if(CLOTH_MESHES[i].skirt) CLOTH_MESHES.splice(i,1);
+  CLOTH_MESHES.push({mesh,a:R.torsoF,b:R.torsoF,c:null,skirt:true}); }
+function bendSkirt(c){
+  const g=c.mesh.geometry, base=g.userData.base, bn=g.userData.baseN; if(!base) return;
+  const lean=-c.a.rotation.x, a=clamp(lean*0.9,-0.3,1.3);
+  if(c.lastA!==undefined && Math.abs(a-c.lastA)<0.004) return; c.lastA=a;
+  const pos=g.attributes.position.array, nor=bn?g.attributes.normal.array:null;
+  for(let i=0;i<base.length;i+=3){ const y=base[i+1];
+    if(y>=SK_Y0){ pos[i+1]=y; pos[i+2]=base[i+2]; if(nor){ nor[i+1]=bn[i+1]; nor[i+2]=bn[i+2]; } continue; }
+    let w=(SK_Y0-y)/(SK_Y0-SK_Y1); w=w>=1?1:w*w*(3-2*w);
+    const t=a*w, ct=Math.cos(t), st=Math.sin(t), dy=y-SK_Y0, dz=base[i+2];
+    pos[i+1]=SK_Y0+dy*ct-dz*st; pos[i+2]=dy*st+dz*ct;
+    if(nor){ const ny=bn[i+1], nz=bn[i+2]; nor[i+1]=ny*ct-nz*st; nor[i+2]=ny*st+nz*ct; } }
+  g.attributes.position.needsUpdate=true; if(nor) g.attributes.normal.needsUpdate=true;
+}
+function bendAll(list){ for(const c of list){ if(c.skirt) bendSkirt(c); else bendCloth(c); } }
 const CLOTH_MESHES=[];
 for(const [th,sh,s] of [[R.thighL,R.shinL,0],[R.thighR,R.shinR,1]]){
   const m=new THREE.Mesh(clothGeo(CLOTH_KIND.leg,s*3.1),R.MATS.pants); m.castShadow=true; m.name='cloth'; R.body.add(m);
@@ -2192,10 +2211,10 @@ for(const [A,s] of [[R.armL,0],[R.armR,1]]){
   CLOTH_MESHES.push({mesh:m,a:A.up,b:A.fo,c:A.gl}); A.up.visible=false; A.fo.visible=false; A.cuff.visible=false; }
 let CLOTH_IDX=[];
 function clothIndex(){ const all=[]; R.rider.traverse(o=>all.push(o));
-  CLOTH_IDX=CLOTH_MESHES.map(m=>({mi:all.indexOf(m.mesh),ai:all.indexOf(m.a),bi:all.indexOf(m.b),ci:m.c?all.indexOf(m.c):-1})); R.cloth=null; }
+  CLOTH_IDX=CLOTH_MESHES.map(m=>({mi:all.indexOf(m.mesh),ai:all.indexOf(m.a),bi:all.indexOf(m.b),ci:m.c?all.indexOf(m.c):-1,skirt:!!m.skirt})); R.cloth=null; }
 function clothBind(root,own){ const all=[]; root.traverse(o=>all.push(o));
   return CLOTH_IDX.map(d=>{ const mesh=all[d.mi]; if(own) mesh.geometry=mesh.geometry.clone();
-    return {mesh,a:all[d.ai],b:all[d.bi],c:d.ci>=0?all[d.ci]:null}; }); }
+    return {mesh,a:all[d.ai],b:all[d.bi],c:d.ci>=0?all[d.ci]:null,skirt:d.skirt}; }); }
 const poseNodes=[R.orient,R.body,R.skis,R.skiParts.L,R.skiParts.R,R.thighL,R.thighR,R.shinL,R.shinR,R.torsoF,R.head];
 for(const a of [R.armL,R.armR]) poseNodes.push(a.up,a.fo,a.cuff,a.gl,a.pole);
 const POSE_LEN=4+poseNodes.length*7;
@@ -2574,7 +2593,7 @@ function applyArt(root){
   const up=A('armUp'), fo=A('armFo'), cu=A('cuff'), gl=A('glove'), po=A('pole');
   for(const arm of [R.armL,R.armR]){ use(arm.up,up); use(arm.fo,fo); use(arm.cuff,cu); use(arm.gl,gl); use(arm.pole,po); }
   const to=A('torso'), tf=A('torsoFP');
-  if(to&&tf){ clear(R.torsoF); put(R.torsoF,to); put(R.torsoF,tf,'',true); }
+  if(to&&tf){ clear(R.torsoF); skirtInit(put(R.torsoF,to,'torsoArt')); put(R.torsoF,tf,'',true); }
   const he=A('helmet'); if(he){ clear(R.head); put(R.head,he); }
   const sk=A('ski'), bo=A('boot'), bi=A('bind');
   if(sk&&bo&&bi) for(const side of ['L','R']){ const g=R.skiParts[side]; clear(g); put(g,sk,'ski'); put(g,bo,''); put(g,bi,'bind'); }
