@@ -2127,7 +2127,7 @@ const NET_COLORS=[0x3aa0ff,0x35c98b,0xffb02e,0x9a6bff,0xff5a4e,0x2fd3d3,0xf9a8d4
    hip-knee-ankle / shoulder-elbow-wrist segments (which stay as hidden "bones"), so no capsules meet at the joints. */
 const CLOTH_KIND={
   leg:{n1:0.45,n2:0.43,rb:0.12,ns:18,step:0.032,d0:-0.04,d1:1.04,depth:0.95,fb:[-1,0,0],
-    prof:[[-0.08,0.104],[0,0.104],[0.12,0.1],[0.25,0.095],[0.36,0.091],[0.45,0.089],[0.55,0.087],[0.65,0.089],[0.75,0.095],[0.83,0.101],[0.9,0.107],[0.97,0.111],[1.04,0.109]],
+    prof:[[-0.08,0.088],[0,0.092],[0.12,0.099],[0.25,0.095],[0.36,0.091],[0.45,0.089],[0.55,0.087],[0.65,0.089],[0.75,0.095],[0.83,0.101],[0.9,0.107],[0.97,0.111],[1.04,0.109]],
     fold:0.03,bunch:[[0.47,0.035,0.018],[0.8,0.028,0.03],[0.87,0.028,0.04],[0.94,0.028,0.042],[1.0,0.025,0.03]]},
   arm:{n1:0.3,n2:0.28,rb:0.085,ns:16,step:0.028,d0:-0.012,d1:0.6,depth:0.93,fb:[1,0,0],
     prof:[[-0.012,0.072],[0.03,0.078],[0.1,0.074],[0.2,0.07],[0.3,0.067],[0.4,0.063],[0.48,0.064],[0.54,0.068],[0.6,0.07]],
@@ -2182,7 +2182,10 @@ function bendCloth(c){
   }
   g.attributes.position.needsUpdate=true; g.computeVertexNormals();
 }
-function bendAll(list){ for(const c of list) bendCloth(c); }
+const seatV=new THREE.Vector3();
+function placeSeat(c){ const a=c.a.position, b=c.b.position;
+  c.mesh.position.set((a.x+b.x)/2,(a.y+b.y)/2-0.01,(a.z+b.z)/2); c.mesh.rotation.set(0,Math.atan2(-(b.z-a.z),b.x-a.x),0); }
+function bendAll(list){ for(const c of list){ if(c.seat) placeSeat(c); else bendCloth(c); } }
 const CLOTH_MESHES=[];
 for(const [th,sh,s] of [[R.thighL,R.shinL,0],[R.thighR,R.shinR,1]]){
   const m=new THREE.Mesh(clothGeo(CLOTH_KIND.leg,s*3.1),R.MATS.pants); m.castShadow=true; m.name='cloth'; R.body.add(m);
@@ -2190,12 +2193,19 @@ for(const [th,sh,s] of [[R.thighL,R.shinL,0],[R.thighR,R.shinR,1]]){
 for(const [A,s] of [[R.armL,0],[R.armR,1]]){
   const m=new THREE.Mesh(clothGeo(CLOTH_KIND.arm,1.7+s*2.3),R.MATS.jacket); m.castShadow=true; m.name='cloth'; R.body.add(m);
   CLOTH_MESHES.push({mesh:m,a:A.up,b:A.fo,c:A.gl}); A.up.visible=false; A.fo.visible=false; A.cuff.visible=false; }
+{ // seat: rounded briefs shape, wide and shallow, slight dip at the crotch
+  const g=new THREE.SphereGeometry(1,24,14), pa=g.attributes.position;
+  for(let i=0;i<pa.count;i++){ const x=pa.getX(i), y=pa.getY(i), z=pa.getZ(i);
+    pa.setXYZ(i, x*0.172, (y>0?y*0.05:y*0.11)*(1-0.12*Math.exp(-x*x*30)*(y<0?1:0)), z*(z>0?0.112:0.1)); }
+  g.computeVertexNormals();
+  const m=new THREE.Mesh(g,R.MATS.pants); m.castShadow=true; m.name='cloth'; R.body.add(m);
+  CLOTH_MESHES.push({mesh:m,a:R.thighL,b:R.thighR,c:null,seat:true}); }
 let CLOTH_IDX=[];
 function clothIndex(){ const all=[]; R.rider.traverse(o=>all.push(o));
-  CLOTH_IDX=CLOTH_MESHES.map(m=>({mi:all.indexOf(m.mesh),ai:all.indexOf(m.a),bi:all.indexOf(m.b),ci:m.c?all.indexOf(m.c):-1})); R.cloth=null; }
+  CLOTH_IDX=CLOTH_MESHES.map(m=>({mi:all.indexOf(m.mesh),ai:all.indexOf(m.a),bi:all.indexOf(m.b),ci:m.c?all.indexOf(m.c):-1,seat:!!m.seat})); R.cloth=null; }
 function clothBind(root,own){ const all=[]; root.traverse(o=>all.push(o));
   return CLOTH_IDX.map(d=>{ const mesh=all[d.mi]; if(own) mesh.geometry=mesh.geometry.clone();
-    return {mesh,a:all[d.ai],b:all[d.bi],c:d.ci>=0?all[d.ci]:null}; }); }
+    return {mesh,a:all[d.ai],b:all[d.bi],c:d.ci>=0?all[d.ci]:null,seat:d.seat}; }); }
 const poseNodes=[R.orient,R.body,R.skis,R.skiParts.L,R.skiParts.R,R.thighL,R.thighR,R.shinL,R.shinR,R.torsoF,R.head];
 for(const a of [R.armL,R.armR]) poseNodes.push(a.up,a.fo,a.cuff,a.gl,a.pole);
 const POSE_LEN=4+poseNodes.length*7;
@@ -2574,7 +2584,14 @@ function applyArt(root){
   const up=A('armUp'), fo=A('armFo'), cu=A('cuff'), gl=A('glove'), po=A('pole');
   for(const arm of [R.armL,R.armR]){ use(arm.up,up); use(arm.fo,fo); use(arm.cuff,cu); use(arm.gl,gl); use(arm.pole,po); }
   const to=A('torso'), tf=A('torsoFP');
-  if(to&&tf){ clear(R.torsoF); put(R.torsoF,to); put(R.torsoF,tf,'',true); }
+  if(to&&tf){ clear(R.torsoF);
+    // cut the jacket higher at the front and let it stand off a little, so the thighs come out under the hem instead of through it
+    const pa=to.geo.attributes.position;
+    for(let i=0;i<pa.count;i++){ const y=pa.getY(i), z=pa.getZ(i); if(y>=-0.03||z>=0) continue;
+      const f=Math.min(1,-z/0.13), d=Math.min(1,(-0.03-y)/0.14);
+      pa.setY(i,-0.03+(y+0.03)*(1-0.62*f)); pa.setZ(i,z*(1+0.1*f*d)); }
+    pa.needsUpdate=true; to.geo.computeBoundingSphere();
+    put(R.torsoF,to); put(R.torsoF,tf,'',true); }
   const he=A('helmet'); if(he){ clear(R.head); put(R.head,he); }
   const sk=A('ski'), bo=A('boot'), bi=A('bind');
   if(sk&&bo&&bi) for(const side of ['L','R']){ const g=R.skiParts[side]; clear(g); put(g,sk,'ski'); put(g,bo,''); put(g,bi,'bind'); }
