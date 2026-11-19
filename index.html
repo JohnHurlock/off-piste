@@ -224,16 +224,19 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
         <dt><kbd>←</kbd><kbd>→</kbd></dt><dd>Carve · spin in air</dd>
         <dt><kbd>↑</kbd><kbd>↓</kbd></dt><dd>Tuck, brake · flip in air</dd>
         <dt><kbd>Space</kbd></dt><dd>Hold to crouch, let go to jump</dd>
-        <dt><kbd>Shift</kbd></dt><dd>Grab (hold in air)</dd>
+        <dt><kbd>Shift</kbd></dt><dd>Grab (hold in air) · tail press on the snow</dd>
+        <dt><kbd>←</kbd><kbd>→</kbd> on a rail</dt><dd>Switch-up</dd>
         <dt><kbd>T</kbd></dt><dd>Push with both poles</dd>
         <dt>Mouse</dt><dd>Scroll or <kbd>+</kbd> <kbd>−</kbd> to zoom · right-drag to look around · <kbd>C</kbd> resets</dd>
         <dt><kbd>V</kbd></dt><dd>First / third person</dd>
+        <dt>Tricks</dt><dd>Spin + flip = cork or misty · spin off a rail end = "out" · repeats score less</dd>
         <dt><kbd>Esc</kbd></dt><dd>Pause</dd>
       </dl></div>
       <div class="ctl"><h3>Controller</h3><dl>
         <dt>Left stick</dt><dd>Carve · spin and flip</dd>
         <dt><kbd>A</kbd></dt><dd>Hold to crouch, let go to jump</dd>
-        <dt><kbd>X</kbd> / <kbd>RB</kbd></dt><dd>Grab</dd>
+        <dt><kbd>X</kbd> / <kbd>RB</kbd></dt><dd>Grab · tail press on the snow</dd>
+        <dt>Stick on a rail</dt><dd>Flick left or right to switch up</dd>
         <dt><kbd>RT</kbd></dt><dd>Tuck for speed</dd>
         <dt>Right stick</dt><dd>Look around and zoom · click to reset</dd>
         <dt><kbd>B</kbd></dt><dd>Push with both poles</dd>
@@ -243,7 +246,7 @@ kbd{display:inline-block;min-width:22px;padding:1px 6px;border:1px solid var(--l
       <div class="ctl"><h3>Touch</h3><dl>
         <dt>Left thumb</dt><dd>Drag to carve, spin, flip</dd>
         <dt>JUMP</dt><dd>Hold to crouch, let go to jump</dd>
-        <dt>GRAB</dt><dd>Hold while airborne</dd>
+        <dt>GRAB</dt><dd>Hold in the air to grab, on the snow to tail press</dd>
         <dt>Rails</dt><dd>Hit the small ramp in front</dd>
         <dt>Camera</dt><dd>Pinch on the right side, or tap ⤢</dd>
       </dl></div>
@@ -941,6 +944,7 @@ function animateRig(dt,now){
   else if(mode==='ride'){
     c=0.3+tuck*0.4+charge*0.62+P.squash*0.55+Math.abs(P.turn)*0.1; lean=0.3+tuck*0.55+charge*0.18+P.squash*0.2;
     side=-P.lean*0.6; twist=charge*IN.x*0.6 + P.turn*0.12; headYaw=-P.turn*0.25;
+    if(P.pressT>0){ const pr=Math.min(1,P.pressT*5); if(BOARD) roll=0.3*pr; else pitch=0.3*pr; lift+=0.22*pr; lean-=0.22*pr; c+=0.12*pr; }
   } else if(mode==='air'){
     const fr=Math.min(1,Math.abs(P.flipRate)/6);
     c=0.24+fr*0.45+P.grab*0.62; lift=fr*0.14+P.grab*0.42; lean=0.18+fr*0.3+P.grab*0.55;
@@ -1399,17 +1403,23 @@ function setText(k,v){ if(hudCache[k]!==v){ hudCache[k]=v; hudEls[k].textContent
 // T: plant both poles and shove. Strong from a standstill, fading out by ~70 km/h.
 const PUSH_T=0.75;
 function startPush(){ if(BOARD || state!=='play' || P.air || P.grind || P.crash>0 || (P.pushT||0)>0.12) return; P.pushT=PUSH_T; }
+function endPress(){ const t=P.pressT||0; P.pressT=0; hideLive();
+  if(t>0.5) addTrick({name:(t>2.5?'Long tail press':'Tail press'),pts:Math.round(80+t*260),perfect:false}); }
 function popStrength(){ return 2.6+(P.charge/0.4)*3.0; }
 function takeoff(){
+  if(P.pressT>0) endPress();
   P.air=true; P.airT=0; P.spin=0; P.flip=0; P.spinRate=0; P.flipRate=0; P.grabT=0; P.grabName=null; P.takeStance=P.stance; P.liveKey=0;
-  P.popReady = P.charge>0; P.errAt=null; P.eS=0; P.eF=0; P.tLand=9; trailPush(false);
+  P.popReady = P.charge>0; P.errAt=null; P.eS=0; P.eF=0; P.tLand=9; P.railOut=false; trailPush(false);
 }
 function doPop(){ const v=P.charge/0.4; P.vy+=popStrength(); P.charge=0; RS.popT=1; sfxPop(v); burst(P.x,P.y,P.z,8+v*22,0.5+v*0.3); }
 function scoreTrick(half,flips,flipSign,grabT,airT,sw,perfect){
   const parts=[]; let pts=0;
   if(sw&&(half||flips)) parts.push('Switch');
-  if(flips){ parts.push(['','Double ','Triple ','Quad '][Math.min(flips,4)-1]+(flipSign>0?'Backflip':'Frontflip')); pts+=flips*500+(flips-1)*250; }
-  if(half){ parts.push(String(half*180)); pts+=half*120+Math.max(0,half-2)*60; }
+  const cork = flips && half>=2;
+  if(flips){ const m=['','Double ','Triple ','Quad '][Math.min(flips,4)-1];
+    parts.push(cork ? m+(flipSign>0?'Cork':'Misty')+' '+half*180 : m+(flipSign>0?'Backflip':'Frontflip'));
+    pts+=flips*500+(flips-1)*250+(cork?300*flips:0); }
+  if(half){ if(!cork) parts.push(String(half*180)); pts+=half*120+Math.max(0,half-2)*60; }
   let name=parts.join(' ');
   if(grabT>0.12){ const g=(P.grabName||'Mute')+' grab'; name=name?name+' · '+g:g; pts+=Math.round(grabT*450); }
   if(!pts){ if(airT<0.75) return null; name=airT>1.6?'Big air':'Straight air'; pts=airT*90; }
@@ -1418,10 +1428,14 @@ function scoreTrick(half,flips,flipSign,grabT,airT,sw,perfect){
   if(perfect) pts*=1.5;
   return {name,pts:Math.round(pts),perfect};
 }
+const recentTricks=[];
 function addTrick(tr){
+  { const base=tr.name.replace(/ · .*/,'').replace(/ out$/,'');
+    if(recentTricks.includes(base)){ tr.pts=Math.round(tr.pts*0.6); tr.repeat=true; }
+    recentTricks.push(base); if(recentTricks.length>4) recentTricks.shift(); }
   combo.mult+=1; combo.pts+=tr.pts; combo.t=5; stats.count++;
   if(!stats.best||tr.pts>stats.best.pts) stats.best=tr;
-  showTrick(tr.name,'+'+fmt(tr.pts)+(combo.mult>1?' &nbsp;×'+combo.mult:'')+(tr.perfect?'<span class="tag">PERFECT</span>':'')+(tr.sketchy?'<span class="tag sketch">SKETCHY</span>':''));
+  showTrick(tr.name,'+'+fmt(tr.pts)+(combo.mult>1?' &nbsp;×'+combo.mult:'')+(tr.perfect?'<span class="tag">PERFECT</span>':'')+(tr.sketchy?'<span class="tag sketch">SKETCHY</span>':'')+(tr.repeat?'<span class="tag sketch">REPEAT</span>':''));
   sfxLand(combo.mult,tr.perfect);
 }
 function bankCombo(){
@@ -1431,7 +1445,7 @@ function bankCombo(){
   combo.mult=0; combo.pts=0; combo.t=0;
 }
 function crash(msg){
-  P.crash=1.15; P.air=false; P.grind=null; P.spin=P.flip=P.spinRate=P.flipRate=0; P.grab=0; P.charge=0; P.tumble=0; P.fading=false; hideLive();
+  P.crash=1.15; P.air=false; P.grind=null; P.pressT=0; P.spin=P.flip=P.spinRate=P.flipRate=0; P.grab=0; P.charge=0; P.tumble=0; P.fading=false; hideLive();
   burst(P.x,P.y,P.z,170,1.5); shake=reduceMotion?0.2:1; sfxCrash(); facePowder(1);
   if(combo.mult>0) showTrick('Combo lost', fmt(combo.pts*combo.mult)+' pts gone', true); else showTrick(msg,'',true);
   combo.mult=0; combo.pts=0; combo.t=0; trailPush(false);
@@ -1464,6 +1478,8 @@ function land(){
   const ownErr=P.errAt!=null?P.errAt:spinErr+flipErr;
   const perfect=!!(half||flips) && !sketchy && ownErr<0.45;
   const tr=scoreTrick(half,flips,Math.sign(flip),P.grabT,airT,P.takeStance>1,perfect);
+  if(tr && P.railOut && half){ tr.name+=' out'; tr.pts=Math.round(tr.pts*1.3); }
+  P.railOut=false;
   if(tr&&sketchy){ tr.pts=Math.round(tr.pts*0.75); tr.sketchy=true; }
   P.grab=0; P.squash=Math.min(1,0.3+airT*0.45); P.noBrake=true;
   burst(P.x,P.y,P.z,25+airT*45+(tr?50:0),0.7+Math.min(1.2,airT*0.3));
@@ -1493,7 +1509,7 @@ function tryRail(){
       // jumping on from any side: you twist to the nearest straight or sideways stance as you land on it
       if(!P.air || Math.abs(P.spin)<0.6) snapped=Math.round((total-Math.PI/2)/Math.PI)*Math.PI+Math.PI/2;   // default: swing sideways into a slide
       const spinOn=P.air?Math.round(Math.abs(P.spin)/(Math.PI/2))*90:0;
-      P.grind={rail:r,t:Math.max(0,t),s:Math.max(6,spAlong),time:0,spinOn,pts:0};
+      P.grind={rail:r,t:Math.max(0,t),s:Math.max(6,spAlong),time:0,spinOn,pts:0,ups:0,names:null,sx:Math.abs(IN.x)>0.6?Math.sign(IN.x):0};
       P.stance=mod(snapped,TAU); P.visYaw=total-snapped; P.visFlip=P.flip-Math.round(P.flip/TAU)*TAU;
       P.spin=P.flip=P.spinRate=P.flipRate=0; P.air=false; P.grab=0; P.heading=r.heading; P.squash=0.4;
       hideLive(); sfxClank(); burst(P.x,ry,P.z,18,0.45);
@@ -1508,15 +1524,15 @@ function exitGrind(popped){
   P.grind=null; P.railLock=0.3; // don't snap straight back onto the rail you just left
   const scored=P.stance;
   if(g.time>0.18){
-    let name=railName(scored); if(g.spinOn>=180) name=g.spinOn+' on '+name;
-    let pts=150+g.time*420+(g.spinOn>=180?g.spinOn*0.8:0)+(full?220:0);
+    let name=g.names&&g.names.length>1 ? g.names.slice(0,4).join(' to ') : railName(scored); if(g.spinOn>=180) name=g.spinOn+' on '+name;
+    let pts=150+g.time*420+(g.spinOn>=180?g.spinOn*0.8:0)+(full?220:0)+g.ups*200;
     addTrick({name:name+(full?' · full rail':''),pts:Math.round(pts),perfect:false});
   }
   const slope=(r.y1-r.y0)/r.len;
   P.vy=slope*g.s+1.2; P.vx=r.dx*g.s; P.vz=r.dz*g.s;
   { const w=wrap(P.stance); if(Math.abs(Math.abs(w)-Math.PI/2)<0.3){ const st=0; P.visYaw+=w-st; P.stance=st; } }
   if(popped) doPop();
-  takeoff(); P.popReady=false;
+  takeoff(); P.popReady=false; P.railOut=true;
 }
 function grindStep(dt){
   const g=P.grind, r=g.rail, slope=(r.y1-r.y0)/r.len;
@@ -1527,6 +1543,12 @@ function grindStep(dt){
   if(Math.random()<0.8) emit(P.x+rand(-0.2,0.2),P.y+0.02,P.z+rand(-0.2,0.2),-P.vx*0.15+rand(-1.2,1.2),rand(0.5,2.2),-P.vz*0.15+rand(-1.2,1.2),rand(0.12,0.28),rand(0.25,0.5));
   hudEls.liveDeg.textContent=railName(P.stance); setText('liveSub',fmt(150+g.time*420));
   if(!hudEls.live.classList.contains('on')) hudEls.live.classList.add('on');
+  { const sx=Math.abs(IN.x)>0.6?Math.sign(IN.x):0;
+    if(sx && !g.sx && g.time>0.15 && g.t<0.92){
+      if(!g.names) g.names=[railName(P.stance)];
+      P.stance=mod(P.stance-sx*Math.PI/2,TAU); P.visYaw+=sx*Math.PI/2; g.ups++;
+      g.names.push(railName(P.stance)); sfxClank(); burst(P.x,P.y,P.z,10,0.35); }
+    g.sx=sx; }
   if(IN.jump){ P.charge=Math.min(0.4,P.charge+dt); }
   else if(P.charge>0){ hideLive(); exitGrind(true); return; }
   if(g.t>=1){ hideLive(); exitGrind(false); }
@@ -1596,6 +1618,10 @@ function groundStep(dt){
   // hold jump to sink into a crouch, let go to spring
   if(IN.jump){ P.charge=Math.min(0.4,P.charge+dt); }
   else if(P.charge>0){ doPop(); takeoff(); P.popReady=false; return; }
+  if(IN.grab && sp>4 && !(P.pushT>0)){ P.pressT=(P.pressT||0)+dt;
+    if(combo.mult>0) combo.t=Math.max(combo.t,1.5);     // a press keeps your combo alive between features
+    if(P.pressT>0.3){ hudEls.liveDeg.textContent='PRESS'; setText('liveSub',fmt(Math.round(80+P.pressT*260))); hudEls.live.classList.add('on'); } }
+  else if(P.pressT>0) endPress();
   if(combo.mult>0){ combo.t-=dt; if(combo.t<=0) bankCombo(); }
   // powder spray off both skis
   const rate2=12+sp*2.6+P.slip*24+Math.abs(P.turn)*sp*1.8+brake*90;
