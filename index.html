@@ -1956,7 +1956,7 @@ function setFP(on){ CAM.fp=on; try{ localStorage.setItem('off-piste-fp',on?'1':'
   document.querySelectorAll('.fpBtn').forEach(b=>{ b.textContent=on?'First person':'Third person'; });
   const ib=$('fpIcon'); if(ib){ ib.setAttribute('aria-pressed',on?'true':'false'); ib.classList.toggle('on',on); } }
 const fpBoardYaw=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI/2);
-const fpQ=new THREE.Quaternion(), fpPitch=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-0.3), fpEye=new THREE.Vector3();
+const fpQ=new THREE.Quaternion(), fpPitch=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),-0.42), fpEye=new THREE.Vector3();
 let camOff=-1;
 function updateCamera(dt,now){
   // on the menu, frame the rider in the open space to the right of the menu panel
@@ -1971,7 +1971,7 @@ function updateCamera(dt,now){
     R.orient.getWorldQuaternion(fpQ); if(BOARD) fpQ.multiply(fpBoardYaw); fpQ.multiply(fpPitch);
     camera.quaternion.slerp(fpQ,1-Math.exp(-(P.air?30:16)*dt));
     if(shake>0){ const s=shake*shake*0.12; camera.position.x+=rand(-s,s); camera.position.y+=rand(-s,s); shake=Math.max(0,shake-dt*2.2); }
-    const fov=84+FOVX*0.6+Math.min(12,sp*0.28);   // wide enough to see your arms, poles and ski tips
+    const fov=Math.min(128,108+FOVX*0.5+Math.min(8,sp*0.2));   // very wide, so your body, arms, poles and skis stay in view
     if(Math.abs(camera.fov-fov)>0.05){ camera.fov+=(fov-camera.fov)*Math.min(1,3*dt); camera.updateProjectionMatrix(); }
     camLook.copy(camera.position).add(tmpV.set(0,0,-6).applyQuaternion(camera.quaternion));
     return;
