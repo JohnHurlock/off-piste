@@ -3,10 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="Off Piste: ski backcountry powder with your friends. Carve, grind rails and land tricks.">
+<meta name="description" content="Off Piste is a free multiplayer ski game you play in your browser. Ski endless backcountry powder with friends, hit kickers, grind rails and land spins, flips and grabs. No download.">
 <meta name="theme-color" content="#06112a">
+<link rel="canonical" href="https://johnhurlock.github.io/off-piste/">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Off Piste">
+<meta property="og:title" content="Off Piste: free multiplayer ski game">
+<meta property="og:description" content="Ski endless backcountry powder with friends, hit kickers, grind rails and land tricks. Free, in your browser.">
+<meta property="og:url" content="https://johnhurlock.github.io/off-piste/">
+<meta property="og:image" content="https://johnhurlock.github.io/off-piste/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Off Piste","url":"https://johnhurlock.github.io/off-piste/","image":"https://johnhurlock.github.io/off-piste/og.jpg","description":"Free multiplayer ski game in your browser. Ski backcountry powder with friends, hit kickers, grind rails and land spins, flips and grabs.","genre":["Sports","Skiing","Multiplayer"],"gamePlatform":"Web browser","applicationCategory":"Game","operatingSystem":"Any","playMode":["SinglePlayer","MultiPlayer"],"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 <style>[hidden]{display:none!important}body{margin:0}</style>
-<title>Off Piste</title>
+<title>Off Piste: Free Multiplayer Ski Game in Your Browser</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;1,700;1,800&family=Barlow:wght@400;500;600;700&display=swap">
@@ -1140,10 +1155,10 @@ function animateRig(dt,now){
     if(P.pressT>0){ const pr=Math.min(1,P.pressT*5); if(BOARD) roll=0.3*pr; else pitch=0.3*pr; lift+=0.22*pr; lean-=0.22*pr; c+=0.12*pr; }
   } else if(mode==='air'){
     const fr=Math.min(1,Math.abs(P.flipRate)/6);
-    c=0.24+fr*0.45+P.grab*0.42; lift=fr*0.14+P.grab*0.26; lean=0.18+fr*0.3+P.grab*0.5;
+    c=0.24+fr*0.45+P.grab*0.5; lift=fr*0.14+P.grab*0.44; lean=0.18+fr*0.3+P.grab*0.72;
     twist=clamp(P.spinRate*0.055,-0.5,0.5);
     headYaw=clamp(wrap(-(P.takeStance+P.spin)),-1.25,1.25)*0.75-twist; headPitch=0.35;
-    if(gd){ pitch=gd.pitch*P.grab; cross=gd.cross*P.grab; roll=gd.roll*P.grab; }
+    if(gd){ pitch=gd.pitch*P.grab; cross=gd.cross*P.grab; roll=gd.roll*P.grab; side=(gd.hand==='L'?0.22:gd.hand==='R'?-0.22:0)*P.grab; }
   } else if(mode==='grind'){
     c=0.36+wob*0.05+charge*0.5; lean=0.2+charge*0.15; side=wob*0.12;
     twist=wrap(-P.stance)*0.45; headYaw=clamp(wrap(-P.stance),-1.3,1.3)*0.8-twist;
@@ -1210,6 +1225,7 @@ function animateRig(dt,now){
       t.lerp(vC,Math.min(1,P.grab*1.2)); grabbing=true;
     }
     hS[i].lerp(t,k(grabbing?24:(mode==='crash'?9:14)));
+    { const d=vF.subVectors(hS[i],shoulder), l=d.length(); if(l>0.565) hS[i].copy(shoulder).addScaledVector(d,0.565/l); }
     const elbow=ik(shoulder,hS[i],0.3,0.28,vD.set(sgn*0.45,-0.5,0.75),vE);
     placeSeg(A.up,shoulder,elbow); placeSeg(A.fo,elbow,hS[i]);
     const fd=vC.subVectors(hS[i],elbow).normalize();
