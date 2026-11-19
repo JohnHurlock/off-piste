@@ -1555,7 +1555,7 @@ function groundStep(dt){
   // gentler pull down the fall line: about 2.5 m/s² on the open slope, top speed near 75 km/h (95 tucked)
   const e=0.4, gx=(physH(P.x+e,P.z)-physH(P.x-e,P.z))/(2*e), gz=(physH(P.x,P.z+e)-physH(P.x,P.z-e))/(2*e);
   // hockey stop (R): skis or board swing across the hill and dig in; hold it to stay stopped
-  const hkIn = IN.stop && !P.pushT ? 1 : 0;
+  const hkIn = IN.stop && !(P.pushT>0) ? 1 : 0;
   P.hk+=(hkIn-P.hk)*Math.min(1,(hkIn?10:5)*dt);
   if(hkIn && !P.hkSide) P.hkSide = P.turn>0.15?1:P.turn<-0.15?-1:(Math.random()<0.5?1:-1);
   if(!hkIn && P.hk<0.05) P.hkSide=0;
@@ -1566,7 +1566,7 @@ function groundStep(dt){
   const lost=vL*(1-Math.exp(-10*dt)); vL-=lost;
   // (no automatic forward creep: you can come to a full stop, and you don't get nudged up the side walls)
   if(P.noBrake && IN.y>-0.3) P.noBrake=false;   // a stick still held back from a backflip isn't a brake
-  if(P.pushT>0){ const ph=1-P.pushT/PUSH_T; P.pushT-=dt;
+  if(P.pushT>0){ const ph=1-P.pushT/PUSH_T; P.pushT=Math.max(0,P.pushT-dt);
     if(ph>0.3 && ph<0.8){ const sp1=Math.hypot(vF,vL); vF+=10.5*Math.max(0,1-sp1/19.5)*dt; } }
   const tuck=IN.y>0.3?IN.y:0, brake=(IN.y<-0.3&&!P.noBrake)?-IN.y:0;
   const sp=Math.hypot(vF,vL);
