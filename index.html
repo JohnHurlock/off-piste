@@ -594,8 +594,15 @@ function buildKicker(k){
   const geo=new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(v,3)); geo.computeVertexNormals();
   const grp=new THREE.Group();
   const mesh=new THREE.Mesh(geo,kickMat); mesh.castShadow=true; mesh.receiveShadow=true; grp.add(mesh);
-  const lipZ=k.z-k.L, ly=groundH(k.x,lipZ)+k.H;
-  const lip=new THREE.Mesh(new THREE.BoxGeometry(k.W,0.07,0.16), lipMat); lip.position.set(k.x,ly+0.05,lipZ); grp.add(lip);
+  const lipZ=k.z-k.L;
+  { const lv=[], dt=Math.min(0.12,0.25/k.L), up=0.012;
+    const P0=j=>{ const p=top(NL,j); return [p[0],p[1]+up,p[2]]; };
+    const P1=j=>{ const t=1-dt, z=k.z-t*k.L, x=k.x-k.W/2+k.W*j/NW; return [x, groundH(x,z)+kProf(k,t)*k.H+0.03+up, z]; };
+    const P2=j=>{ const p=top(NL,j); return [p[0],p[1]-0.09,p[2]-0.005]; };
+    const q=(a,b,c,d)=>lv.push(a[0],a[1],a[2],b[0],b[1],b[2],c[0],c[1],c[2], a[0],a[1],a[2],c[0],c[1],c[2],d[0],d[1],d[2]);
+    for(let j=0;j<NW;j++){ q(P1(j),P1(j+1),P0(j+1),P0(j)); q(P0(j),P0(j+1),P2(j+1),P2(j)); }
+    const lg=new THREE.BufferGeometry(); lg.setAttribute('position',new THREE.Float32BufferAttribute(lv,3)); lg.computeVertexNormals();
+    const lm=new THREE.Mesh(lg,lipMat); lm.material.side=THREE.DoubleSide; grp.add(lm); }
   if(!k.feeder) for(const s of [-1,1]){
     const px=k.x+s*(k.W/2+0.8), py=groundH(px,lipZ);
     const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,k.H+2,5), poleMat); pole.position.set(px,py+(k.H+2)/2,lipZ); pole.castShadow=true; grp.add(pole);
@@ -1428,15 +1435,18 @@ function tryRail(){
   for(let i=0;i<rails.length;i++){ const r=rails[i];
     const px=P.x-r.x0, pz=P.z-r.z0, along=px*r.dx+pz*r.dz, t=along/r.len;
     if(t<-0.02||t>0.97) continue;
-    const lat=-px*r.dz+pz*r.dx; if(Math.abs(lat)>0.42) continue;
+    const lat=-px*r.dz+pz*r.dx, latV=-P.vx*r.dz+P.vz*r.dx, latPrev=lat-latV/60;
+    const crossed = P.air && Math.sign(lat)!==Math.sign(latPrev) && Math.abs(latPrev)<1.2;   // flew over it this frame
+    if(Math.abs(lat)>0.42 && !crossed) continue;
     const ry=r.y0+(r.y1-r.y0)*t, dy=P.y-ry;
     const slope=(r.y1-r.y0)/r.len, spAlong=P.vx*r.dx+P.vz*r.dz;
-    if(dy>-0.22 && dy<0.45 && (P.vy-slope*spAlong)<0.8){
+    if(dy>(P.air?-0.3:-0.22) && dy<(P.air?0.55:0.45) && (P.vy-slope*spAlong)<0.8){
       const rf=mod(P.flip,TAU), flipErr=Math.min(rf,TAU-rf);
       if(P.air && flipErr>1.0){ crash('Rail check'); return true; }
       const total=(P.air?P.takeStance+P.spin:P.stance)-(P.heading-r.heading);
       const snapped=Math.round(total/(Math.PI/2))*(Math.PI/2);
-      if(Math.abs(total-snapped)>0.5){ crash('Rail check'); return true; } // arrive straight or sideways, not in between
+      if(!P.air && Math.abs(total-snapped)>0.5){ crash('Rail check'); return true; } // riding on: straight or sideways
+      // jumping on from any side: you twist to the nearest straight or sideways stance as you land on it
       const spinOn=P.air?Math.round(Math.abs(P.spin)/(Math.PI/2))*90:0;
       P.grind={rail:r,t:Math.max(0,t),s:Math.max(6,spAlong),time:0,spinOn,pts:0};
       P.stance=mod(snapped,TAU); P.visYaw=total-snapped; P.visFlip=P.flip-Math.round(P.flip/TAU)*TAU;
@@ -1481,7 +1491,11 @@ function collide(){
   for(let i=0;i<objs.length;i++){ const o=objs[i];
     if((o.type!=='tree'&&o.type!=='rock') || Math.abs(o.z-P.z)>3) continue;
     const dx=P.x-o.x, dz2=P.z-o.z;
-    if(dx*dx+dz2*dz2 < (o.r+0.35)*(o.r+0.35) && P.y-o.y < o.h){ P.vx*=0.25; P.vz*=0.25; crash(o.type==='tree'?'Tree hug':'Rock check'); return; }
+    const d2=dx*dx+dz2*dz2;
+    if(o.type==='rock'){ const rr=o.r*1.1+0.2; if(d2>=rr*rr) continue;
+      const top=o.h*0.85*Math.sqrt(Math.max(0,1-d2/(rr*rr)));   // height of the rock's rounded surface under you
+      if(P.y-o.y < top-0.1){ P.vx*=0.25; P.vz*=0.25; crash('Rock check'); return; } continue; }
+    if(d2 < (o.r+0.35)*(o.r+0.35) && P.y-o.y < o.h){ P.vx*=0.25; P.vz*=0.25; crash(o.type==='tree'?'Tree hug':'Rock check'); return; }
   }
 }
 function bounds(){ const c=center(P.z); if(P.x>c+46){P.x=c+46; P.vx=Math.min(P.vx,0);} if(P.x<c-46){P.x=c-46; P.vx=Math.max(P.vx,0);} }
