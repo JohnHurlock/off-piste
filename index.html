@@ -610,7 +610,10 @@ document.querySelectorAll('.weatherBtn').forEach(b=>b.addEventListener('click',(
 
 /* ---------- Renderer / scene ---------- */
 const canvas = $('c');
-const renderer = new THREE.WebGLRenderer({canvas, antialias:true, powerPreference:'high-performance'});
+const LOWEND = (()=>{ let m='auto'; try{ m=localStorage.getItem('off-piste-gfx')||'auto'; }catch(e){}
+  if(m==='low') return true; if(m!=='auto') return false;
+  return /CrOS/.test(navigator.userAgent||'') && !((navigator.hardwareConcurrency||4)>4 && (navigator.deviceMemory||8)>=8); })();
+const renderer = new THREE.WebGLRenderer({canvas, antialias:!LOWEND, powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, isTouch?1.5:2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -797,14 +800,30 @@ const snowMat = new THREE.MeshStandardMaterial({color:L(0xf4eeff), roughness:0.8
 const terrain = new THREE.Mesh(tGeo, snowMat);
 terrain.receiveShadow = true; terrain.frustumCulled = false; scene.add(terrain);
 let tOX=NaN, tOZ=NaN;
+/* The grid is (SX+1) x (SZ+1), vertex i = iz*(SX+1)+ix. When it slides, rows/columns already computed are reused,
+   so a shift only samples groundH on the new strip. Normals come straight from the height grid. */
+const TNX=SX+1, TNZ=SZ+1, tH=new Float32Array(TNX*TNZ), tH2=new Float32Array(TNX*TNZ);
+const tIX=new Int16Array(tPos.count), tIZ=new Int16Array(tPos.count);
+for(let i=0;i<tPos.count;i++){ tIX[i]=Math.round((tBase[i*2]+TW/2)/cellX); tIZ[i]=Math.round((tBase[i*2+1]+TL/2)/cellZ); }
 function updateTerrain(force){
   const sx=4*cellX, sz=4*cellZ;
   const ox=Math.round(P.x/sx)*sx, oz=Math.round((P.z-105)/sz)*sz;
   if(!force && ox===tOX && oz===tOZ) return;
+  const dX=Math.round((ox-tOX)/cellX), dZ=Math.round((oz-tOZ)/cellZ), reuse=!force && isFinite(dX) && isFinite(dZ);
   tOX=ox; tOZ=oz; terrain.position.set(ox,0,oz);
-  const arr = tPos.array, uv = tUV.array, US=6, uo=Math.floor(ox/US), vo=Math.floor(oz/US);
-  for(let i=0;i<tPos.count;i++){ const wx=ox+tBase[i*2], wz=oz+tBase[i*2+1]; arr[i*3+1]=groundH(wx,wz); uv[i*2]=wx/US-uo; uv[i*2+1]=wz/US-vo; }
-  tPos.needsUpdate = true; tUV.needsUpdate = true; tGeo.computeVertexNormals();
+  const x0=ox-TW/2, z0=oz-TL/2;
+  for(let iz=0;iz<TNZ;iz++){ const jz=iz+dZ, rowOK=reuse && jz>=0 && jz<TNZ, wz=z0+iz*cellZ;
+    for(let ix=0;ix<TNX;ix++){ const jx=ix+dX;
+      tH2[iz*TNX+ix] = (rowOK && jx>=0 && jx<TNX) ? tH[jz*TNX+jx] : groundH(x0+ix*cellX, wz); } }
+  tH.set(tH2);
+  const arr = tPos.array, uv = tUV.array, nrm = tGeo.attributes.normal.array, US=6, uo=Math.floor(ox/US), vo=Math.floor(oz/US);
+  const ix2=1/(2*cellX), iz2=1/(2*cellZ);
+  for(let i=0;i<tPos.count;i++){ const ix=tIX[i], iz=tIZ[i], g=iz*TNX+ix;
+    arr[i*3+1]=tH[g]; uv[i*2]=(x0+ix*cellX)/US-uo; uv[i*2+1]=(z0+iz*cellZ)/US-vo;
+    const hl=tH[ix>0?g-1:g], hr=tH[ix<TNX-1?g+1:g], hd=tH[iz>0?g-TNX:g], hu=tH[iz<TNZ-1?g+TNX:g];
+    const nx=-(hr-hl)*(ix>0&&ix<TNX-1?ix2:2*ix2), nz=-(hu-hd)*(iz>0&&iz<TNZ-1?iz2:2*iz2), il=1/Math.sqrt(nx*nx+1+nz*nz);
+    nrm[i*3]=nx*il; nrm[i*3+1]=il; nrm[i*3+2]=nz*il; }
+  tPos.needsUpdate = true; tUV.needsUpdate = true; tGeo.attributes.normal.needsUpdate = true;
 }
 
 /* ---------- Trees and rocks (instanced pools) ---------- */
@@ -827,8 +846,8 @@ const rocks = new THREE.InstancedMesh(rockG, new THREE.MeshStandardMaterial({col
 const dummy = new THREE.Object3D();
 const ZERO = new THREE.Matrix4().makeScale(0,0,0);
 let freeT = [], freeR = [];
-function markPools(){ foliage.instanceMatrix.needsUpdate=caps.instanceMatrix.needsUpdate=trunks.instanceMatrix.needsUpdate=rocks.instanceMatrix.needsUpdate=true; }
-function clearTree(slot){ trunks.setMatrixAt(slot,ZERO); for(let i=0;i<TI;i++){ foliage.setMatrixAt(slot*TI+i,ZERO); caps.setMatrixAt(slot*TI+i,ZERO);} }
+function markPools(){ foliage.instanceMatrix.needsUpdate=caps.instanceMatrix.needsUpdate=trunks.instanceMatrix.needsUpdate=rocks.instanceMatrix.needsUpdate=true; if(ART.tree) packTrees(); }
+function clearTree(slot){ if(ART.tree){ treeM[slot*16+15]=0; return; } trunks.setMatrixAt(slot,ZERO); for(let i=0;i<TI;i++){ foliage.setMatrixAt(slot*TI+i,ZERO); caps.setMatrixAt(slot*TI+i,ZERO);} }
 function resetPools(){
   freeT=[]; freeR=[];
   for(let i=0;i<MAXT;i++){ freeT.push(i); clearTree(i); }
@@ -836,15 +855,30 @@ function resetPools(){
   markPools();
 }
 const ART={tree:false};
+const treeM=new Float32Array(MAXT*16), treeCap=new Uint8Array(MAXT);
+/* With the Blender tree each slot keeps its matrix here, and the instance buffers only hold the trees that are
+   close enough to see, packed at the front, with .count set to match. Zero-scaled instances still cost vertex work,
+   so this is what actually saves GPU time. */
+function packTrees(){
+  if(!ART.tree) return;
+  const D2=GFX.treeD*GFX.treeD, F=foliage.instanceMatrix.array, C=caps.instanceMatrix.array, T=trunks.instanceMatrix.array;
+  let nf=0, nc=0;
+  for(let s2=0;s2<MAXT;s2++){ const o=s2*16; if(!treeM[o+15]) continue;
+    const dx=treeM[o+12]-P.x, dz=treeM[o+14]-P.z; if(dx*dx+dz*dz>D2) continue;
+    for(let k=0;k<16;k++){ F[nf*16+k]=T[nf*16+k]=treeM[o+k]; } nf++;
+    if(treeCap[s2]){ for(let k=0;k<16;k++) C[nc*16+k]=treeM[o+k]; nc++; } }
+  foliage.count=trunks.count=nf; caps.count=nc;
+  foliage.instanceMatrix.needsUpdate=caps.instanceMatrix.needsUpdate=trunks.instanceMatrix.needsUpdate=true;
+}
+function cullTrees(){ packTrees(); }
 function setTree(slot,x,y,z,s){
   const ry = wrand(0,TAU);
   if(ART.tree){
     const slim=wrand(0.8,1.05), snowy=wrand(0.55,1); const tilt=[];
     for(let i=0;i<TI;i++){ tilt.push(wrand(-0.05,0.05)); wrand(-0.05,0.05); WR(); }
     dummy.rotation.set(0,ry,0); dummy.position.set(x,y-0.12,z); dummy.scale.set(s*slim*1.05,s,s*slim*1.05); dummy.updateMatrix();
-    trunks.setMatrixAt(slot,dummy.matrix); foliage.setMatrixAt(slot*TI,dummy.matrix);
-    if(snowy>0.62){ caps.setMatrixAt(slot*TI,dummy.matrix); } else caps.setMatrixAt(slot*TI,ZERO);
-    for(let i=1;i<TI;i++){ foliage.setMatrixAt(slot*TI+i,ZERO); caps.setMatrixAt(slot*TI+i,ZERO); }
+    // one whole-tree mesh per slot, so the pool only draws MAXT copies (not MAXT*TI)
+    dummy.matrix.toArray(treeM,slot*16); treeCap[slot]=snowy>0.62?1:0;
     return;
   }
   dummy.rotation.set(0,ry,0);
@@ -1411,11 +1445,11 @@ const NF = isTouch?900:1800;
 /* Graphics levels. Auto picks by device (Chromebooks and 4-core machines start on Low/Medium) and steps down
    by itself if the frame rate stays under ~40 fps. */
 const GFX_LEVELS={
-  low:   {name:'Low',    ratio:0.75, shadows:false, map:512,  soft:false, parts:0.45, flakes:0.3},
-  medium:{name:'Medium', ratio:1,    shadows:true,  map:1024, soft:false, parts:0.75, flakes:0.6},
-  high:  {name:'High',   ratio:2,    shadows:true,  map:2048, soft:true,  parts:1,    flakes:1}
+  low:   {name:'Low',    ratio:0.7,  shadows:false, map:512,  soft:false, parts:0.4,  flakes:0.25, treeD:150},
+  medium:{name:'Medium', ratio:1,    shadows:true,  map:1024, soft:false, parts:0.75, flakes:0.6,  treeD:230},
+  high:  {name:'High',   ratio:2,    shadows:true,  map:2048, soft:true,  parts:1,    flakes:1,    treeD:1e9}
 };
-const GFX={mode:'auto', level:'high', parts:1, flakes:1, fpsT:0, fpsN:0, fpsAcc:0};
+const GFX={mode:'auto', level:'high', parts:1, flakes:1, treeD:1e9, scale:1, fpsT:0, fpsN:0, fpsAcc:0};
 function autoLevel(){
   const ua=navigator.userAgent||'', cores=navigator.hardwareConcurrency||4, mem=navigator.deviceMemory||8;
   if(/CrOS/.test(ua)) return cores>4 && mem>=8 ? 'medium' : 'low';
@@ -1423,9 +1457,10 @@ function autoLevel(){
   return isTouch ? 'medium' : 'high';
 }
 function applyGfx(level){
-  const L2=GFX_LEVELS[level]; GFX.level=level; GFX.parts=L2.parts; GFX.flakes=L2.flakes;
+  const L2=GFX_LEVELS[level]; if(level!==GFX.level) GFX.scale=1; GFX.level=level; GFX.parts=L2.parts; GFX.flakes=L2.flakes; GFX.treeD=L2.treeD;
   const dpr=window.devicePixelRatio||1;
-  renderer.setPixelRatio(level==='low' ? Math.min(1,dpr)*L2.ratio : Math.min(dpr, isTouch?Math.min(1.5,L2.ratio):L2.ratio));
+  renderer.setPixelRatio(GFX.scale*(level==='low' ? Math.min(1,dpr)*L2.ratio : Math.min(dpr, isTouch?Math.min(1.5,L2.ratio):L2.ratio)));
+  cullTrees();
   resize();
   sunLight.castShadow=L2.shadows;
   const ms=isTouch?Math.min(1024,L2.map):L2.map;
@@ -1440,10 +1475,10 @@ function setGfxMode(mode){
 }
 // Auto mode watches the real frame rate while you ride and steps down a level if it stays low
 function gfxWatch(rdt){
-  if(GFX.mode!=='auto' || state!=='play' || GFX.level==='low') return;
+  if(GFX.mode!=='auto' || state!=='play' || (GFX.level==='low' && GFX.scale<=0.55)) return;
   GFX.fpsAcc+=rdt; GFX.fpsN++; GFX.fpsT+=rdt;
-  if(GFX.fpsT>=4){ const fps=GFX.fpsN/GFX.fpsAcc; GFX.fpsT=GFX.fpsN=GFX.fpsAcc=0;
-    if(fps<40) applyGfx(GFX.level==='high'?'medium':'low'); }
+  if(GFX.fpsT>=2.5){ const fps=GFX.fpsN/GFX.fpsAcc; GFX.fpsT=GFX.fpsN=GFX.fpsAcc=0;
+    if(fps<42){ if(GFX.level!=='low') applyGfx(GFX.level==='high'?'medium':'low'); else { GFX.scale=Math.max(0.55,GFX.scale-0.15); applyGfx('low'); } } }
 }
 const fPos=new Float32Array(NF*3), fSize=new Float32Array(NF), fAlpha=new Float32Array(NF);
 for(let i=0;i<NF;i++){ fPos[i*3]=rand(-35,35); fPos[i*3+1]=rand(-12,22); fPos[i*3+2]=rand(-35,35); fSize[i]=rand(0.05,0.13); fAlpha[i]=rand(0.4,0.9); }
@@ -2786,7 +2821,7 @@ function frame(now){
     const hold=modeHold(), dt=rdt*timeScale; const n=3; if(!hold) for(let i=0;i<n;i++) step(dt/n);
     if(!hold) elapsed+=rdt; stats.top=Math.max(stats.top,Math.hypot(P.vx,P.vz)*3.6);
     passGates();
-    generateUntil(P.z-340); recycleT+=rdt; if(recycleT>0.5){ recycleT=0; recycle(); }
+    generateUntil(P.z-340); recycleT+=rdt; if(recycleT>0.5){ recycleT=0; recycle(); cullTrees(); }
     updateTerrain(false); updateHud(); modeTick(rdt);
     if(AC){ const sp=Math.hypot(P.vx,P.vz), t=AC.currentTime;
       windG.gain.setTargetAtTime(Math.min(0.32,sp/110+(P.air?0.05:0)),t,0.1); windF.frequency.setTargetAtTime(250+sp*28,t,0.1);
@@ -3305,6 +3340,7 @@ function applyArt(root){
   // trees and rocks
   const tF=A('treeFol'), tS=A('treeSnow'), tT=A('treeTrunk');
   if(tF&&tS&&tT){ foliage.geometry=tF.geo; caps.geometry=tS.geo; trunks.geometry=tT.geo; ART.tree=true;
+    treeM.fill(0);
     const saved=WR; WR=Math.random;   // re-dress the trees already standing without touching the world's random sequence
     for(const o of objs) if(o.type==='tree') setTree(o.slot,o.x,o.y,o.z,o.r/0.45);
     WR=saved; markPools(); }
