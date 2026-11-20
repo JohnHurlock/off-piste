@@ -1560,12 +1560,12 @@ function sfxLand(mult,perfect){}   // no chime on landing a trick
 function sfxThump(v){ if(!AC) return; const t=AC.currentTime; noiseHit(t,0.35+v*0.3,0.35+v*0.4,700);
   const o=AC.createOscillator(), g=AC.createGain(); o.frequency.setValueAtTime(110,t); o.frequency.exponentialRampToValueAtTime(42,t+0.25);
   g.gain.setValueAtTime(0.4*v+0.1,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.3); o.connect(g); g.connect(master); o.start(t); o.stop(t+0.35); }
-function sfxTick(n){ if(!AC) return; tone(SCALE[Math.min(10,n)]*0.5,AC.currentTime,0.14,0.11,'triangle'); }
-function sfxPop(v){ if(!AC) return; const t=AC.currentTime; noiseHit(t,0.18,0.2+v*0.2,2500); tone(260+v*120,t,0.12,0.08,'sine'); }
-function sfxClank(){ if(!AC) return; const t=AC.currentTime; tone(1240,t,0.25,0.08,'triangle'); tone(1870,t,0.18,0.05,'sine'); noiseHit(t,0.12,0.25,5000); }
+function sfxTick(n){}
+function sfxPop(v){ if(!AC) return; noiseHit(AC.currentTime,0.18,0.2+v*0.2,2500); }   // just the snow, no beep
+function sfxClank(){}
 function sfxCrash(){}   // no bail sound
-function sfxBank(){ if(!AC) return; const t=AC.currentTime; [5,7,9,10].forEach((s,i)=>tone(SCALE[s],t+i*0.05,0.5,0.09,'sine')); }
-function sfxGate(){ if(!AC) return; const t=AC.currentTime; [4,7,9].forEach((s,i)=>tone(SCALE[s],t+i*0.08,0.6,0.08,'sine')); }
+function sfxBank(){}
+function sfxGate(){}
 function setMuted(m){ muted=m; $('muteBtn').classList.toggle('off',m); document.querySelectorAll('.soundBtn').forEach(b=>b.textContent=m?'Off':'On'); $('muteBtn').setAttribute('aria-label',m?'Unmute sound':'Mute sound'); if(master) master.gain.setTargetAtTime(m?0:0.75,AC.currentTime,0.05); }
 
 /* ---------- Input ---------- */
@@ -2511,7 +2511,7 @@ function chDone(id){ if(CH_DONE.has(id)) return; const c=CHALLENGES.find(x=>x.id
   CH_DONE.add(id); try{ localStorage.setItem('op-ch',JSON.stringify([...CH_DONE])); }catch(e){}
   const fresh=allGear().filter(it=>gearOk(it) && !it._ok); for(const it of allGear()) it._ok=gearOk(it);
   $('chTxt').textContent=c.name+(fresh.length?' · unlocked '+fresh.map(it=>it.name+(it.kind?' '+it.kind:'')).join(', '):'');
-  restart($('chToast'),'show'); if(AC){ const t=AC.currentTime; [2,4,7,9].forEach((s,i)=>tone(SCALE[s],t+i*0.07,0.7,0.08,'triangle')); }
+  restart($('chToast'),'show');
   renderChallenges(); }
 
 /* ---------- Gear: outfits, ski colours and stickers, unlocked by challenges ---------- */
@@ -2609,7 +2609,7 @@ function modeExit(){
   RACE.on=false; RACE.pending=false; RACE.host=false; CD.t=0; BA.wait=BA.over=0; AV.on=false; avRumble(0);
   $('modeHud').hidden=true; $('count').classList.remove('show');
 }
-function countShow(txt){ const el=$('count'); el.textContent=txt; restart(el,'show'); if(AC){ const go=txt==='GO'; tone(go?SCALE[7]:SCALE[2],AC.currentTime,go?0.6:0.25,0.12,'triangle'); } }
+function countShow(txt){ const el=$('count'); el.textContent=txt; restart(el,'show'); }
 function modeClock(){ if(RUNMODE==='daily'){ const r=Math.max(0,DAILY.time-elapsed); return Math.floor(r/60)+':'+String(Math.ceil(r%60)===60?0:Math.floor(r%60)).padStart(2,'0'); }
   const m=Math.floor(elapsed/60), s=Math.floor(elapsed%60); return m+':'+String(s).padStart(2,'0'); }
 const MH={};
