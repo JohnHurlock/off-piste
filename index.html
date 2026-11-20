@@ -1556,16 +1556,14 @@ function tone(f,t0,dur,vol,type){ if(!AC) return; const o=AC.createOscillator(),
 function noiseHit(t0,dur,vol,freq){ if(!AC) return; const s=AC.createBufferSource(); s.buffer=noiseBuf; const f=AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=freq; const g=AC.createGain();
   g.gain.setValueAtTime(vol,t0); g.gain.exponentialRampToValueAtTime(0.0001,t0+dur); s.connect(f); f.connect(g); g.connect(master); s.start(t0, Math.random()); s.stop(t0+dur+0.05); }
 const SCALE=[523.25,587.33,659.25,783.99,880,1046.5,1174.66,1318.51,1567.98,1760,2093];
-function sfxLand(mult,perfect){ if(!AC) return; const t=AC.currentTime+0.02, b=Math.min(mult-1,4);
-  [0,2,4].forEach((s,i)=>tone(SCALE[Math.min(10,b+s)],t+i*0.065,0.7,0.16,'triangle'));
-  if(perfect){ tone(SCALE[Math.min(10,b+6)],t+0.22,0.9,0.12,'sine'); tone(SCALE[Math.min(10,b+7)]*1.5,t+0.26,0.6,0.05,'sine'); } }
+function sfxLand(mult,perfect){}   // no chime on landing a trick
 function sfxThump(v){ if(!AC) return; const t=AC.currentTime; noiseHit(t,0.35+v*0.3,0.35+v*0.4,700);
   const o=AC.createOscillator(), g=AC.createGain(); o.frequency.setValueAtTime(110,t); o.frequency.exponentialRampToValueAtTime(42,t+0.25);
   g.gain.setValueAtTime(0.4*v+0.1,t); g.gain.exponentialRampToValueAtTime(0.0001,t+0.3); o.connect(g); g.connect(master); o.start(t); o.stop(t+0.35); }
 function sfxTick(n){ if(!AC) return; tone(SCALE[Math.min(10,n)]*0.5,AC.currentTime,0.14,0.11,'triangle'); }
 function sfxPop(v){ if(!AC) return; const t=AC.currentTime; noiseHit(t,0.18,0.2+v*0.2,2500); tone(260+v*120,t,0.12,0.08,'sine'); }
 function sfxClank(){ if(!AC) return; const t=AC.currentTime; tone(1240,t,0.25,0.08,'triangle'); tone(1870,t,0.18,0.05,'sine'); noiseHit(t,0.12,0.25,5000); }
-function sfxCrash(){ if(!AC) return; const t=AC.currentTime; noiseHit(t,0.9,0.7,500); tone(180,t,0.3,0.12,'sawtooth'); tone(130,t+0.1,0.4,0.1,'sawtooth'); }
+function sfxCrash(){}   // no bail sound
 function sfxBank(){ if(!AC) return; const t=AC.currentTime; [5,7,9,10].forEach((s,i)=>tone(SCALE[s],t+i*0.05,0.5,0.09,'sine')); }
 function sfxGate(){ if(!AC) return; const t=AC.currentTime; [4,7,9].forEach((s,i)=>tone(SCALE[s],t+i*0.08,0.6,0.08,'sine')); }
 function setMuted(m){ muted=m; $('muteBtn').classList.toggle('off',m); document.querySelectorAll('.soundBtn').forEach(b=>b.textContent=m?'Off':'On'); $('muteBtn').setAttribute('aria-label',m?'Unmute sound':'Mute sound'); if(master) master.gain.setTargetAtTime(m?0:0.75,AC.currentTime,0.05); }
