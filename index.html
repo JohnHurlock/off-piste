@@ -2257,7 +2257,6 @@ const MODES={
   free:{name:'Free ride',sign:'blue',desc:'Endless runs on the mountain you pick. No timer, no pressure.'},
   avalanche:{name:'Avalanche',sign:'double',desc:'The slope lets go behind you. Outrun it 1.5 km down to the rescue hut. Slow down or crash too much and it swallows you.',level:'back'},
   night:{name:'Night run',sign:'black',desc:'Your mountain after dark: headlamp on, glowing gates, a sky full of stars. Every gate you pass is +250.'},
-  bigair:{name:'Big air comp',sign:'double',desc:'One giant kicker, three attempts. Your best trick is your score.',level:'mega'},
   daily:{name:'Daily challenge',sign:'green',desc:''}
 };
 MODE='free'; try{ const m=localStorage.getItem('off-piste-mode'); if(MODES[m]) MODE=m; }catch(e){}
@@ -2501,7 +2500,6 @@ const CHALLENGES=[
   {id:'s1080',name:'Spin a 1080',t:tr=>/\b(1080|1260|1440|1620|1800)\b/.test(tr.name)},
   {id:'c10k',name:'Bank 10,000 in one combo'},
   {id:'hut',name:'Outrun the avalanche to the rescue hut'},
-  {id:'ba5k',name:'Score 5,000 in one big air attempt'},
   {id:'gates10',name:'Pass 10 glowing gates in one night run'},
   {id:'daily',name:'Finish a daily challenge'},
   {id:'race',name:'Win a race against your room'}
