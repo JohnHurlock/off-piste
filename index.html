@@ -504,6 +504,7 @@ kbd{border-radius:3px;background:var(--panel2)}
         <dt><kbd>Shift</kbd></dt><dd>Grab (hold in air) · tail press on the snow</dd>
         <dt><kbd>←</kbd><kbd>→</kbd> on a rail</dt><dd>Switch-up</dd>
         <dt><kbd>T</kbd></dt><dd>Push with both poles</dd>
+        <dt><kbd>R</kbd></dt><dd>Back to the last checkpoint (gate)</dd>
         <dt>Mouse</dt><dd>Right-drag to turn the camera · scroll or <kbd>I</kbd> <kbd>O</kbd> to zoom · <kbd>C</kbd> resets</dd>
         <dt><kbd>V</kbd></dt><dd>First / third person (or zoom all the way in)</dd>
         <dt>Tricks</dt><dd>Backflip + 360 = cork, + 540 = rodeo · frontflip + spin = misty · flick the stick and back for a shifty · hold a grab long to tweak it · repeats score less</dd>
@@ -1662,6 +1663,7 @@ window.addEventListener('keydown',e=>{
   if(e.code==='KeyC'){ resetCam(); return; }
   if(e.code==='KeyV'){ setFP(!CAM.fp); return; }
   if(e.code==='KeyT'){ startPush(); return; }
+  if(e.code==='KeyR' && state==='play' && !e.repeat && !/INPUT|TEXTAREA/.test(document.activeElement.tagName) && !(AV.on && AV.swallowed)){ respawn(); showTrick('Back to checkpoint','',false); return; }
   if(e.code==='Enter' && (state==='title'||state==='results') && document.activeElement.tagName!=='BUTTON'){ startRun(); return; }
   keys.add(e.code);
 });
