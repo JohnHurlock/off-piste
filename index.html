@@ -1749,6 +1749,7 @@ function takeoff(){
   P.air=true; P.airT=0; P.spinMax=0; P.spin=0; P.flip=0; P.spinRate=0; P.flipRate=0; P.grabT=0; P.grabName=null; P.takeStance=P.stance; P.liveKey=0;
   if(LEVEL==='pipe' && Math.abs(P.x)>PIPE_F+PIPE_R*0.55){ const sg=Math.sign(P.x), vo=P.vx*sg;
     if(vo>0.5){ P.vy=Math.max(vo*1.22, 2); P.vx=-sg*0.7; P.pipeAir=true; } }
+  P.tuckLock = IN.y>0.3;   // still holding tuck as you leave the snow: that isn't a frontflip until you let go and push again
   P.popReady = P.charge>0; P.errAt=null; P.eS=0; P.eF=0; P.tLand=9; P.railOut=false; trailPush(false);
 }
 function doPop(){ const v=P.charge/0.4; P.vy+=popStrength(); P.charge=0; RS.popT=1; sfxPop(v); burst(P.x,P.y,P.z,8+v*22,0.5+v*0.3); }
@@ -2007,13 +2008,15 @@ function groundStep(dt){
 function airStep(dt){
   P.airT+=dt;
   if(!IN.jump && P.charge>0){ if(P.popReady && P.airT<0.16) doPop(); P.charge=0; P.popReady=false; }
-  const ix=Math.abs(IN.x)>0.1, iy=Math.abs(IN.y)>0.15;
+  if(P.tuckLock && IN.y<0.3) P.tuckLock=false;
+  const yIn=P.tuckLock?0:IN.y;
+  const ix=Math.abs(IN.x)>0.1, iy=Math.abs(yIn)>0.15;
   P.spinRate+=(-IN.x*7.2-P.spinRate)*Math.min(1,(ix?10:2.5)*dt);
   // flip pacing: holding forward/back aims for the next whole flip that fits in the air you have;
   // if there isn't room for one, it holds you level instead of over/under-rotating you into the snow
-  let fT=-IN.y*6.0;
+  let fT=-yIn*6.0;
   if(iy && P.airT>0.12 && P.tLand<5){
-    const dir=-Math.sign(IN.y), cur=dir*P.flip, tl=Math.max(P.tLand,0.1), next=(Math.floor(cur/TAU+0.02)+1)*TAU;
+    const dir=-Math.sign(yIn), cur=dir*P.flip, tl=Math.max(P.tLand,0.1), next=(Math.floor(cur/TAU+0.02)+1)*TAU;
     const rate=(next-cur)/tl;
     fT = rate<=10.5 ? dir*Math.max(6,rate) : dir*clamp((Math.round(cur/TAU)*TAU-cur)/tl,-4,8);
   }
@@ -2299,13 +2302,13 @@ let avRum=null;
 function avRumble(v){ if(!AC) return; if(!avRum){ const s=AC.createBufferSource(); s.buffer=noiseBuf; s.loop=true; const f=AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=140; const g=AC.createGain(); g.gain.value=0;
     s.connect(f); f.connect(g); g.connect(master); s.start(); avRum={g}; }
   avRum.g.gain.setTargetAtTime(v,AC.currentTime,0.25); }
-function avStart(){ AV.on=true; AV.z=P.z+75; AV.v=0; AV.t=0; AV.swallowT=0; AV.swallowed=false; AVW.m.visible=true; AVC.forEach(s=>s.visible=true); }
+function avStart(){ AV.on=true; AV.z=P.z+55; AV.v=0; AV.t=0; AV.swallowT=0; AV.swallowed=false; AVW.m.visible=true; AVC.forEach(s=>s.visible=true); }
 const avCol=new THREE.Color();
 function avTick(dt,hold){
   if(!hold && !AV.swallowed){
     AV.t+=dt; const gap0=AV.z-P.z;
-    let tv=11+Math.min(1,AV.t/18)*8+AV.t*0.03;            // builds to ~19 m/s, then keeps creeping up
-    if(gap0>110) tv+=(gap0-110)*0.08;                      // never lets you get too far ahead
+    let tv=14+Math.min(1,AV.t/12)*8.5+AV.t*0.045;         // builds to ~22.5 m/s (81 km/h) fast, then keeps creeping up: you have to tuck
+    if(gap0>70) tv+=(gap0-70)*0.12;                        // never lets you get far ahead
     if(FIN.done) tv=0;
     AV.v+=(tv-AV.v)*Math.min(1,0.8*dt); AV.z-=AV.v*dt;
     if(COURSE_END!=null && AV.z<COURSE_END+70) AV.z=COURSE_END+70;   // it runs out on the flat before the hut
