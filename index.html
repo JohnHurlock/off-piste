@@ -433,6 +433,7 @@ kbd{border-radius:3px;background:var(--panel2)}
   <div class="set"><span>Camera distance</span><button class="distBtn">Close</button></div>
   <div class="set"><span>Field of view</span><button class="fovBtn">Wide</button></div>
   <div class="set"><span>Landing assist</span><button class="assistBtn" aria-pressed="true">On</button></div>
+  <div class="set"><span>Holding W off a bump</span><button class="tuckBtn">Flips</button></div>
   <div class="set"><span>Ghost of your best run</span><button class="ghostBtn">On</button></div>
   <div class="set"><span>Sound</span><button class="soundBtn">On</button></div>
   <div class="set"><span>Lighting</span><button class="lightBtn">Midnight</button></div>
@@ -574,6 +575,7 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const isTouch = ('ontouchstart' in window) || matchMedia('(pointer: coarse)').matches;
 if(isTouch) document.body.classList.add('touch');
 const RUN_TIME = 150;
+const STEEP = 0.95;   // The Wall: about 44 degrees
 const G = 14, SLOPE = 0.32, G_SLIDE = 9.4;   // more pull down the hill: faster runs
 const L = h => new THREE.Color(h).convertSRGBToLinear();
 
@@ -586,6 +588,11 @@ try{ ASSIST=localStorage.getItem('violet-hour-assist')!=='off'; }catch(e){}
 function syncAssist(){ document.querySelectorAll('.assistBtn').forEach(b=>{ b.textContent=ASSIST?'On':'Off'; b.setAttribute('aria-pressed',String(ASSIST)); }); }
 document.querySelectorAll('.assistBtn').forEach(b=>b.addEventListener('click',()=>{ ASSIST=!ASSIST; try{ localStorage.setItem('violet-hour-assist',ASSIST?'on':'off'); }catch(e){} syncAssist(); }));
 syncAssist();
+// holding W (tuck) as you leave the snow: frontflip like before, or stay level until you let go and press again
+let TUCKLOCK=false; try{ TUCKLOCK=localStorage.getItem('off-piste-tucklock')==='on'; }catch(e){}
+function syncTuck(){ document.querySelectorAll('.tuckBtn').forEach(b=>b.textContent=TUCKLOCK?'Stays level':'Flips'); }
+document.querySelectorAll('.tuckBtn').forEach(b=>b.addEventListener('click',()=>{ TUCKLOCK=!TUCKLOCK; try{ localStorage.setItem('off-piste-tucklock',TUCKLOCK?'on':'off'); }catch(e){} syncTuck(); }));
+syncTuck();
 let LIGHT='night', WEATHER='snow';
 var MODE='free', RUNMODE='free', USER_LEVEL='back', COURSE_END=null, SKY_HOLD=null;   // game modes (set up further down)
 try{ const l=localStorage.getItem('off-piste-light'), w=localStorage.getItem('violet-hour-weather'); if(l) LIGHT=l; if(w) WEATHER=w; }catch(e){}
@@ -711,7 +718,8 @@ const LEVELS={
   park:  {name:'Terrain Park', sign:'green', desc:'A groomed run packed with kickers, rails and wide boxes.'},
   glades:{name:'Tree Glades', sign:'black',  desc:'Tight trees and deep pillows. Pick a line and hold it.'},
   mega:  {name:'Mega Ramp',   sign:'double', desc:'A huge drop-in, a giant kicker and a long steep landing. Over and over.'},
-  pipe:  {name:'Halfpipe',    sign:'black',  desc:'Carve up the walls and launch straight up. Spin and grab above the lip.'}
+  pipe:  {name:'Halfpipe',    sign:'black',  desc:'Carve up the walls and launch straight up. Spin and grab above the lip.'},
+  steep: {name:'The Wall',    sign:'double', desc:'An extremely steep face, about 45 degrees, with kickers all the way down. Hang on.'}
 };
 let LEVEL='back'; try{ const l=localStorage.getItem('off-piste-level'); if(LEVELS[l]) LEVEL=l; }catch(e){}
 function center(z){
@@ -734,8 +742,8 @@ function pipeWall(ax){ const d=ax-PIPE_F; if(d<=0) return 0;
   const top=PIPE_R-Math.sqrt(PIPE_R*PIPE_R-dm*dm), e=d-dm; return top + (e>5 ? (e-5)*(e-5)*0.03 : 0); }
 function baseH(x,z){
   if(LEVEL==='pipe') return z*0.36 + pipeWall(Math.abs(x)) + 0.12*Math.sin(z*0.05);
-  const bump = LEVEL==='park'||LEVEL==='mega' ? 0.22 : 1;
-  let h = (LEVEL==='mega' ? -megaDrop(-z) : slopeH(z)) + bump*(1.1*Math.sin(x*0.09+z*0.045) + 0.7*Math.sin(z*0.12-x*0.06) + 0.32*Math.sin(x*0.21+z*0.17));
+  const bump = LEVEL==='park'||LEVEL==='mega' ? 0.22 : LEVEL==='steep' ? 0.35 : 1;
+  let h = (LEVEL==='mega' ? -megaDrop(-z) : LEVEL==='steep' ? z*STEEP : slopeH(z)) + bump*(1.1*Math.sin(x*0.09+z*0.045) + 0.7*Math.sin(z*0.12-x*0.06) + 0.32*Math.sin(x*0.21+z*0.17));
   const e = Math.abs(x-center(z)) - (LEVEL==='park'||LEVEL==='mega' ? 26 : 20); if(e>0) h += e*e*0.05;
   return h;
 }
@@ -972,6 +980,7 @@ function genChunk(z0,z1){
     while(nextFeatureZ > z1-80 && !pastEnd(nextFeatureZ)){ const r=WR();
       if(LEVEL==='park'){ if(r<0.33) spawnKicker(nextFeatureZ); else spawnRail(nextFeatureZ, r>0.66); nextFeatureZ -= wrand(34,52); }
       else if(LEVEL==='glades'){ spawnKicker(nextFeatureZ); nextFeatureZ -= wrand(150,210); }
+      else if(LEVEL==='steep'){ spawnKicker(nextFeatureZ); nextFeatureZ -= wrand(55,85); }
       else { if(r<0.45) spawnRail(nextFeatureZ); else spawnKicker(nextFeatureZ); nextFeatureZ -= wrand(70,115); } }
     while(nextGateZ > z1 && !pastEnd(nextGateZ)){ spawnGate(nextGateZ); nextGateZ -= 160; }
   }
@@ -1751,7 +1760,7 @@ function takeoff(){
   P.air=true; P.airT=0; P.spinMax=0; P.spin=0; P.flip=0; P.spinRate=0; P.flipRate=0; P.grabT=0; P.grabName=null; P.takeStance=P.stance; P.liveKey=0;
   if(LEVEL==='pipe' && Math.abs(P.x)>PIPE_F+PIPE_R*0.55){ const sg=Math.sign(P.x), vo=P.vx*sg;
     if(vo>0.5){ P.vy=Math.max(vo*1.22, 2); P.vx=-sg*0.7; P.pipeAir=true; } }
-  P.tuckLock = IN.y>0.3;   // still holding tuck as you leave the snow: that isn't a frontflip until you let go and push again
+  P.tuckLock = TUCKLOCK && IN.y>0.3;   // still holding tuck as you leave the snow: that isn't a frontflip until you let go and push again
   P.popReady = P.charge>0; P.errAt=null; P.eS=0; P.eF=0; P.tLand=9; P.railOut=false; trailPush(false);
 }
 function doPop(){ const v=P.charge/0.4; P.vy+=popStrength(); P.charge=0; RS.popT=1; sfxPop(v); burst(P.x,P.y,P.z,8+v*22,0.5+v*0.3); }
@@ -1952,7 +1961,7 @@ function groundStep(dt){
   const tuck=IN.y>0.3?IN.y:0, brake=(IN.y<-0.3&&!P.noBrake)?-IN.y:0;
   const sp=Math.hypot(vF,vL);
   const turnDrag = sp>4 && LEVEL!=='pipe' ? Math.abs(P.turn)*0.32 : 0;     // turning slows you down
-  const k=(0.0032-tuck*0.0015)*sp+0.025+brake*1.1+P.charge*0.15+turnDrag+P.hk*2.4;
+  const k=(0.0032-tuck*0.0015)*sp+0.025+(LEVEL==='steep'?0.13:0)+brake*1.1+P.charge*0.15+turnDrag+P.hk*2.4;
   const f=Math.exp(-k*dt); vF*=f; vL*=f;
   if(P.hk>0.05){ const s1=Math.hypot(vF,vL), d=P.hk*9*dt, q=s1>d?(s1-d)/s1:0; vF*=q; vL*=q; }   // edges dig in: about a second from cruising speed
   if(hkIn && Math.hypot(vF,vL)<0.8){ vF=0; vL=0; }      // dead stop
@@ -2144,7 +2153,7 @@ function updateCamera(dt,now){
   // pitch is measured from the slope, not the horizon: on a steep pitch the camera rides up with the hill behind you
   const hx=Math.sin(CAM.yaw), hz=Math.cos(CAM.yaw), g0=physH(P.x,P.z), up=(physH(P.x+hx*3,P.z+hz*3)-g0)/3;
   camSlope+=(Math.atan(up)-camSlope)*Math.min(1,4*dt);
-  const pe=clamp(CAM.pitch+camSlope*0.75,-0.4,1.45), cp=Math.cos(pe), ox=hx*cp, oy=Math.sin(pe), oz=hz*cp;
+  const pe=clamp(CAM.pitch+camSlope*(LEVEL==='steep'?0.32:0.75),-0.4,1.45), cp=Math.cos(pe), ox=hx*cp, oy=Math.sin(pe), oz=hz*cp;
   // pull in if the slope or a ramp is between the camera and the rider, so it never looks through the snow
   let d=CAM.dist;
   for(let k=1;k<=6;k++){ const t=k/6*d, x=camFocus.x+ox*t, y=camFocus.y+oy*t, z=camFocus.z+oz*t;
