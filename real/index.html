@@ -1026,18 +1026,25 @@ const treeM=new Float32Array(MAXT*16), treeCap=new Uint8Array(MAXT);
    so this is what actually saves GPU time. */
 /* far trees: a two-cone stand-in (~30 triangles instead of ~1350), built from the Blender tree's size once it loads */
 let farTrees=null;
-function buildFarTrees(fg){ fg.computeBoundingBox(); const b=fg.boundingBox, H=b.max.y, w=Math.max(b.max.x-b.min.x,b.max.z-b.min.z)*0.5;
-  const dark=foliage.material.color.clone(), snow=caps.material.color.clone().multiplyScalar(0.92);
-  const cone=(r,y0,y1,col)=>{ const g=new THREE.ConeGeometry(r,y1-y0,8,1,true).toNonIndexed(); g.translate(0,(y0+y1)/2,0);
-    const c=new Float32Array(g.attributes.position.count*3); for(let i=0;i<c.length;i+=3){ c[i]=col.r; c[i+1]=col.g; c[i+2]=col.b; } g.setAttribute('color',new THREE.BufferAttribute(c,3)); g.deleteAttribute('uv'); return g; };
-  const g=THREE.BufferGeometryUtils.mergeBufferGeometries([cone(w*0.92,H*0.12,H,dark),cone(w*0.5,H*0.52,H*1.01,snow)]);
-  farTrees=new THREE.InstancedMesh(g,new THREE.MeshLambertMaterial({vertexColors:true}),MAXT); farTrees.count=0; farTrees.frustumCulled=false;
+function buildFarTrees(fg){
+  // impostor: render the real Blender tree once into a texture, then draw far trees as two crossed cards (4 triangles)
+  fg.computeBoundingBox(); const b=fg.boundingBox, H=b.max.y*1.03, W=Math.max(b.max.x-b.min.x,b.max.z-b.min.z)*1.04;
+  const rt=new THREE.WebGLRenderTarget(256,512,{format:THREE.RGBAFormat}); rt.texture.generateMipmaps=true; rt.texture.minFilter=THREE.LinearMipmapLinearFilter;
+  const s2=new THREE.Scene(); s2.add(new THREE.Mesh(foliage.geometry,foliage.material), new THREE.Mesh(caps.geometry,caps.material), new THREE.Mesh(trunks.geometry,trunks.material));
+  s2.add(new THREE.HemisphereLight(0xffffff,0xdfe6f0,0.8)); const dl=new THREE.DirectionalLight(0xffffff,0.45); dl.position.set(0.3,0.8,1); s2.add(dl);
+  const cam=new THREE.OrthographicCamera(-W/2,W/2,H,-0.02*H,-50,50); cam.position.set(0,0,10); cam.lookAt(0,0,0);
+  const prevRT=renderer.getRenderTarget(), prevCol=new THREE.Color(), prevA=renderer.getClearAlpha(); renderer.getClearColor(prevCol);
+  renderer.setRenderTarget(rt); renderer.setClearColor(0x000000,0); renderer.clear(); renderer.render(s2,cam);
+  renderer.setRenderTarget(prevRT); renderer.setClearColor(prevCol,prevA);
+  const q=new THREE.PlaneGeometry(W,H*1.02); q.translate(0,H*0.5-0.02*H,0); const q2=q.clone(); q2.rotateY(Math.PI/2);
+  const g=THREE.BufferGeometryUtils.mergeBufferGeometries([q,q2]);
+  farTrees=new THREE.InstancedMesh(g,new THREE.MeshLambertMaterial({map:rt.texture,alphaTest:0.45,side:THREE.DoubleSide}),MAXT); farTrees.count=0; farTrees.frustumCulled=false;
   farTrees.castShadow=false; farTrees.receiveShadow=false; farTrees.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(farTrees); }
 const TV={yaw:0,x:0,z:0,dir:new THREE.Vector3()};
 function packTrees(){
   if(!ART.tree) return;
   const D2=GFX.treeD*GFX.treeD, F=foliage.instanceMatrix.array, C=caps.instanceMatrix.array, T=trunks.instanceMatrix.array, FA=farTrees?farTrees.instanceMatrix.array:null;
-  const lod=GFX.level==='low'?42:GFX.level==='medium'?75:120, L2=lod*lod;
+  const lod=GFX.level==='low'?55:GFX.level==='medium'?90:140, L2=lod*lod;
   // skip trees behind the camera (further back when shadows are on, since those can still throw shadows into view)
   camera.getWorldDirection(TV.dir); const cl=Math.hypot(TV.dir.x,TV.dir.z)||1, cfx=TV.dir.x/cl, cfz=TV.dir.z/cl, cx=camera.position.x, cz=camera.position.z;
   const back=GFX_LEVELS[GFX.level].shadows?-28:-8;
