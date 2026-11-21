@@ -1022,17 +1022,39 @@ const treeM=new Float32Array(MAXT*16), treeCap=new Uint8Array(MAXT);
 /* With the Blender tree each slot keeps its matrix here, and the instance buffers only hold the trees that are
    close enough to see, packed at the front, with .count set to match. Zero-scaled instances still cost vertex work,
    so this is what actually saves GPU time. */
+/* far trees: a two-cone stand-in (~30 triangles instead of ~1350), built from the Blender tree's size once it loads */
+let farTrees=null;
+function buildFarTrees(fg){ fg.computeBoundingBox(); const b=fg.boundingBox, H=b.max.y, w=Math.max(b.max.x-b.min.x,b.max.z-b.min.z)*0.5;
+  const dark=foliage.material.color.clone(), snow=caps.material.color.clone().multiplyScalar(0.92);
+  const cone=(r,y0,y1,col)=>{ const g=new THREE.ConeGeometry(r,y1-y0,8,1,true).toNonIndexed(); g.translate(0,(y0+y1)/2,0);
+    const c=new Float32Array(g.attributes.position.count*3); for(let i=0;i<c.length;i+=3){ c[i]=col.r; c[i+1]=col.g; c[i+2]=col.b; } g.setAttribute('color',new THREE.BufferAttribute(c,3)); g.deleteAttribute('uv'); return g; };
+  const g=THREE.BufferGeometryUtils.mergeBufferGeometries([cone(w*0.92,H*0.12,H,dark),cone(w*0.5,H*0.52,H*1.01,snow)]);
+  farTrees=new THREE.InstancedMesh(g,new THREE.MeshLambertMaterial({vertexColors:true}),MAXT); farTrees.count=0; farTrees.frustumCulled=false;
+  farTrees.castShadow=false; farTrees.receiveShadow=false; farTrees.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(farTrees); }
+const TV={yaw:0,x:0,z:0,dir:new THREE.Vector3()};
 function packTrees(){
   if(!ART.tree) return;
-  const D2=GFX.treeD*GFX.treeD, F=foliage.instanceMatrix.array, C=caps.instanceMatrix.array, T=trunks.instanceMatrix.array;
-  let nf=0, nc=0;
+  const D2=GFX.treeD*GFX.treeD, F=foliage.instanceMatrix.array, C=caps.instanceMatrix.array, T=trunks.instanceMatrix.array, FA=farTrees?farTrees.instanceMatrix.array:null;
+  const lod=GFX.level==='low'?42:GFX.level==='medium'?75:120, L2=lod*lod;
+  // skip trees behind the camera (further back when shadows are on, since those can still throw shadows into view)
+  camera.getWorldDirection(TV.dir); const cl=Math.hypot(TV.dir.x,TV.dir.z)||1, cfx=TV.dir.x/cl, cfz=TV.dir.z/cl, cx=camera.position.x, cz=camera.position.z;
+  const back=GFX_LEVELS[GFX.level].shadows?-28:-8;
+  TV.yaw=Math.atan2(cfx,cfz); TV.x=cx; TV.z=cz;
+  let nf=0, nc=0, nfar=0;
   for(let s2=0;s2<MAXT;s2++){ const o=s2*16; if(!treeM[o+15]) continue;
-    const dx=treeM[o+12]-P.x, dz=treeM[o+14]-P.z; if(dx*dx+dz*dz>D2) continue;
+    const dx=treeM[o+12]-P.x, dz=treeM[o+14]-P.z, d2=dx*dx+dz*dz; if(d2>D2) continue;
+    if(state!=='title' && (treeM[o+12]-cx)*cfx+(treeM[o+14]-cz)*cfz<back) continue;
+    if(FA && d2>L2){ for(let k=0;k<16;k++) FA[nfar*16+k]=treeM[o+k]; nfar++; continue; }
     for(let k=0;k<16;k++){ F[nf*16+k]=T[nf*16+k]=treeM[o+k]; } nf++;
     if(treeCap[s2]){ for(let k=0;k<16;k++) C[nc*16+k]=treeM[o+k]; nc++; } }
   foliage.count=trunks.count=nf; caps.count=nc;
   foliage.instanceMatrix.needsUpdate=caps.instanceMatrix.needsUpdate=trunks.instanceMatrix.needsUpdate=true;
+  if(farTrees){ farTrees.count=nfar; farTrees.instanceMatrix.needsUpdate=true; }
 }
+// re-pack as soon as the camera swings round or moves a fair way, not just on the half-second timer
+function treeViewCheck(){ if(!ART.tree || state==='title') return; camera.getWorldDirection(TV.dir);
+  const y=Math.atan2(TV.dir.x,TV.dir.z); let dy=Math.abs(y-TV.yaw); if(dy>Math.PI) dy=TAU-dy;
+  if(dy>0.3 || Math.hypot(camera.position.x-TV.x,camera.position.z-TV.z)>12) packTrees(); }
 function cullTrees(){ packTrees(); }
 function setTree(slot,x,y,z,s){
   const ry = wrand(0,TAU);
@@ -3116,7 +3138,7 @@ function frame(now){
   } else if(AC){ windG.gain.setTargetAtTime(0.03,AC.currentTime,0.3); carveG.gain.setTargetAtTime(0,AC.currentTime,0.1); grindG.gain.setTargetAtTime(0,AC.currentTime,0.05); }
   const paused=state==='paused'||state==='photo';
   updatePowder(paused?0:rdt); updateParticles(paused?0:rdt*timeScale); updateFlakes(paused?0:rdt);
-  updateRider(paused?0:rdt,now); if(state==='photo') photoCam(rdt); else updateCamera(paused?0:rdt,now); updateStreaks(paused?0:rdt); updateEnvironment();
+  updateRider(paused?0:rdt,now); if(state==='photo') photoCam(rdt); else updateCamera(paused?0:rdt,now); updateStreaks(paused?0:rdt); treeViewCheck(); updateEnvironment();
   netTick(rdt,now); gfxWatch(Math.max(rdt,0.001));
   renderer.render(scene,camera);
 }
@@ -3668,7 +3690,7 @@ function applyArt(root){
   rideVis(R.rider,BOARD); fpList=null; setFPVis(CAM.fp && state!=='title'); indexPose(); placeSticker();
   // trees and rocks
   const tF=A('treeFol'), tS=A('treeSnow'), tT=A('treeTrunk');
-  if(tF&&tS&&tT){ foliage.geometry=tF.geo; caps.geometry=tS.geo; trunks.geometry=tT.geo; ART.tree=true;
+  if(tF&&tS&&tT){ foliage.geometry=tF.geo; caps.geometry=tS.geo; trunks.geometry=tT.geo; ART.tree=true; if(!farTrees) try{ buildFarTrees(tF.geo); }catch(e){ console.warn(e); }
     treeM.fill(0);
     const saved=WR; WR=Math.random;   // re-dress the trees already standing without touching the world's random sequence
     for(const o of objs) if(o.type==='tree') setTree(o.slot,o.x,o.y,o.z,o.r/0.45);
