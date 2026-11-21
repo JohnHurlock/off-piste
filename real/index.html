@@ -1145,7 +1145,7 @@ function paintOutfit(mats,i){ const o=OUTFITS[i]||OUTFITS[0];
   for(const k of ['jacket','accent','pants','helmet','glove']) if(mats[k]) mats[k].color.copy(L(o[k]));
   if(mats.pack) mats.pack.color.copy(L(o.glove)).lerp(L(o.pants),0.5);
   if(mats.gaiter) mats.gaiter.color.copy(L(o.glove)).lerp(L(o.accent),0.12);
-  if(mats.lens){ mats.lens.color.copy(L(o.lens)).lerp(new THREE.Color(1,1,1),0.25); mats.lens.emissive.setRGB(0,0,0); }
+  if(mats.lens){ const h={}; mats.lens.color.copy(L(o.lens)).getHSL(h); mats.lens.color.setHSL(h.h,Math.min(1,h.s*1.3+0.35),Math.min(h.l,0.42)); mats.lens.emissive.setRGB(0,0,0); }
 }
 const R = (function(){
   const rider=new THREE.Group(), orient=new THREE.Group(); orient.rotation.order='YXZ'; rider.add(orient);
@@ -3025,32 +3025,49 @@ new THREE.GLTFLoader().load('real_rock.glb', g=>{
    per-vertex radius multipliers; the rings are made denser so a baffle has a few rings to round over. */
 let realClothDone=false;
 function realCloth(){ if(realClothDone) return; realClothDone=true; if(REAL_LOW) return;
-  CLOTH_KIND.arm.step=0.011; CLOTH_KIND.arm.ns=22; CLOTH_KIND.leg.step=0.013; CLOTH_KIND.leg.ns=24;
+  const A=CLOTH_KIND.arm, Lg=CLOTH_KIND.leg;
+  A.step=0.011; A.ns=24; Lg.step=0.012; Lg.ns=28;
+  // baggy insulated sleeves (narrow where they tuck into the shoulder) and loose pants that flare and stack over the boots
+  A.prof=A.prof.map(([d,r])=>[d, r*(d<0.05 ? 0.85+0.45*Math.max(0,(d+0.012)/0.062) : 1.3)]);
+  Lg.prof=Lg.prof.map(([d,r])=>[d, r*(1.28+0.05*Math.max(0,Math.min(1,(d-0.4)/0.5))-0.12*Math.max(0,Math.min(1,(d-0.85)/0.15)))]);
+  A.fold=0.04; Lg.fold=0.04;
+  const ridge=x=>Math.pow(Math.abs(Math.sin(x)),0.5)-0.62;   // fabric folds: round crests, sharp valleys
   const clothGeo0=clothGeo;
   clothGeo=function(K,seed){
-    const g=clothGeo0(K,seed), U=g.userData;
-    for(let i=0;i<U.NR;i++){ const d=U.dd[i]; let add=0;
-      if(K===CLOTH_KIND.arm && d>0.03 && d<0.5){ const b=Math.abs(Math.sin(Math.PI*(d-0.03)/0.072)); add=0.07*(Math.pow(b,0.45)-0.62); }
-      if(K===CLOTH_KIND.leg) for(const c of [0.14,0.38,0.52]) add-=0.03*Math.exp(-(((d-c)/0.012)**2));
-      if(add) for(let k=0;k<U.ns;k++) U.mul[i*U.ns+k]+=add; }
+    const g=clothGeo0(K,seed), U=g.userData, ns=U.ns;
+    for(let i=0;i<U.NR;i++){ const d=U.dd[i];
+      for(let k=0;k<ns;k++){ const th=k/ns*Math.PI*2; let add=0;
+        if(K===A){
+          add+=0.045*ridge(2*th+d*11+seed)*Math.min(1,Math.max(0,(d-0.04)/0.08));                    // diagonal twist folds
+          for(const c of [0.27,0.31,0.35]) add+=0.06*Math.exp(-(((d-c)/0.012)**2))*(0.4+0.6*Math.sin(th)**2)*(0.7+0.3*Math.sin(3*th+c*40));  // elbow creases
+          for(const c of [0.47,0.52,0.565]) add+=0.07*Math.exp(-(((d-c)/0.014)**2))*(0.75+0.25*Math.sin(2*th+c*50+seed));  // sleeve bunching at the wrist
+        } else if(K===Lg){
+          add+=0.04*ridge(2*th-d*7+seed)*Math.min(1,Math.max(0,(d+0.02)/0.1));                     // long twist folds down the leg
+          for(const c of [0.4,0.45,0.5]) add+=0.055*Math.exp(-(((d-c)/0.013)**2))*(0.5+0.5*Math.sin(th)**2)*(0.7+0.3*Math.sin(2*th+c*30));   // knee creases
+          for(const c of [0.76,0.82,0.88,0.94,0.99]) add+=0.04*Math.exp(-(((d-c)/0.016)**2))*(0.7+0.3*Math.sin(2*th+c*37+seed));          // stacked hem over the boot
+        }
+        U.mul[i*ns+k]+=add;
+        if(K===A && i<2) U.mul[i*ns+k]*=i===0?0.3:0.75; } }
     return g; };
-  for(const c of CLOTH_MESHES){ if(!c.mesh.geometry.userData || !c.mesh.geometry.userData.K) continue;
-    const K=c.mesh.geometry.userData.K, old=c.mesh.geometry; c.mesh.geometry=clothGeo(K,(c.seed!=null?c.seed:Math.random()*6)); old.dispose(); }
+  for(const c of CLOTH_MESHES){ const U=c.mesh.geometry.userData; if(!U || !U.K) continue;
+    const old=c.mesh.geometry; c.mesh.geometry=clothGeo(U.K,Math.random()*6); old.dispose(); }
 }
 
 /* ---- rider gear ---- */
+R.MATS.skin=new THREE.MeshStandardMaterial({color:new THREE.Color(0.3,0.16,0.105), roughness:0.6, metalness:0, envMapIntensity:0.6});
+
 function realArt(){
   const M=R.MATS;
   for(const k of ['jacket','accent','pants','glove','gaiter','pack']){ const m=M[k]; if(!m) continue;
-    const fab=k==='jacket'?FAB.puffer:k==='pants'?FAB.twill:k==='gaiter'?FAB.knit:FAB.shell;
-    m.normalMap=fab.normalMap; m.normalScale.set(0.55,0.55); m.roughness=k==='jacket'?0.72:0.86; m.envMapIntensity=0.8; m.needsUpdate=true; }
+    const fab=k==='jacket'?FAB.shell:k==='pants'?FAB.twill:k==='gaiter'?FAB.knit:FAB.shell;
+    m.normalMap=fab.normalMap; m.normalScale.setScalar(k==='jacket'?0.35:0.55); m.roughness=k==='jacket'?0.72:0.86; m.envMapIntensity=0.8; m.needsUpdate=true; }
   if(M.helmet){ M.helmet.roughness=0.28; M.helmet.needsUpdate=true; }
   realLens();
   realTrees();
 }
 function realLens(){ const l=R.MATS.lens; if(!l) return;
   l.map=null; l.emissiveMap=null; l.emissive.setRGB(0,0,0); l.metalness=1; l.roughness=0.06; l.envMapIntensity=1.4;
-  const o=OUTFITS[OUTFIT.i|0]; if(o) l.color.copy(L(o.lens)).lerp(new THREE.Color(1,1,1),0.25); l.needsUpdate=true; }
+  const o=OUTFITS[OUTFIT.i|0]; if(o){ const h={}; l.color.copy(L(o.lens)).getHSL(h); l.color.setHSL(h.h,Math.min(1,h.s*1.3+0.35),Math.min(h.l,0.42)); } l.needsUpdate=true; }
 
 /* ---- per frame: replace the stylised palette with the panorama's light ---- */
 function realEnv(){
@@ -3075,6 +3092,22 @@ function realEnv(){
   panoMat.uniforms.uGain.value=WEATHER==='blizzard'?0.75:WEATHER==='fog'?0.85:1;
   pUni.uColor.value.setRGB(M.sunCol[0],M.sunCol[1],M.sunCol[2]).lerp(tmpSprayC.setRGB(0.9,0.93,0.98),0.6).multiplyScalar(LIGHT==='night'?0.35:1);
   if(!IMP.mesh && REAL.ready && RT_.tree) realTrees();
+}
+if(/[?&]d=1/.test(location.search)){
+  // debug only: render a copy of the rider in a plain studio, aimed at a body part (rider-local), shown as an overlay
+  window.__RD={scene,camera,renderer,R,THREE,canvas:renderer.domElement,
+    studio(az,el,dist,part,dy,fov,light){ const T=THREE; R.rider.updateMatrixWorld(true);
+      const tp=new T.Vector3(); (R[part]||R.rider).getWorldPosition(tp); tp.applyMatrix4(R.rider.matrixWorld.clone().invert()); tp.y+=dy||0;
+      const sc=new T.Scene(); sc.background=new T.Color(0xe9ecf0); sc.environment=scene.environment;
+      const g=R.rider.clone(true); g.position.set(0,0,0); g.rotation.set(0,0,0); g.visible=true; sc.add(g);
+      const dl=new T.DirectionalLight(0xfff4e6,light||1.4); dl.position.set(-2,4,-3); sc.add(dl);
+      const cam=new T.PerspectiveCamera(fov||30,1,0.02,100);
+      cam.position.set(tp.x+Math.sin(az)*Math.cos(el)*dist, tp.y+Math.sin(el)*dist, tp.z+Math.cos(az)*Math.cos(el)*dist); cam.lookAt(tp);
+      const sz=renderer.getSize(new T.Vector2()), pr=renderer.getPixelRatio(); renderer.setPixelRatio(1); renderer.setSize(900,900,false);
+      renderer.render(sc,cam); const url=renderer.domElement.toDataURL(); renderer.setPixelRatio(pr); renderer.setSize(sz.x,sz.y,false);
+      let im=document.getElementById('__ov'); if(!im){ im=document.createElement('img'); im.id='__ov'; im.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;z-index:99999;object-fit:contain;background:#000'; im.onclick=()=>im.remove(); document.body.appendChild(im); }
+      im.src=url; return 1; },
+    freeze(){ if(state==='play'){ state='paused'; } return state; }};
 }
 if(GFX_LEVELS.high){ GFX_LEVELS.high.map=4096; }
 /* =================== end OFF PISTE REAL =================== */
