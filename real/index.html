@@ -429,8 +429,8 @@ body.touch .speedo b{font-size:32px}
 .charge{height:7px;transform:skewX(-24deg);background:var(--plate)}
 .charge i{background:var(--accG)}
 /* speed vignette: the edges close in a little when you're flying */
-#hud::before{content:'';position:fixed;inset:0;pointer-events:none;opacity:calc(var(--spd,0)*1.4 - .35);
-  background:radial-gradient(ellipse 75% 70% at 50% 52%,transparent 55%,rgba(7,7,7,.5) 100%)}
+#hud::before{content:'';position:fixed;inset:0;pointer-events:none;opacity:calc(var(--spd,0)*1.9 - .45);
+  background:radial-gradient(ellipse 72% 66% at 50% 52%,transparent 50%,rgba(0,0,0,.62) 100%)}
 /* results */
 #results .card{animation:hzIn .4s both}
 .res{border:0;border-left:4px solid var(--acc);background:linear-gradient(90deg,var(--panel),rgba(27,27,27,.6))}
@@ -1494,7 +1494,7 @@ function animateRig(dt,now){
   const pushPh = (mode==='ride' && P.pushT>0) ? 1-P.pushT/PUSH_T : -1;
   if(pushPh>=0){ const sm=(a,b,x)=>{ const t=clamp((x-a)/(b-a),0,1); return t*t*(3-2*t); };
     const reach=sm(0,0.18,pushPh)*(1-sm(0.18,0.34,pushPh)), drive=sm(0.16,0.5,pushPh)*(1-sm(0.72,1,pushPh));
-    c+=drive*0.34-reach*0.14; lean+=drive*0.85-reach*0.1; headPitch-=drive*0.5; }
+    c+=drive*0.2-reach*0.1; lean+=drive*0.38-reach*0.08; headPitch-=drive*0.22; }
   c=clamp(c,-0.1,1);
   const kk=k(mode==='crash'?8:15);
   RS.c+=(c-RS.c)*k(18); RS.lean+=(lean-RS.lean)*kk; RS.twist+=(twist-RS.twist)*kk; RS.side+=(side-RS.side)*kk;
@@ -1543,7 +1543,7 @@ function animateRig(dt,now){
     else t.set(sgn*0.5+Math.sin(now*0.02+i*2)*0.3,0.5+Math.cos(now*0.017+i)*0.3,Math.sin(now*0.013+i)*0.4);
     if(RS.popT>0) t.lerp(vC.set(sgn*0.3,0.72,-0.34),RS.popT);
     if(pushPh>=0){ const ss=x=>{ x=clamp(x,0,1); return x*x*(3-2*x); };
-      const REACH=vC.set(sgn*0.25,0.56,-0.52), PULL=pushV1.set(sgn*0.21,-0.1,0.2), BACK=pushV2.set(sgn*0.25,0.06,0.5);
+      const REACH=vC.set(sgn*0.25,0.56,-0.52), PULL=pushV1.set(sgn*0.22,0.02,0.18), BACK=pushV2.set(sgn*0.25,0.06,0.5);
       if(pushPh<0.2) t.lerp(REACH,ss(pushPh/0.2));
       else if(pushPh<0.62) t.copy(REACH).lerp(PULL,ss((pushPh-0.2)/0.42));
       else if(pushPh<0.82) t.copy(PULL).lerp(BACK,ss((pushPh-0.62)/0.2));
@@ -1733,28 +1733,40 @@ trail.frustumCulled=false; trail.receiveShadow=true; trail.renderOrder=-1; scene
 terrain.renderOrder=-3;
 let trPts=[], trLast=null;
 let trDir=null;
-function trailPush(on){
+const trV=new THREE.Vector3();
+function trailCentres(off){
+  const fb=[P.x-off.fz*off.o,P.z+off.fx*off.o,P.x+off.fz*off.o,P.z-off.fx*off.o];
+  if(!R.skiParts||!R.skiParts.L) return fb;
+  R.rider.updateMatrixWorld(true);
+  const a=R.skiParts.L.getWorldPosition(trV), ax=a.x, az=a.z, b=R.skiParts.R.getWorldPosition(trV), bx=b.x, bz=b.z;
+  if(Math.hypot(ax-P.x,az-P.z)>1.4||Math.hypot(bx-P.x,bz-P.z)>1.4) return fb;   // tumbling: don't smear the groove
+  if(BOARD){ const mx=(ax+bx)/2, mz=(az+bz)/2; return [mx,mz,mx,mz]; }
+  return [ax,az,bx,bz];
+}
+function trailPush(on,live){
+  const wasN=trPts.length; if(wasN && trPts[wasN-1].live) trPts.pop();
   // slices across the groove follow the path you actually travel, not where the skis point: in a skid the heading
   // swings much faster than you move, and slicing by heading fanned the groove out into overlapping sheets
   let fx=Math.sin(P.heading), fz=-Math.cos(P.heading);
   if(trLast){ const dx=P.x-trLast.x, dz=P.z-trLast.z, dl=Math.hypot(dx,dz);
-    if(dl>0.02){ const tx=dx/dl, tz=dz/dl; if(!trDir) trDir={x:tx,z:tz}; else { trDir.x+=(tx-trDir.x)*0.6; trDir.z+=(tz-trDir.z)*0.6; const l=Math.hypot(trDir.x,trDir.z)||1; trDir.x/=l; trDir.z/=l; } }
+    if(dl>0.02 && !live){ const tx=dx/dl, tz=dz/dl; if(!trDir) trDir={x:tx,z:tz}; else { trDir.x+=(tx-trDir.x)*0.6; trDir.z+=(tz-trDir.z)*0.6; const l=Math.hypot(trDir.x,trDir.z)||1; trDir.x/=l; trDir.z/=l; } }
     if(trDir){ fx=trDir.x; fz=trDir.z; } }
   const gx=(groundH(P.x+0.5,P.z)-groundH(P.x-0.5,P.z)), gz=(groundH(P.x,P.z+0.5)-groundH(P.x,P.z-0.5));
   const nl=Math.hypot(gx,1,gz);
   const off=BOARD?0:SKI_OFF*(1-0.5*(RS.narrow||0)), pw=BOARD?2.75:1;   // board: one groove ~30 cm wide (board 27 cm + about an inch)
-  const hs=new Float32Array(NPV); for(let s2=0;s2<2;s2++) for(let j=0;j<PROF.length;j++){ const o=(s2?off:-off)+PROF[j]*pw; hs[s2*PROF.length+j]=groundH(P.x-fz*o,P.z+fx*o)+0.03; }
-  trPts.push({x:P.x,z:P.z,hs,sx:-fz,sz:fx,nx:-gx/nl,ny:1/nl,nz:-gz/nl,on}); if(trPts.length>TN) trPts.shift();
-  const n=trPts.length, last=PROF.length-1;
-  for(let i=0;i<n;i++){ const p=trPts[i];
-    for(let s=0;s<2;s++){ const c=(s?off:-off);
-      for(let j=0;j<PROF.length;j++){ const v=(i*NPV+s*PROF.length+j)*3, o=c+PROF[j]*pw;
-        trPos[v]=p.x+p.sx*o; trPos[v+1]=p.hs[s*PROF.length+j]+PH[j]; trPos[v+2]=p.z+p.sz*o;
+  const cc0=trailCentres({fx,fz,o:off});
+  const hs=new Float32Array(NPV); for(let s2=0;s2<2;s2++) for(let j=0;j<PROF.length;j++){ const o=PROF[j]*pw; hs[s2*PROF.length+j]=groundH(cc0[s2*2]-fz*o,cc0[s2*2+1]+fx*o)+0.03; }
+  trPts.push({x:P.x,z:P.z,c:cc0,hs,sx:-fz,sz:fx,nx:-gx/nl,ny:1/nl,nz:-gz/nl,on,live:!!live}); if(trPts.length>TN) trPts.shift();
+  const n=trPts.length, last=PROF.length-1, from=(live && n===wasN) ? n-1 : 0;
+  for(let i=from;i<n;i++){ const p=trPts[i];
+    for(let s=0;s<2;s++){ const cx=p.c[s*2], cz=p.c[s*2+1];
+      for(let j=0;j<PROF.length;j++){ const v=(i*NPV+s*PROF.length+j)*3, o=PROF[j]*pw;
+        trPos[v]=cx+p.sx*o; trPos[v+1]=p.hs[s*PROF.length+j]+PH[j]; trPos[v+2]=cz+p.sz*o;
         let nx=p.nx*NU[j]+p.sx*NT[j], ny=p.ny*NU[j], nz=p.nz*NU[j]+p.sz*NT[j]; const l=Math.hypot(nx,ny,nz);
         trNor[v]=nx/l; trNor[v+1]=ny/l; trNor[v+2]=nz/l; }
       // cap edges sit exactly on the groove lips
-      for(let e=0;e<2;e++){ const j=e?last:0, o=c+PROF[j]*pw, v=(i*4+s*2+e)*3;
-        capPos[v]=p.x+p.sx*o; capPos[v+1]=p.hs[s*PROF.length+j]; capPos[v+2]=p.z+p.sz*o; } } }
+      for(let e=0;e<2;e++){ const j=e?last:0, o=PROF[j]*pw, v=(i*4+s*2+e)*3;
+        capPos[v]=cx+p.sx*o; capPos[v+1]=p.hs[s*PROF.length+j]; capPos[v+2]=cz+p.sz*o; } } }
   let c=0, cc=0;
   for(let i=0;i<n-1;i++){ if(!trPts[i].on||!trPts[i+1].on) continue;
     for(let s=0;s<(BOARD?1:2);s++){
@@ -1765,7 +1777,7 @@ function trailPush(on){
       capIdx[cc++]=a; capIdx[cc++]=b; capIdx[cc++]=a+1; capIdx[cc++]=a+1; capIdx[cc++]=b; capIdx[cc++]=b+1; } }
   trGeo.attributes.position.needsUpdate=true; trGeo.attributes.normal.needsUpdate=true; trGeo.index.needsUpdate=true; trGeo.setDrawRange(0,c);
   capGeo.attributes.position.needsUpdate=true; capGeo.index.needsUpdate=true; capGeo.setDrawRange(0,cc);
-  trLast={x:P.x,z:P.z};
+  if(!live) trLast={x:P.x,z:P.z};
 }
 
 /* powder face shot: landing in deep snow throws a cloud over the camera for a moment */
@@ -2256,7 +2268,7 @@ function groundStep(dt){
       m-=1; }
   }
   if(sp>8 && Math.random()<sp*0.9*dt){ emit(P.x+fx*0.5+rand(-0.3,0.3),P.y+0.1,P.z+fz*0.5+rand(-0.3,0.3),P.vx*0.75,rand(1.5,3),P.vz*0.75,rand(0.3,0.6),rand(0.4,0.7)); }
-  if(!trLast || Math.hypot(P.x-trLast.x,P.z-trLast.z)>0.35) trailPush(true);
+  if(!trLast || Math.hypot(P.x-trLast.x,P.z-trLast.z)>0.35) trailPush(true); else trailPush(true,true);
 }
 function airStep(dt){
   P.airT+=dt;
@@ -2412,6 +2424,8 @@ function updateCamera(dt,now){
   camLook.copy(camFocus); camLook.y+=0.22;          // aim a little over the rider's head so you see down the hill
   camera.lookAt(camLook);
   if(shake>0){ const s=shake*shake*0.25; camera.position.x+=rand(-s,s); camera.position.y+=rand(-s,s); shake=Math.max(0,shake-dt*2.2); }
+  { const kmh=Math.hypot(P.vx,P.vz)*3.6, sk=(state==='play' && !P.air && !reduceMotion) ? clamp((kmh-40)/65,0,1) : 0;
+    if(sk>0){ const a=sk*sk*0.03; camera.position.x+=(Math.sin(now*0.061)+Math.sin(now*0.137)*0.6)*a; camera.position.y+=(Math.sin(now*0.079)+Math.sin(now*0.163)*0.6)*a; } }
   const pk=P.pushT>0 ? Math.sin(Math.PI*clamp((1-P.pushT/PUSH_T-0.22)/0.5,0,1))*4 : 0;
   const spf=state==='play' ? clamp((Math.hypot(P.vx,P.vz)-11)/16,0,1) : 0;
   const fov=70+FOVX+pk+spf*spf*8;
@@ -2425,7 +2439,7 @@ const STRK=(()=>{ const N=70, pos=new Float32Array(N*6), seed=[];
   return {N,pos,seed,g,m,ln}; })();
 function updateStreaks(dt){
   const sp=Math.hypot(P.vx,P.vz), on=state==='play' && !reduceMotion && GFX.level!=='low' && !CAM.fp;
-  const a=on ? clamp((sp-15)/14,0,1)*0.42 : 0;
+  const a=on ? clamp((sp-13)/18,0,1)*0.55 : 0;
   STRK.m.opacity+=(a-STRK.m.opacity)*Math.min(1,5*dt);
   STRK.ln.visible=STRK.m.opacity>0.01; if(!STRK.ln.visible) return;
   STRK.ln.position.copy(camera.position); STRK.ln.quaternion.copy(camera.quaternion);
