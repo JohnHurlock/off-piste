@@ -2207,14 +2207,18 @@ function groundStep(dt){
   if(!held){ P.vx-=G_SLIDE*gx*dt; P.vz-=G_SLIDE*gz*dt; }
   const fx=Math.sin(P.heading), fz=-Math.cos(P.heading), lx=-fz, lz=fx;
   let vF=P.vx*fx+P.vz*fz, vL=P.vx*lx+P.vz*lz;
+  // how big is this turn? quick carves cost almost nothing; holding a hard turn for a while (a real direction change) scrubs speed
+  const tS=Math.sign(P.turn); if(Math.abs(P.turn)>0.35 && tS===P.turnS) P.turnT=(P.turnT||0)+dt; else { P.turnT=Math.max(0,(P.turnT||0)-dt*3); if(Math.abs(P.turn)>0.35) P.turnS=tS; }
+  const tq=clamp((P.turnT-0.35)/0.8,0,1), turnSig=tq*tq*(3-2*tq);
   const lost=vL*(1-Math.exp(-10*dt)); vL-=lost;
+  if(vF>0.5){ const keep=1-0.8*turnSig; vF=Math.sqrt(vF*vF+(lost*(2*vL+lost))*keep); }   // carving redirects the sideways momentum along the skis
   // (no automatic forward creep: you can come to a full stop, and you don't get nudged up the side walls)
   if(P.noBrake && IN.y>-0.3) P.noBrake=false;   // a stick still held back from a backflip isn't a brake
   if(P.pushT>0){ const ph=1-P.pushT/PUSH_T; P.pushT=Math.max(0,P.pushT-dt);
     if(ph>0.24 && ph<0.62){ const sp1=Math.hypot(vF,vL); vF+=13.8*Math.max(0,1-sp1/19.5)*dt; } }
   const tuck=IN.y>0.3?IN.y:0, brake=(IN.y<-0.3&&!P.noBrake)?-IN.y:0;
   const sp=Math.hypot(vF,vL);
-  const turnDrag = sp>4 && LEVEL!=='pipe' ? Math.abs(P.turn)*0.32 : 0;     // turning slows you down
+  const turnDrag = sp>4 && LEVEL!=='pipe' ? Math.abs(P.turn)*(0.05+0.32*turnSig) : 0;     // only big, held turns really slow you down
   const k=(0.0032-tuck*0.0015)*sp+0.025+(LEVEL==='steep'?0.13:0)+brake*1.1+P.charge*0.15+turnDrag+P.hk*2.4;
   const f=Math.exp(-k*dt); vF*=f; vL*=f;
   if(P.hk>0.05){ const s1=Math.hypot(vF,vL), d=P.hk*9*dt, q=s1>d?(s1-d)/s1:0; vF*=q; vL*=q; }   // edges dig in: about a second from cruising speed
@@ -2425,7 +2429,7 @@ function updateCamera(dt,now){
   camera.lookAt(camLook);
   if(shake>0){ const s=shake*shake*0.25; camera.position.x+=rand(-s,s); camera.position.y+=rand(-s,s); shake=Math.max(0,shake-dt*2.2); }
   { const kmh=Math.hypot(P.vx,P.vz)*3.6, sk=(state==='play' && !P.air && !reduceMotion) ? clamp((kmh-40)/65,0,1) : 0;
-    if(sk>0){ const a=sk*sk*0.03; camera.position.x+=(Math.sin(now*0.061)+Math.sin(now*0.137)*0.6)*a; camera.position.y+=(Math.sin(now*0.079)+Math.sin(now*0.163)*0.6)*a; } }
+    if(sk>0){ const a=sk*sk*0.013; camera.position.x+=(Math.sin(now*0.061)+Math.sin(now*0.137)*0.6)*a; camera.position.y+=(Math.sin(now*0.079)+Math.sin(now*0.163)*0.6)*a; } }
   const pk=P.pushT>0 ? Math.sin(Math.PI*clamp((1-P.pushT/PUSH_T-0.22)/0.5,0,1))*4 : 0;
   const spf=state==='play' ? clamp((Math.hypot(P.vx,P.vz)-11)/16,0,1) : 0;
   const fov=70+FOVX+pk+spf*spf*8;
@@ -3951,7 +3955,7 @@ function applyArt(root){
   const rk=A('rock'); if(rk) rocks.geometry=rk.geo;
 }
 function loadArt(){ if(!THREE.GLTFLoader || !THREE.BufferGeometryUtils) return;
-  new THREE.GLTFLoader().load((LOWEND||isTouch)?'../offpiste.glb':'real_rider.glb', g=>{ try{ applyArt(g.scene); realArt(); }catch(e){ console.warn('Off Piste art failed to apply', e); } }, undefined, ()=>{}); }
+  new THREE.GLTFLoader().load((LOWEND||isTouch)?'../offpiste.glb?v=7ab68c37':'real_rider.glb?v=a14a6ef9', g=>{ try{ applyArt(g.scene); realArt(); }catch(e){ console.warn('Off Piste art failed to apply', e); } }, undefined, ()=>{}); }
 loadArt();
 
 requestAnimationFrame(frame);
